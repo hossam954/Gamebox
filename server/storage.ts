@@ -1,5 +1,5 @@
-import { 
-  type User, 
+import {
+  type User,
   type InsertUser,
   type PasswordRecoveryRequest,
   type InsertPasswordRecovery,
@@ -20,19 +20,19 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(userId: string, amount: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
-  
+
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;
   getPasswordRecoveryRequests(): Promise<PasswordRecoveryRequest[]>;
   updatePasswordRecoveryStatus(id: string, status: string): Promise<void>;
-  
+
   createDepositRequest(request: InsertDepositRequest): Promise<DepositRequest>;
   getDepositRequests(): Promise<DepositRequest[]>;
   updateDepositStatus(id: string, status: string): Promise<void>;
-  
+
   createWithdrawRequest(request: InsertWithdrawRequest): Promise<WithdrawRequest>;
   getWithdrawRequests(): Promise<WithdrawRequest[]>;
   updateWithdrawStatus(id: string, status: string): Promise<void>;
-  
+
   getPaymentSettings(): Promise<PaymentSettings>;
   updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings>;
 }
@@ -49,7 +49,7 @@ export class MemStorage implements IStorage {
     this.passwordRecoveryRequests = new Map();
     this.depositRequests = new Map();
     this.withdrawRequests = new Map();
-    
+
     const adminId = randomUUID();
     const adminUser: User = {
       id: adminId,
@@ -61,7 +61,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.users.set(adminId, adminUser);
-    
+
     this.paymentSettings = {
       id: randomUUID(),
       depositFee: 0,
@@ -99,8 +99,8 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
+      ...insertUser,
       id,
       balance: 1000,
       isAdmin: false,

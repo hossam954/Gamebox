@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save } from "lucide-react";
+import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save, Link2, Shield, ShieldOff, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,19 +59,47 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDeleteUser }: AdminPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("overview");
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [passwordRecoveryRequests, setPasswordRecoveryRequests] = useState<Request[]>([]);
   const [depositRequests, setDepositRequests] = useState<Request[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<Request[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPaymentSettings();
-    fetchPasswordRecoveryRequests();
-    fetchDepositRequests();
-    fetchWithdrawRequests();
+    fetchAllData();
   }, []);
+
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        fetchUsers(),
+        fetchPaymentSettings(),
+        fetchPasswordRecoveryRequests(),
+        fetchDepositRequests(),
+        fetchWithdrawRequests(),
+      ]);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/users");
+      if (response.ok) {
+        const data = await response.json();
+        setAllUsers(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
 
   const fetchPaymentSettings = async () => {
     try {
@@ -151,19 +180,44 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
+  const generateResetLink = (userId: string) => {
+    const resetToken = btoa(`${userId}:${Date.now()}`);
+    return `${window.location.origin}/reset-password?token=${resetToken}`;
+  };
+
   const handlePasswordRecoveryAction = async (id: string, action: "approve" | "reject") => {
     try {
+      const request = passwordRecoveryRequests.find(r => r.id === id);
+      if (!request) return;
+
+      let resetLink = "";
+      if (action === "approve") {
+        resetLink = generateResetLink(request.userId!);
+      }
+
       const response = await fetch(`/api/password-recovery/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: action === "approve" ? "approved" : "rejected" }),
+        body: JSON.stringify({ 
+          status: action === "approve" ? "approved" : "rejected",
+          resetLink: resetLink
+        }),
       });
 
       if (response.ok) {
-        toast({
-          title: `Request ${action}d`,
-          description: `Password recovery request has been ${action}d`,
-        });
+        if (action === "approve") {
+          // Copy reset link to clipboard
+          navigator.clipboard.writeText(resetLink);
+          toast({
+            title: "Reset link generated",
+            description: `Reset link copied to clipboard. Send this to ${request.email}`,
+          });
+        } else {
+          toast({
+            title: "Request rejected",
+            description: "Password recovery request has been rejected",
+          });
+        }
         fetchPasswordRecoveryRequests();
       }
     } catch (error) {
@@ -189,6 +243,9 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           description: `Deposit request has been ${action}d`,
         });
         fetchDepositRequests();
+        if (action === "approve") {
+          fetchUsers(); // Refresh user data after balance update
+        }
       }
     } catch (error) {
       toast({
@@ -213,6 +270,9 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           description: `Withdrawal request has been ${action}d`,
         });
         fetchWithdrawRequests();
+        if (action === "approve") {
+          fetchUsers(); // Refresh user data after balance update
+        }
       }
     } catch (error) {
       toast({
@@ -223,125 +283,221 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
-  const filteredUsers = users.filter(
+  const displayUsers = allUsers.length > 0 ? allUsers : users;
+  const filteredUsers = displayUsers.filter(
     (user) =>
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalBalance = users.reduce((sum, user) => sum + user.balance, 0);
-  const activeUsers = users.filter((u) => u.status === "active").length;
+  const totalBalance = displayUsers.reduce((sum, user) => sum + user.balance, 0);
+  const activeUsers = displayUsers.filter((u) => u.status === "active").length;
+  const suspendedUsers = displayUsers.filter((u) => u.status === "suspended").length;
+  const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +
+    withdrawRequests.filter((r) => r.status === "pending").length +
+    passwordRecoveryRequests.filter((r) => r.status === "pending").length;
 
   return (
-    <div className="min-h-screen bg-background p-6" data-testid="admin-panel">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage users, payments, and platform settings</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6" data-testid="admin-panel">
+      <div className="mx-auto max-w-7xl space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-lg text-muted-foreground mt-2">Manage users, payments, and platform settings</p>
+          </div>
+          <Button 
+            onClick={fetchAllData} 
+            disabled={isLoading}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          >
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+        {/* Stats Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Users</CardTitle>
+              <Users className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-total-users">
-                {users.length}
+              <div className="text-3xl font-bold text-blue-900 dark:text-blue-100" data-testid="stat-total-users">
+                {displayUsers.length}
               </div>
-              <p className="text-xs text-muted-foreground">{activeUsers} active</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400">
+                {activeUsers} active • {suspendedUsers} suspended
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Total Balance</CardTitle>
+              <Wallet className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="stat-total-balance">
+              <div className="text-3xl font-bold text-green-900 dark:text-green-100" data-testid="stat-total-balance">
                 £{totalBalance.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">Across all accounts</p>
+              <p className="text-sm text-green-600 dark:text-green-400">Across all accounts</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Pending Requests</CardTitle>
+              <Settings className="h-5 w-5 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {depositRequests.filter((r) => r.status === "pending").length +
-                  withdrawRequests.filter((r) => r.status === "pending").length +
-                  passwordRecoveryRequests.filter((r) => r.status === "pending").length}
+              <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">
+                {pendingRequests}
               </div>
-              <p className="text-xs text-muted-foreground">Require attention</p>
+              <p className="text-sm text-orange-600 dark:text-orange-400">Require attention</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Today's Activity</CardTitle>
+              <Eye className="h-5 w-5 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+                {depositRequests.length + withdrawRequests.length}
+              </div>
+              <p className="text-sm text-purple-600 dark:text-purple-400">Total transactions</p>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
-            <TabsTrigger value="deposits" data-testid="tab-deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="withdrawals" data-testid="tab-withdrawals">Withdrawals</TabsTrigger>
-            <TabsTrigger value="recovery" data-testid="tab-recovery">Password Recovery</TabsTrigger>
-            <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
+        {/* Main Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6 bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1">
+            <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md">Overview</TabsTrigger>
+            <TabsTrigger value="users" data-testid="tab-users" className="rounded-md">Users</TabsTrigger>
+            <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md">Deposits</TabsTrigger>
+            <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md">Withdrawals</TabsTrigger>
+            <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md">Recovery</TabsTrigger>
+            <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md">Settings</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Recent Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {displayUsers.slice(0, 5).map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div>
+                          <p className="font-medium">{user.username}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-bold">£{user.balance.toLocaleString()}</p>
+                          <Badge variant={user.status === "active" ? "default" : "destructive"} className="text-xs">
+                            {user.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[...depositRequests, ...withdrawRequests].slice(0, 5).map((request) => (
+                      <div key={request.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div>
+                          <p className="font-medium">{request.username}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {depositRequests.includes(request) ? "Deposit" : "Withdrawal"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-bold">£{request.amount?.toLocaleString()}</p>
+                          <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"} className="text-xs">
+                            {request.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           <TabsContent value="users">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  User Management
+                </CardTitle>
                 <CardDescription>View and manage user accounts</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
+                <div className="mb-6">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search by username or email..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
+                      className="pl-9 bg-white dark:bg-slate-800"
                       data-testid="input-search-users"
                     />
                   </div>
                 </div>
 
-                <div className="rounded-md border border-card-border">
+                <div className="rounded-lg border border-card-border overflow-hidden">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="text-right">Balance</TableHead>
-                        <TableHead className="text-right">Wins/Losses</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="font-semibold">Username</TableHead>
+                        <TableHead className="font-semibold">Email</TableHead>
+                        <TableHead className="text-right font-semibold">Balance</TableHead>
+                        <TableHead className="text-right font-semibold">Wins/Losses</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                             No users found
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredUsers.map((user) => (
-                          <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
+                          <TableRow key={user.id} data-testid={`user-row-${user.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <TableCell className="font-medium">{user.username}</TableCell>
                             <TableCell>{user.email}</TableCell>
-                            <TableCell className="text-right font-mono">
+                            <TableCell className="text-right font-mono font-bold">
                               £{user.balance.toLocaleString()}
                             </TableCell>
                             <TableCell className="text-right">
-                              <span className="text-success">{user.totalWins}</span> /{" "}
-                              <span className="text-destructive">{user.totalLosses}</span>
+                              <span className="text-green-600 font-semibold">{user.totalWins || 0}</span> /{" "}
+                              <span className="text-red-600 font-semibold">{user.totalLosses || 0}</span>
                             </TableCell>
                             <TableCell>
                               <Badge variant={user.status === "active" ? "default" : "destructive"}>
@@ -349,31 +505,38 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
+                              <div className="flex justify-end gap-1">
                                 <Button
-                                  size="icon"
+                                  size="sm"
                                   variant="ghost"
                                   onClick={() => {
                                     const newBalance = prompt("Enter new balance:", user.balance.toString());
                                     if (newBalance) onEditBalance(user.id, parseFloat(newBalance));
                                   }}
                                   data-testid={`button-edit-${user.id}`}
+                                  className="h-8 w-8 p-0"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
-                                  size="icon"
+                                  size="sm"
                                   variant="ghost"
                                   onClick={() => onSuspendUser(user.id)}
                                   data-testid={`button-suspend-${user.id}`}
+                                  className="h-8 w-8 p-0"
                                 >
-                                  <Wallet className="h-4 w-4" />
+                                  {user.status === "active" ? (
+                                    <ShieldOff className="h-4 w-4 text-orange-600" />
+                                  ) : (
+                                    <Shield className="h-4 w-4 text-green-600" />
+                                  )}
                                 </Button>
                                 <Button
-                                  size="icon"
+                                  size="sm"
                                   variant="ghost"
                                   onClick={() => onDeleteUser(user.id)}
                                   data-testid={`button-delete-${user.id}`}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -390,36 +553,41 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </TabsContent>
 
           <TabsContent value="deposits">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>Deposit Requests</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-green-600" />
+                  Deposit Requests
+                </CardTitle>
                 <CardDescription>Approve or reject deposit requests</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border border-card-border">
+                <div className="rounded-lg border border-card-border overflow-hidden">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="font-semibold">Username</TableHead>
+                        <TableHead className="text-right font-semibold">Amount</TableHead>
+                        <TableHead className="font-semibold">Date</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {depositRequests.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                             No deposit requests
                           </TableCell>
                         </TableRow>
                       ) : (
                         depositRequests.map((request) => (
-                          <TableRow key={request.id}>
+                          <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <TableCell className="font-medium">{request.username}</TableCell>
-                            <TableCell className="text-right font-mono">£{request.amount?.toLocaleString()}</TableCell>
-                            <TableCell>{new Date(request.createdAt).toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-mono font-bold text-green-600">
+                              £{request.amount?.toLocaleString()}
+                            </TableCell>
+                            <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
                                 {request.status}
@@ -429,20 +597,22 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               {request.status === "pending" && (
                                 <div className="flex justify-end gap-2">
                                   <Button
-                                    size="icon"
+                                    size="sm"
                                     variant="ghost"
                                     onClick={() => handleDepositAction(request.id, "approve")}
                                     data-testid={`button-approve-deposit-${request.id}`}
+                                    className="h-8 text-green-600 hover:text-green-700"
                                   >
-                                    <Check className="h-4 w-4 text-success" />
+                                    <Check className="h-4 w-4" />
                                   </Button>
                                   <Button
-                                    size="icon"
+                                    size="sm"
                                     variant="ghost"
                                     onClick={() => handleDepositAction(request.id, "reject")}
                                     data-testid={`button-reject-deposit-${request.id}`}
+                                    className="h-8 text-red-600 hover:text-red-700"
                                   >
-                                    <X className="h-4 w-4 text-destructive" />
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 </div>
                               )}
@@ -458,38 +628,43 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>Withdrawal Requests</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-red-600" />
+                  Withdrawal Requests
+                </CardTitle>
                 <CardDescription>Approve or reject withdrawal requests</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border border-card-border">
+                <div className="rounded-lg border border-card-border overflow-hidden">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="font-semibold">Username</TableHead>
+                        <TableHead className="text-right font-semibold">Amount</TableHead>
+                        <TableHead className="font-semibold">Address</TableHead>
+                        <TableHead className="font-semibold">Date</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {withdrawRequests.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                             No withdrawal requests
                           </TableCell>
                         </TableRow>
                       ) : (
                         withdrawRequests.map((request) => (
-                          <TableRow key={request.id}>
+                          <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <TableCell className="font-medium">{request.username}</TableCell>
-                            <TableCell className="text-right font-mono">£{request.amount?.toLocaleString()}</TableCell>
-                            <TableCell className="font-mono text-xs">{request.address}</TableCell>
-                            <TableCell>{new Date(request.createdAt).toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-mono font-bold text-red-600">
+                              £{request.amount?.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs max-w-32 truncate">{request.address}</TableCell>
+                            <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
                                 {request.status}
@@ -499,20 +674,22 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               {request.status === "pending" && (
                                 <div className="flex justify-end gap-2">
                                   <Button
-                                    size="icon"
+                                    size="sm"
                                     variant="ghost"
                                     onClick={() => handleWithdrawAction(request.id, "approve")}
                                     data-testid={`button-approve-withdraw-${request.id}`}
+                                    className="h-8 text-green-600 hover:text-green-700"
                                   >
-                                    <Check className="h-4 w-4 text-success" />
+                                    <Check className="h-4 w-4" />
                                   </Button>
                                   <Button
-                                    size="icon"
+                                    size="sm"
                                     variant="ghost"
                                     onClick={() => handleWithdrawAction(request.id, "reject")}
                                     data-testid={`button-reject-withdraw-${request.id}`}
+                                    className="h-8 text-red-600 hover:text-red-700"
                                   >
-                                    <X className="h-4 w-4 text-destructive" />
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 </div>
                               )}
@@ -528,10 +705,13 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </TabsContent>
 
           <TabsContent value="recovery">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>Password Recovery Requests</CardTitle>
-                <CardDescription>Review and approve password recovery requests</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-blue-600" />
+                  Password Recovery Requests
+                </CardTitle>
+                <CardDescription>Generate reset links for password recovery</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -541,36 +721,38 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                     </p>
                   ) : (
                     passwordRecoveryRequests.map((request) => (
-                      <div key={request.id} className="rounded-md border border-card-border bg-card p-4 space-y-2">
+                      <div key={request.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-4">
                         <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <div className="font-medium">{request.username}</div>
+                          <div className="space-y-2">
+                            <div className="font-semibold text-lg">{request.username}</div>
                             <div className="text-sm text-muted-foreground">{request.email}</div>
-                            <div className="text-xs text-muted-foreground">{new Date(request.createdAt).toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(request.createdAt).toLocaleString()}
+                            </div>
                           </div>
                           <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
                             {request.status}
                           </Badge>
                         </div>
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Message: </span>
-                          {request.message}
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
+                          <span className="text-sm font-medium text-muted-foreground">Message: </span>
+                          <p className="text-sm mt-1">{request.message}</p>
                         </div>
                         {request.status === "pending" && (
-                          <div className="flex gap-2 pt-2">
+                          <div className="flex gap-3 pt-2">
                             <Button
-                              size="sm"
                               onClick={() => handlePasswordRecoveryAction(request.id, "approve")}
                               data-testid={`button-approve-recovery-${request.id}`}
+                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                             >
-                              <Check className="mr-2 h-4 w-4" />
-                              Approve
+                              <Link2 className="mr-2 h-4 w-4" />
+                              Generate Reset Link
                             </Button>
                             <Button
-                              size="sm"
                               variant="outline"
                               onClick={() => handlePasswordRecoveryAction(request.id, "reject")}
                               data-testid={`button-reject-recovery-${request.id}`}
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                             >
                               <X className="mr-2 h-4 w-4" />
                               Reject
@@ -586,15 +768,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle>Payment Settings</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Payment Settings
+                </CardTitle>
                 <CardDescription>Configure payment fees, limits, and addresses</CardDescription>
               </CardHeader>
               <CardContent>
                 {paymentSettings && (
-                  <div className="space-y-6">
-                    <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-8">
+                    <div className="grid gap-6 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="depositFee">Deposit Fee (%)</Label>
                         <Input
@@ -603,6 +788,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.depositFee}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, depositFee: parseFloat(e.target.value) })}
                           data-testid="input-deposit-fee"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
 
@@ -614,6 +800,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.withdrawFee}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, withdrawFee: parseFloat(e.target.value) })}
                           data-testid="input-withdraw-fee"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
 
@@ -625,6 +812,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.minDeposit}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, minDeposit: parseFloat(e.target.value) })}
                           data-testid="input-min-deposit"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
 
@@ -636,6 +824,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.maxDeposit}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, maxDeposit: parseFloat(e.target.value) })}
                           data-testid="input-max-deposit"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
 
@@ -647,6 +836,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.minWithdraw}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, minWithdraw: parseFloat(e.target.value) })}
                           data-testid="input-min-withdraw"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
 
@@ -658,33 +848,42 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           value={paymentSettings.maxWithdraw}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, maxWithdraw: parseFloat(e.target.value) })}
                           data-testid="input-max-withdraw"
+                          className="bg-white dark:bg-slate-800"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">Payment Method</Label>
-                      <Input
-                        id="paymentMethod"
-                        type="text"
-                        value={paymentSettings.paymentMethod}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
-                        data-testid="input-payment-method"
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentMethod">Payment Method</Label>
+                        <Input
+                          id="paymentMethod"
+                          type="text"
+                          value={paymentSettings.paymentMethod}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
+                          data-testid="input-payment-method"
+                          className="bg-white dark:bg-slate-800"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="depositAddress">Deposit Address</Label>
+                        <Input
+                          id="depositAddress"
+                          type="text"
+                          value={paymentSettings.depositAddress}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, depositAddress: e.target.value })}
+                          data-testid="input-deposit-address"
+                          className="bg-white dark:bg-slate-800"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="depositAddress">Deposit Address</Label>
-                      <Input
-                        id="depositAddress"
-                        type="text"
-                        value={paymentSettings.depositAddress}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, depositAddress: e.target.value })}
-                        data-testid="input-deposit-address"
-                      />
-                    </div>
-
-                    <Button onClick={handleUpdatePaymentSettings} data-testid="button-save-settings">
+                    <Button 
+                      onClick={handleUpdatePaymentSettings} 
+                      data-testid="button-save-settings"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    >
                       <Save className="mr-2 h-4 w-4" />
                       Save Settings
                     </Button>
