@@ -279,135 +279,31 @@ export default function WalletModal({
             </TabsContent>
 
             <TabsContent value="deposit" className="space-y-4">
-              {paymentSettings && (
-                <div className="rounded-lg border border-card-border bg-card p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Payment Method:</span>
-                    <span className="font-medium">{paymentSettings.paymentMethod}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Deposit Address:</span>
-                    <span className="font-mono text-xs">{paymentSettings.depositAddress}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Fee:</span>
-                    <span className="font-medium">{paymentSettings.depositFee}%</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Limits:</span>
-                    <span className="font-medium">£{paymentSettings.minDeposit} - £{paymentSettings.maxDeposit}</span>
-                  </div>
+              <div className="text-center py-8">
+                <div className="mb-4">
+                  <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
                 </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Quick Amounts</Label>
-                <div className="flex gap-2">
-                  {QUICK_AMOUNTS.map((amount) => (
-                    <Button
-                      key={amount}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickAmount(amount, "deposit")}
-                      data-testid={`quick-deposit-${amount}`}
-                    >
-                      £{amount}
-                    </Button>
-                  ))}
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Deposit Feature</h3>
+                <p className="text-muted-foreground">
+                  This feature is currently being developed.
+                  <br />
+                  Please check back later or contact support for assistance.
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="deposit-amount">Deposit Amount</Label>
-                <Input
-                  id="deposit-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  data-testid="input-deposit-amount"
-                />
-              </div>
-
-              <Button 
-                onClick={handleDeposit} 
-                disabled={isLoading}
-                className="w-full"
-                data-testid="button-deposit"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {isLoading ? "Submitting..." : "Submit Deposit Request"}
-              </Button>
             </TabsContent>
 
             <TabsContent value="withdraw" className="space-y-4">
-              {paymentSettings && (
-                <div className="rounded-lg border border-card-border bg-card p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Fee:</span>
-                    <span className="font-medium">{paymentSettings.withdrawFee}%</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Limits:</span>
-                    <span className="font-medium">£{paymentSettings.minWithdraw} - £{paymentSettings.maxWithdraw}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Available:</span>
-                    <span className="font-mono font-semibold text-success">£{balance.toLocaleString()}</span>
-                  </div>
+              <div className="text-center py-8">
+                <div className="mb-4">
+                  <Download className="h-12 w-12 mx-auto text-muted-foreground" />
                 </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Quick Amounts</Label>
-                <div className="flex gap-2">
-                  {QUICK_AMOUNTS.map((amount) => (
-                    <Button
-                      key={amount}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickAmount(amount, "withdraw")}
-                      data-testid={`quick-withdraw-${amount}`}
-                    >
-                      £{amount}
-                    </Button>
-                  ))}
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Withdrawal Feature</h3>
+                <p className="text-muted-foreground">
+                  This feature is currently being developed.
+                  <br />
+                  Please check back later or contact support for assistance.
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="withdraw-amount">Withdrawal Amount</Label>
-                <Input
-                  id="withdraw-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  data-testid="input-withdraw-amount"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="withdraw-address">Your Wallet/Bank Address</Label>
-                <Input
-                  id="withdraw-address"
-                  type="text"
-                  placeholder="Enter your payment address"
-                  value={withdrawAddress}
-                  onChange={(e) => setWithdrawAddress(e.target.value)}
-                  data-testid="input-withdraw-address"
-                />
-              </div>
-
-              <Button 
-                onClick={handleWithdraw} 
-                disabled={isLoading}
-                className="w-full"
-                data-testid="button-withdraw"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {isLoading ? "Submitting..." : "Submit Withdrawal Request"}
-              </Button>
             </TabsContent>
           </Tabs>
         </div>

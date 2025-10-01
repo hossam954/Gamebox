@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertPasswordRecoverySchema, insertDepositRequestSchema, insertWithdrawRequestSchema, insertPaymentSettingsSchema } from "@shared/schema";
+import { insertUserSchema, insertPasswordRecoverySchema, insertDepositRequestSchema, insertWithdrawRequestSchema, insertPaymentSettingsSchema, insertPromoCodeSchema, insertSupportTicketSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
@@ -38,6 +38,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ userId: user.id, username: user.username, isAdmin: user.isAdmin });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/auth/change-password", async (req, res) => {
+    try {
+      const { userId, currentPassword, newPassword } = req.body;
+      const user = await storage.getUser(userId);
+
+      if (!user || user.password !== currentPassword) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      await storage.updateUserPassword(userId, newPassword);
+      res.json({ message: "Password updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
@@ -206,6 +222,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove password from response for security
       const safeUsers = users.map(({ password, ...user }) => user);
       res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/promo-codes", async (req, res) => {
+    try {
+      const result = insertPromoCodeSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error });
+      }
+
+      const promoCode = await storage.createPromoCode(result.data);
+      res.json({ message: "Promo code created", promoCode });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/promo-codes", async (req, res) => {
+    try {
+      const promoCodes = await storage.getPromoCodes();
+      res.json(promoCodes);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.patch("/api/promo-codes/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      await storage.updatePromoCodeStatus(id, isActive);
+      res.json({ message: "Promo code updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/promo-codes/redeem", async (req, res) => {
+    try {
+      const { userId, code } = req.body;
+      const result = await storage.redeemPromoCode(userId, code);
+      
+      if (result.success) {
+        res.json({ message: "Promo code redeemed", reward: result.reward });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/support", async (req, res) => {
+    try {
+      const result = insertSupportTicketSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error });
+      }
+
+      const ticket = await storage.createSupportTicket(result.data);
+      res.json({ message: "Support ticket created", ticket });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/support", async (req, res) => {
+    try {
+      const tickets = await storage.getSupportTickets();
+      res.json(tickets);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.patch("/api/support/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { response, status } = req.body;
+      await storage.updateSupportTicket(id, response, status);
+      res.json({ message: "Support ticket updated" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

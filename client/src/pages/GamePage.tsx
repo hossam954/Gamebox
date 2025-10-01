@@ -5,6 +5,8 @@ import TopBar from "@/components/TopBar";
 import MysteryBox from "@/components/MysteryBox";
 import BetSelector from "@/components/BetSelector";
 import WalletModal from "@/components/WalletModal";
+import SettingsModal from "@/components/SettingsModal";
+import SupportModal from "@/components/SupportModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +22,8 @@ export default function GamePage() {
   const [, setLocation] = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [balance, setBalance] = useState(1000);
   const [username, setUsername] = useState("");
   const [selectedBet, setSelectedBet] = useState<number | null>(null);
@@ -141,8 +145,8 @@ export default function GamePage() {
       <TopBar
         balance={balance}
         onWalletClick={() => setShowWalletModal(true)}
-        onSupportClick={() => toast({ title: "Support", description: "Contact support feature coming soon!" })}
-        onSettingsClick={handleLogout}
+        onSupportClick={() => setShowSupportModal(true)}
+        onSettingsClick={() => setShowSettingsModal(true)}
         onNotificationsClick={() => toast({ title: "Notifications", description: "No new notifications" })}
         hasNotifications={false}
       />
@@ -187,6 +191,21 @@ export default function GamePage() {
         balance={balance}
         transactions={transactions}
         userId={userId}
+        username={username}
+      />
+
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        userId={userId || ""}
+        username={username}
+        onLogout={handleLogout}
+      />
+
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+        userId={userId || ""}
         username={username}
       />
     </div>

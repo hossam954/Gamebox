@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save, Link2, Shield, ShieldOff, Eye, EyeOff } from "lucide-react";
+import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save, Link2, Shield, ShieldOff, Eye, EyeOff, Gift, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,28 @@ interface Request {
   createdAt: Date;
 }
 
+interface PromoCode {
+  id: string;
+  code: string;
+  value: number;
+  type: "balance" | "percentage";
+  usageLimit: number;
+  usedCount: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+interface SupportTicket {
+  id: string;
+  userId: string;
+  username: string;
+  subject: string;
+  message: string;
+  status: "open" | "in_progress" | "closed";
+  response?: string;
+  createdAt: Date;
+}
+
 interface AdminPanelProps {
   users: User[];
   onEditBalance: (userId: string, newBalance: number) => void;
@@ -65,6 +87,12 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [depositRequests, setDepositRequests] = useState<Request[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<Request[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [newPromoCode, setNewPromoCode] = useState("");
+  const [newPromoValue, setNewPromoValue] = useState("");
+  const [newPromoType, setNewPromoType] = useState<"balance" | "percentage">("balance");
+  const [newPromoLimit, setNewPromoLimit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -81,6 +109,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         fetchPasswordRecoveryRequests(),
         fetchDepositRequests(),
         fetchWithdrawRequests(),
+        fetchPromoCodes(),
+        fetchSupportTickets(),
       ]);
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -146,6 +176,108 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       }
     } catch (error) {
       console.error("Failed to fetch withdraw requests:", error);
+    }
+  };
+
+  const fetchPromoCodes = async () => {
+    try {
+      const response = await fetch("/api/promo-codes");
+      if (response.ok) {
+        const data = await response.json();
+        setPromoCodes(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch promo codes:", error);
+    }
+  };
+
+  const fetchSupportTickets = async () => {
+    try {
+      const response = await fetch("/api/support");
+      if (response.ok) {
+        const data = await response.json();
+        setSupportTickets(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch support tickets:", error);
+    }
+  };
+
+  const handleCreatePromoCode = async () => {
+    if (!newPromoCode || !newPromoValue || !newPromoLimit) return;
+
+    try {
+      const response = await fetch("/api/promo-codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: newPromoCode,
+          value: parseFloat(newPromoValue),
+          type: newPromoType,
+          usageLimit: parseInt(newPromoLimit),
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Promo code created",
+          description: `Code ${newPromoCode} has been created successfully`,
+        });
+        setNewPromoCode("");
+        setNewPromoValue("");
+        setNewPromoLimit("");
+        fetchPromoCodes();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create promo code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTogglePromoCode = async (id: string, isActive: boolean) => {
+    try {
+      const response = await fetch(`/api/promo-codes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+
+      if (response.ok) {
+        fetchPromoCodes();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update promo code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSupportResponse = async (ticketId: string, response: string) => {
+    try {
+      const responseData = await fetch(`/api/support/${ticketId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response, status: "closed" }),
+      });
+
+      if (responseData.ok) {
+        toast({
+          title: "Response sent",
+          description: "Support ticket has been responded to",
+        });
+        fetchSupportTickets();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send response",
+        variant: "destructive",
+      });
     }
   };
 
@@ -295,7 +427,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const suspendedUsers = displayUsers.filter((u) => u.status === "suspended").length;
   const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +
     withdrawRequests.filter((r) => r.status === "pending").length +
-    passwordRecoveryRequests.filter((r) => r.status === "pending").length;
+    passwordRecoveryRequests.filter((r) => r.status === "pending").length +
+    supportTickets.filter((t) => t.status === "open").length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6" data-testid="admin-panel">
@@ -376,12 +509,14 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1">
+          <TabsList className="grid w-full grid-cols-8 bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1">
             <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md">Overview</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-users" className="rounded-md">Users</TabsTrigger>
             <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md">Deposits</TabsTrigger>
             <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md">Withdrawals</TabsTrigger>
             <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md">Recovery</TabsTrigger>
+            <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md">Promo Codes</TabsTrigger>
+            <TabsTrigger value="support" data-testid="tab-support" className="rounded-md">Support</TabsTrigger>
             <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md">Settings</TabsTrigger>
           </TabsList>
 
@@ -756,6 +891,197 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             >
                               <X className="mr-2 h-4 w-4" />
                               Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="promo">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-purple-600" />
+                  Promo Code Management
+                </CardTitle>
+                <CardDescription>Create and manage promotional codes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="promoCode">Promo Code</Label>
+                      <Input
+                        id="promoCode"
+                        placeholder="WELCOME50"
+                        value={newPromoCode}
+                        onChange={(e) => setNewPromoCode(e.target.value)}
+                        data-testid="input-promo-code"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="promoValue">Value</Label>
+                      <Input
+                        id="promoValue"
+                        type="number"
+                        placeholder="50"
+                        value={newPromoValue}
+                        onChange={(e) => setNewPromoValue(e.target.value)}
+                        data-testid="input-promo-value"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="promoType">Type</Label>
+                      <select 
+                        id="promoType"
+                        value={newPromoType}
+                        onChange={(e) => setNewPromoType(e.target.value as "balance" | "percentage")}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="balance">Balance (£)</option>
+                        <option value="percentage">Percentage (%)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="promoLimit">Usage Limit</Label>
+                      <Input
+                        id="promoLimit"
+                        type="number"
+                        placeholder="100"
+                        value={newPromoLimit}
+                        onChange={(e) => setNewPromoLimit(e.target.value)}
+                        data-testid="input-promo-limit"
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleCreatePromoCode} data-testid="button-create-promo">
+                    Create Promo Code
+                  </Button>
+
+                  <div className="rounded-lg border border-card-border overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                        <TableRow>
+                          <TableHead className="font-semibold">Code</TableHead>
+                          <TableHead className="font-semibold">Value</TableHead>
+                          <TableHead className="font-semibold">Type</TableHead>
+                          <TableHead className="text-right font-semibold">Used/Limit</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="text-right font-semibold">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {promoCodes.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                              No promo codes created
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          promoCodes.map((promo) => (
+                            <TableRow key={promo.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <TableCell className="font-mono font-bold">{promo.code}</TableCell>
+                              <TableCell>
+                                {promo.value}{promo.type === "percentage" ? "%" : "£"}
+                              </TableCell>
+                              <TableCell className="capitalize">{promo.type}</TableCell>
+                              <TableCell className="text-right">
+                                {promo.usedCount}/{promo.usageLimit}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={promo.isActive ? "default" : "destructive"}>
+                                  {promo.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleTogglePromoCode(promo.id, promo.isActive)}
+                                  data-testid={`button-toggle-promo-${promo.id}`}
+                                >
+                                  {promo.isActive ? "Disable" : "Enable"}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="support">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-blue-600" />
+                  Support Management
+                </CardTitle>
+                <CardDescription>Manage user support tickets and communications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {supportTickets.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">
+                      No support tickets
+                    </p>
+                  ) : (
+                    supportTickets.map((ticket) => (
+                      <div key={ticket.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <div className="font-semibold text-lg">{ticket.subject}</div>
+                            <div className="text-sm text-muted-foreground">From: {ticket.username}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(ticket.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                          <Badge variant={ticket.status === "open" ? "default" : ticket.status === "in_progress" ? "default" : "destructive"}>
+                            {ticket.status.replace("_", " ")}
+                          </Badge>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
+                          <span className="text-sm font-medium text-muted-foreground">Message: </span>
+                          <p className="text-sm mt-1">{ticket.message}</p>
+                        </div>
+                        {ticket.response && (
+                          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                            <span className="text-sm font-medium text-green-700 dark:text-green-300">Admin Response: </span>
+                            <p className="text-sm mt-1 text-green-800 dark:text-green-200">{ticket.response}</p>
+                          </div>
+                        )}
+                        {ticket.status === "open" && (
+                          <div className="flex gap-3 pt-2">
+                            <Input
+                              placeholder="Type your response..."
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  handleSupportResponse(ticket.id, e.currentTarget.value);
+                                  e.currentTarget.value = "";
+                                }
+                              }}
+                              data-testid={`input-support-response-${ticket.id}`}
+                            />
+                            <Button
+                              onClick={() => {
+                                const input = document.querySelector(`[data-testid="input-support-response-${ticket.id}"]`) as HTMLInputElement;
+                                if (input?.value) {
+                                  handleSupportResponse(ticket.id, input.value);
+                                  input.value = "";
+                                }
+                              }}
+                              data-testid={`button-send-response-${ticket.id}`}
+                            >
+                              Send Response
                             </Button>
                           </div>
                         )}

@@ -98,3 +98,45 @@ export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).o
 
 export type InsertPaymentSettings = z.infer<typeof insertPaymentSettingsSchema>;
 export type PaymentSettings = typeof paymentSettings.$inferSelect;
+
+export const promoCodes = pgTable("promo_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  value: integer("value").notNull(),
+  type: text("type").notNull().default("balance"), // "balance" or "percentage"
+  usageLimit: integer("usage_limit").notNull().default(1),
+  usedCount: integer("used_count").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPromoCodeSchema = createInsertSchema(promoCodes).pick({
+  code: true,
+  value: true,
+  type: true,
+  usageLimit: true,
+});
+
+export type InsertPromoCode = z.infer<typeof insertPromoCodeSchema>;
+export type PromoCode = typeof promoCodes.$inferSelect;
+
+export const supportTickets = pgTable("support_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  username: text("username").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  response: text("response"),
+  status: text("status").notNull().default("open"), // "open", "in_progress", "closed"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).pick({
+  userId: true,
+  username: true,
+  subject: true,
+  message: true,
+});
+
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type SupportTicket = typeof supportTickets.$inferSelect;

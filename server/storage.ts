@@ -8,7 +8,11 @@ import {
   type WithdrawRequest,
   type InsertWithdrawRequest,
   type PaymentSettings,
-  type InsertPaymentSettings
+  type InsertPaymentSettings,
+  type PromoCode,
+  type InsertPromoCode,
+  type SupportTicket,
+  type InsertSupportTicket
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -35,6 +39,17 @@ export interface IStorage {
 
   getPaymentSettings(): Promise<PaymentSettings>;
   updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings>;
+
+  updateUserPassword(userId: string, newPassword: string): Promise<void>;
+
+  createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode>;
+  getPromoCodes(): Promise<PromoCode[]>;
+  updatePromoCodeStatus(id: string, isActive: boolean): Promise<void>;
+  redeemPromoCode(userId: string, code: string): Promise<{ success: boolean; message?: string; reward?: string }>;
+
+  createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
+  getSupportTickets(): Promise<SupportTicket[]>;
+  updateSupportTicket(id: string, response: string, status: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -43,12 +58,16 @@ export class MemStorage implements IStorage {
   private depositRequests: Map<string, DepositRequest>;
   private withdrawRequests: Map<string, WithdrawRequest>;
   private paymentSettings: PaymentSettings;
+  private promoCodes: Map<string, PromoCode>;
+  private supportTickets: Map<string, SupportTicket>;
 
   constructor() {
     this.users = new Map();
     this.passwordRecoveryRequests = new Map();
     this.depositRequests = new Map();
     this.withdrawRequests = new Map();
+    this.promoCodes = new Map();
+    this.supportTickets = new Map();
 
     const adminId = randomUUID();
     const adminUser: User = {
@@ -204,6 +223,103 @@ export class MemStorage implements IStorage {
       ...settings,
     };
     return this.paymentSettings;
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.password = newPassword;
+      this.users.set(userId, user);
+    }
+  }
+
+  async createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode> {
+    const id = randomUUID();
+    const newPromoCode: PromoCode = {
+      ...promoCode,
+      id,
+      usedCount: 0,
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.promoCodes.set(id, newPromoCode);
+    return newPromoCode;
+  }
+
+  async getPromoCodes(): Promise<PromoCode[]> {
+    return Array.from(this.promoCodes.values());
+  }
+
+  async updatePromoCodeStatus(id: string, isActive: boolean): Promise<void> {
+    const promoCode = this.promoCodes.get(id);
+    if (promoCode) {
+      promoCode.isActive = isActive;
+      this.promoCodes.set(id, promoCode);
+    }
+  }
+
+  async redeemPromoCode(userId: string, code: string): Promise<{ success: boolean; message?: string; reward?: string }> {
+    const promoCode = Array.from(this.promoCodes.values()).find(p => p.code === code);
+    
+    if (!promoCode) {
+      return { success: false, message: "Invalid promo code" };
+    }
+
+    if (!promoCode.isActive) {
+      return { success: false, message: "Promo code is disabled" };
+    }
+
+    if (promoCode.usedCount >= promoCode.usageLimit) {
+      return { success: false, message: "Promo code has reached usage limit" };
+    }
+
+    const user = this.users.get(userId);
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    // Apply reward
+    let reward = "";
+    if (promoCode.type === "balance") {
+      user.balance += promoCode.value;
+      reward = `£${promoCode.value}`;
+    } else if (promoCode.type === "percentage") {
+      const bonus = Math.floor(user.balance * (promoCode.value / 100));
+      user.balance += bonus;
+      reward = `${promoCode.value}% bonus (£${bonus})`;
+    }
+
+    // Update usage count
+    promoCode.usedCount += 1;
+    this.promoCodes.set(promoCode.id, promoCode);
+    this.users.set(userId, user);
+
+    return { success: true, reward };
+  }
+
+  async createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket> {
+    const id = randomUUID();
+    const newTicket: SupportTicket = {
+      ...ticket,
+      id,
+      status: "open",
+      createdAt: new Date(),
+    };
+    this.supportTickets.set(id, newTicket);
+    return newTicket;
+  }
+
+  async getSupportTickets(): Promise<SupportTicket[]> {
+    return Array.from(this.supportTickets.values());
+  }
+
+  async updateSupportTicket(id: string, response: string, status: string): Promise<void> {
+    const ticket = this.supportTickets.get(id);
+    if (ticket) {
+      ticket.response = response;
+      ticket.status = status;
+      this.supportTickets.set(id, ticket);
+    }
   }
 }
 
