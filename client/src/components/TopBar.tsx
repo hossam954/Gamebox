@@ -37,7 +37,7 @@ export default function TopBar({
             <Wallet className="h-5 w-5 text-primary" />
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">Balance</span>
-              <span className="font-mono text-sm font-semibold md:text-base">${balance.toLocaleString()}</span>
+              <span className="font-mono text-sm font-semibold md:text-base">£{balance.toLocaleString()}</span>
             </div>
           </div>
 

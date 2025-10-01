@@ -57,7 +57,7 @@ export default function BetSelector({ selectedBet, onSelectBet, disabled = false
         </h3>
         {selectedBet && (
           <span className="font-mono text-sm font-semibold text-foreground" data-testid="selected-bet">
-            ${selectedBet.toLocaleString()}
+            £{selectedBet.toLocaleString()}
           </span>
         )}
       </div>
@@ -93,7 +93,7 @@ export default function BetSelector({ selectedBet, onSelectBet, disabled = false
               } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
               <span className="text-xs font-medium">BET</span>
-              <span className="text-lg font-bold">${formatBetAmount(amount)}</span>
+              <span className="text-lg font-bold">£{formatBetAmount(amount)}</span>
             </button>
           ))}
         </div>

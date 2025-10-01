@@ -54,7 +54,7 @@ export default function AdminPage() {
     );
     toast({
       title: "Balance updated",
-      description: `User balance updated to $${newBalance.toLocaleString()}`,
+      description: `User balance updated to £${newBalance.toLocaleString()}`,
     });
   };
 

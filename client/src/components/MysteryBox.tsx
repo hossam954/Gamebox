@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Gift, Sparkles } from "lucide-react";
 
 interface MysteryBoxProps {
@@ -7,9 +7,38 @@ interface MysteryBoxProps {
   prize?: number | null;
 }
 
+const getWinTier = (multiplier: number) => {
+  if (multiplier >= 1000) return { label: "PERFECT WIN", color: "text-warning", glow: "shadow-warning" };
+  if (multiplier >= 100) return { label: "MASTER WIN", color: "text-success", glow: "shadow-success" };
+  if (multiplier >= 50) return { label: "EPIC WIN", color: "text-primary", glow: "shadow-primary" };
+  if (multiplier >= 10) return { label: "BIG WIN", color: "text-chart-2", glow: "shadow-chart-2" };
+  return null;
+};
+
 export default function MysteryBox({ isOpening, isOpen, prize }: MysteryBoxProps) {
+  const [showWinTier, setShowWinTier] = useState(false);
+  const winTier = prize && prize >= 10 ? getWinTier(prize) : null;
+
+  useEffect(() => {
+    if (isOpen && winTier) {
+      setShowWinTier(true);
+    } else {
+      setShowWinTier(false);
+    }
+  }, [isOpen, winTier]);
+
   return (
     <div className="relative flex flex-col items-center justify-center" data-testid="mystery-box">
+      {showWinTier && winTier && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center">
+          <div className="animate-scale-in rounded-lg bg-background/95 p-8 backdrop-blur">
+            <div className={`font-display text-6xl font-black ${winTier.color} animate-pulse drop-shadow-lg`}>
+              {winTier.label}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative">
         {!isOpen && (
           <div

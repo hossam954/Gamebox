@@ -55,7 +55,7 @@ export default function WalletModal({ isOpen, onClose, balance, transactions }: 
           <div className="rounded-lg border border-card-border bg-card p-6">
             <div className="mb-2 text-sm text-muted-foreground">Current Balance</div>
             <div className="font-mono text-4xl font-bold" data-testid="wallet-balance">
-              ${balance.toLocaleString()}
+              £{balance.toLocaleString()}
             </div>
           </div>
 
@@ -70,7 +70,7 @@ export default function WalletModal({ isOpen, onClose, balance, transactions }: 
                   onClick={() => handleQuickDeposit(amount)}
                   data-testid={`quick-deposit-${amount}`}
                 >
-                  ${amount}
+                  £{amount}
                 </Button>
               ))}
             </div>
@@ -132,7 +132,7 @@ export default function WalletModal({ isOpen, onClose, balance, transactions }: 
                           : "text-primary"
                       }`}
                     >
-                      {transaction.type === "win" ? "+" : transaction.type === "loss" ? "-" : "+"}$
+                      {transaction.type === "win" ? "+" : transaction.type === "loss" ? "-" : "+"}£
                       {transaction.amount.toLocaleString()}
                     </div>
                   </div>

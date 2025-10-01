@@ -71,7 +71,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="stat-total-balance">
-                ${totalBalance.toLocaleString()}
+                £{totalBalance.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Across all accounts</p>
             </CardContent>
@@ -133,7 +133,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         <TableCell className="font-medium">{user.username}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell className="text-right font-mono">
-                          ${user.balance.toLocaleString()}
+                          £{user.balance.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="text-success">{user.totalWins}</span> /{" "}

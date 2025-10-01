@@ -77,7 +77,7 @@ export default function GamePage() {
         ]);
         toast({
           title: `You won ${prizeMultiplier}x!`,
-          description: `+$${winnings.toLocaleString()}`,
+          description: `+£${winnings.toLocaleString()}`,
           className: "bg-success text-success-foreground",
         });
       } else {
@@ -92,7 +92,7 @@ export default function GamePage() {
         ]);
         toast({
           title: "Better luck next time!",
-          description: `Lost $${selectedBet!.toLocaleString()}`,
+          description: `Lost £${selectedBet!.toLocaleString()}`,
           variant: "destructive",
         });
       }
