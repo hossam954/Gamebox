@@ -116,11 +116,13 @@ export default function LoginPage() {
             </Button>
 
             <div className="space-y-2 text-center text-sm">
-              <Link href="/password-recovery">
-                <a className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
-                  Forgot your password?
-                </a>
-              </Link>
+              <div>
+                <Link href="/password-recovery">
+                  <a className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
+                    Forgot your password?
+                  </a>
+                </Link>
+              </div>
 
               <div>
                 <span className="text-muted-foreground">Don't have an account? </span>
