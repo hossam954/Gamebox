@@ -508,17 +508,19 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         </div>
 
         {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 bg-white dark:bg-slate-800 shadow-lg rounded-lg p-1">
-            <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md">Overview</TabsTrigger>
-            <TabsTrigger value="users" data-testid="tab-users" className="rounded-md">Users</TabsTrigger>
-            <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md">Deposits</TabsTrigger>
-            <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md">Withdrawals</TabsTrigger>
-            <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md">Recovery</TabsTrigger>
-            <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md">Promo Codes</TabsTrigger>
-            <TabsTrigger value="support" data-testid="tab-support" className="rounded-md">Support</TabsTrigger>
-            <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md">Settings</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+            <TabsList className="grid w-full grid-cols-8 bg-slate-100 dark:bg-slate-700 rounded-lg p-2 gap-2">
+              <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md py-3 font-medium transition-all duration-200">Overview</TabsTrigger>
+              <TabsTrigger value="users" data-testid="tab-users" className="rounded-md py-3 font-medium transition-all duration-200">Users</TabsTrigger>
+              <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md py-3 font-medium transition-all duration-200">Deposits</TabsTrigger>
+              <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md py-3 font-medium transition-all duration-200">Withdrawals</TabsTrigger>
+              <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md py-3 font-medium transition-all duration-200">Recovery</TabsTrigger>
+              <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md py-3 font-medium transition-all duration-200">Promo Codes</TabsTrigger>
+              <TabsTrigger value="support" data-testid="tab-support" className="rounded-md py-3 font-medium transition-all duration-200">Support</TabsTrigger>
+              <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md py-3 font-medium transition-all duration-200">Settings</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -580,24 +582,26 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </div>
           </TabsContent>
 
-          <TabsContent value="users">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+          <TabsContent value="users" className="space-y-6">
+            <Card className="shadow-lg border-2 border-blue-100 dark:border-blue-800">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                    <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                  </div>
                   User Management
                 </CardTitle>
-                <CardDescription>View and manage user accounts</CardDescription>
+                <CardDescription className="text-base mt-2">View and manage user accounts, balances, and status</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="mb-6">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <CardContent className="p-8">
+                <div className="mb-8">
+                  <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search by username or email..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 bg-white dark:bg-slate-800"
+                      className="pl-10 h-12 text-base bg-white dark:bg-slate-800 border-2 focus:border-blue-400"
                       data-testid="input-search-users"
                     />
                   </div>
@@ -640,40 +644,50 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex justify-end gap-1">
+                              <div className="flex justify-end gap-2">
                                 <Button
                                   size="sm"
-                                  variant="ghost"
+                                  variant="outline"
                                   onClick={() => {
                                     const newBalance = prompt("Enter new balance:", user.balance.toString());
                                     if (newBalance) onEditBalance(user.id, parseFloat(newBalance));
                                   }}
                                   data-testid={`button-edit-${user.id}`}
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="ghost"
+                                  variant="outline"
                                   onClick={() => onSuspendUser(user.id)}
                                   data-testid={`button-suspend-${user.id}`}
-                                  className="h-8 w-8 p-0"
+                                  className={`h-9 px-3 ${user.status === "active" 
+                                    ? "bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700" 
+                                    : "bg-green-50 hover:bg-green-100 border-green-200 text-green-700"}`}
                                 >
                                   {user.status === "active" ? (
-                                    <ShieldOff className="h-4 w-4 text-orange-600" />
+                                    <>
+                                      <ShieldOff className="h-4 w-4 mr-1" />
+                                      Suspend
+                                    </>
                                   ) : (
-                                    <Shield className="h-4 w-4 text-green-600" />
+                                    <>
+                                      <Shield className="h-4 w-4 mr-1" />
+                                      Activate
+                                    </>
                                   )}
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="ghost"
+                                  variant="outline"
                                   onClick={() => onDeleteUser(user.id)}
                                   data-testid={`button-delete-${user.id}`}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  className="h-9 px-3 bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
                                 </Button>
                               </div>
                             </TableCell>
@@ -730,24 +744,26 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             </TableCell>
                             <TableCell className="text-right">
                               {request.status === "pending" && (
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-3">
                                   <Button
                                     size="sm"
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => handleDepositAction(request.id, "approve")}
                                     data-testid={`button-approve-deposit-${request.id}`}
-                                    className="h-8 text-green-600 hover:text-green-700"
+                                    className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
                                   >
-                                    <Check className="h-4 w-4" />
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
                                   </Button>
                                   <Button
                                     size="sm"
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => handleDepositAction(request.id, "reject")}
                                     data-testid={`button-reject-deposit-${request.id}`}
-                                    className="h-8 text-red-600 hover:text-red-700"
+                                    className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
                                   >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
                                   </Button>
                                 </div>
                               )}
@@ -807,24 +823,26 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             </TableCell>
                             <TableCell className="text-right">
                               {request.status === "pending" && (
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-3">
                                   <Button
                                     size="sm"
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => handleWithdrawAction(request.id, "approve")}
                                     data-testid={`button-approve-withdraw-${request.id}`}
-                                    className="h-8 text-green-600 hover:text-green-700"
+                                    className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
                                   >
-                                    <Check className="h-4 w-4" />
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
                                   </Button>
                                   <Button
                                     size="sm"
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => handleWithdrawAction(request.id, "reject")}
                                     data-testid={`button-reject-withdraw-${request.id}`}
-                                    className="h-8 text-red-600 hover:text-red-700"
+                                    className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
                                   >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
                                   </Button>
                                 </div>
                               )}
@@ -839,58 +857,74 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </Card>
           </TabsContent>
 
-          <TabsContent value="recovery">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Link2 className="h-5 w-5 text-blue-600" />
+          <TabsContent value="recovery" className="space-y-6">
+            <Card className="shadow-lg border-2 border-purple-100 dark:border-purple-800">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                    <Link2 className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                  </div>
                   Password Recovery Requests
                 </CardTitle>
-                <CardDescription>Generate reset links for password recovery</CardDescription>
+                <CardDescription className="text-base mt-2">Review and generate reset links for password recovery</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-8">
+                <div className="space-y-6">
                   {passwordRecoveryRequests.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                      No password recovery requests
-                    </p>
+                    <div className="py-12 text-center">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg inline-block mb-4">
+                        <Link2 className="h-12 w-12 text-gray-400 mx-auto" />
+                      </div>
+                      <p className="text-lg text-muted-foreground">No password recovery requests</p>
+                      <p className="text-sm text-muted-foreground mt-2">Recovery requests will appear here when users submit them</p>
+                    </div>
                   ) : (
-                    passwordRecoveryRequests.map((request) => (
-                      <div key={request.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2">
-                            <div className="font-semibold text-lg">{request.username}</div>
-                            <div className="text-sm text-muted-foreground">{request.email}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(request.createdAt).toLocaleString()}
+                    passwordRecoveryRequests.map((request, index) => (
+                      <div key={request.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="flex items-start justify-between pb-4 border-b border-gray-200 dark:border-gray-600">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-medium text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">#{index + 1}</span>
+                              <div className="font-bold text-xl text-gray-900 dark:text-gray-100">{request.username}</div>
+                            </div>
+                            <div className="text-base text-gray-600 dark:text-gray-300 font-medium">{request.email}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              Submitted: {new Date(request.createdAt).toLocaleString()}
                             </div>
                           </div>
-                          <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
-                            {request.status}
+                          <Badge 
+                            variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}
+                            className="text-sm px-3 py-1"
+                          >
+                            {request.status.toUpperCase()}
                           </Badge>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
-                          <span className="text-sm font-medium text-muted-foreground">Message: </span>
-                          <p className="text-sm mt-1">{request.message}</p>
+                        
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">User Message:</span>
+                          </div>
+                          <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">{request.message}</p>
                         </div>
+                        
                         {request.status === "pending" && (
-                          <div className="flex gap-3 pt-2">
+                          <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                             <Button
                               onClick={() => handlePasswordRecoveryAction(request.id, "approve")}
                               data-testid={`button-approve-recovery-${request.id}`}
-                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-6 py-3 text-base font-medium shadow-lg"
                             >
-                              <Link2 className="mr-2 h-4 w-4" />
+                              <Link2 className="mr-2 h-5 w-5" />
                               Generate Reset Link
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => handlePasswordRecoveryAction(request.id, "reject")}
                               data-testid={`button-reject-recovery-${request.id}`}
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                              className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 px-6 py-3 text-base font-medium"
                             >
-                              <X className="mr-2 h-4 w-4" />
-                              Reject
+                              <X className="mr-2 h-5 w-5" />
+                              Reject Request
                             </Button>
                           </div>
                         )}
