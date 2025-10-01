@@ -33,7 +33,12 @@ export default function LoginPage() {
           description: "Successfully logged in",
         });
         localStorage.setItem("userId", data.userId);
-        setLocation("/");
+        localStorage.setItem("username", data.username);
+        if (data.isAdmin) {
+          setLocation("/admin");
+        } else {
+          setLocation("/");
+        }
       } else {
         toast({
           title: "Login failed",

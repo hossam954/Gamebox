@@ -54,6 +54,7 @@ export default function RegisterPage() {
           description: "Welcome to Mystery Box. Starting balance: £1,000",
         });
         localStorage.setItem("userId", data.userId);
+        localStorage.setItem("username", username);
         setLocation("/");
       } else {
         toast({

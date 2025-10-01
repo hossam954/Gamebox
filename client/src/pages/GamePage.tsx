@@ -1,23 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/TopBar";
 import MysteryBox from "@/components/MysteryBox";
 import BetSelector from "@/components/BetSelector";
-import AuthModal from "@/components/AuthModal";
 import WalletModal from "@/components/WalletModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  balance: number;
+  isAdmin: boolean;
+}
+
 export default function GamePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [, setLocation] = useLocation();
+  const [userId, setUserId] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [balance, setBalance] = useState(10000);
+  const [balance, setBalance] = useState(1000);
+  const [username, setUsername] = useState("");
   const [selectedBet, setSelectedBet] = useState<number | null>(null);
   const [isOpening, setIsOpening] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [prize, setPrize] = useState<number | null | undefined>(undefined);
   const [transactions, setTransactions] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    const storedUsername = localStorage.getItem("username");
+    if (!storedUserId) {
+      setLocation("/login");
+    } else {
+      setUserId(storedUserId);
+      setUsername(storedUsername || "");
+    }
+  }, [setLocation]);
 
   const handleOpenBox = () => {
     if (!selectedBet) {
@@ -105,13 +126,23 @@ export default function GamePage() {
     setPrize(undefined);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    setLocation("/login");
+  };
+
+  if (!userId) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar
         balance={balance}
         onWalletClick={() => setShowWalletModal(true)}
         onSupportClick={() => toast({ title: "Support", description: "Contact support feature coming soon!" })}
-        onSettingsClick={() => toast({ title: "Settings", description: "Settings panel coming soon!" })}
+        onSettingsClick={handleLogout}
         onNotificationsClick={() => toast({ title: "Notifications", description: "No new notifications" })}
         hasNotifications={false}
       />
@@ -150,28 +181,13 @@ export default function GamePage() {
         </div>
       </div>
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onLogin={(username, password) => {
-          console.log("Login:", username, password);
-          setIsAuthenticated(true);
-          setShowAuthModal(false);
-          toast({ title: "Welcome back!", description: "Successfully logged in" });
-        }}
-        onRegister={(username, email, password) => {
-          console.log("Register:", username, email, password);
-          setIsAuthenticated(true);
-          setShowAuthModal(false);
-          toast({ title: "Account created!", description: "Welcome to Mystery Box" });
-        }}
-      />
-
       <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
         balance={balance}
         transactions={transactions}
+        userId={userId}
+        username={username}
       />
     </div>
   );
