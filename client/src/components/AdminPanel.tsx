@@ -338,7 +338,6 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
       if (response.ok) {
         if (action === "approve") {
-          // Copy reset link to clipboard
           navigator.clipboard.writeText(resetLink);
           toast({
             title: "Reset link generated",
@@ -376,7 +375,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         });
         fetchDepositRequests();
         if (action === "approve") {
-          fetchUsers(); // Refresh user data after balance update
+          fetchUsers();
         }
       }
     } catch (error) {
@@ -403,7 +402,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         });
         fetchWithdrawRequests();
         if (action === "approve") {
-          fetchUsers(); // Refresh user data after balance update
+          fetchUsers();
         }
       }
     } catch (error) {
@@ -431,828 +430,846 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     supportTickets.filter((t) => t.status === "open").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6" data-testid="admin-panel">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4" data-testid="admin-panel">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Admin Dashboard
+            <h1 className="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              لوحة تحكم الإدارة
             </h1>
-            <p className="text-lg text-muted-foreground mt-2">Manage users, payments, and platform settings</p>
+            <p className="text-base md:text-lg text-muted-foreground mt-2">إدارة المستخدمين والمدفوعات وإعدادات المنصة</p>
           </div>
           <Button 
             onClick={fetchAllData} 
             disabled={isLoading}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 w-full md:w-auto"
+            size="lg"
           >
-            {isLoading ? "Refreshing..." : "Refresh Data"}
+            {isLoading ? "جاري التحديث..." : "تحديث البيانات"}
           </Button>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">إجمالي المستخدمين</CardTitle>
               <Users className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-900 dark:text-blue-100" data-testid="stat-total-users">
+              <div className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100" data-testid="stat-total-users">
                 {displayUsers.length}
               </div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">
-                {activeUsers} active • {suspendedUsers} suspended
+              <p className="text-xs md:text-sm text-blue-600 dark:text-blue-400">
+                {activeUsers} نشط • {suspendedUsers} معلق
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Total Balance</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">إجمالي الرصيد</CardTitle>
               <Wallet className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-900 dark:text-green-100" data-testid="stat-total-balance">
+              <div className="text-2xl md:text-3xl font-bold text-green-900 dark:text-green-100" data-testid="stat-total-balance">
                 £{totalBalance.toLocaleString()}
               </div>
-              <p className="text-sm text-green-600 dark:text-green-400">Across all accounts</p>
+              <p className="text-xs md:text-sm text-green-600 dark:text-green-400">عبر جميع الحسابات</p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Pending Requests</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">الطلبات المعلقة</CardTitle>
               <Settings className="h-5 w-5 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">
+              <div className="text-2xl md:text-3xl font-bold text-orange-900 dark:text-orange-100">
                 {pendingRequests}
               </div>
-              <p className="text-sm text-orange-600 dark:text-orange-400">Require attention</p>
+              <p className="text-xs md:text-sm text-orange-600 dark:text-orange-400">تتطلب انتباه</p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Today's Activity</CardTitle>
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">النشاط اليومي</CardTitle>
               <Eye className="h-5 w-5 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+              <div className="text-2xl md:text-3xl font-bold text-purple-900 dark:text-purple-100">
                 {depositRequests.length + withdrawRequests.length}
               </div>
-              <p className="text-sm text-purple-600 dark:text-purple-400">Total transactions</p>
+              <p className="text-xs md:text-sm text-purple-600 dark:text-purple-400">إجمالي المعاملات</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-            <TabsList className="grid w-full grid-cols-8 bg-slate-100 dark:bg-slate-700 rounded-lg p-2 gap-2">
-              <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md py-3 font-medium transition-all duration-200">Overview</TabsTrigger>
-              <TabsTrigger value="users" data-testid="tab-users" className="rounded-md py-3 font-medium transition-all duration-200">Users</TabsTrigger>
-              <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md py-3 font-medium transition-all duration-200">Deposits</TabsTrigger>
-              <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md py-3 font-medium transition-all duration-200">Withdrawals</TabsTrigger>
-              <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md py-3 font-medium transition-all duration-200">Recovery</TabsTrigger>
-              <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md py-3 font-medium transition-all duration-200">Promo Codes</TabsTrigger>
-              <TabsTrigger value="support" data-testid="tab-support" className="rounded-md py-3 font-medium transition-all duration-200">Support</TabsTrigger>
-              <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md py-3 font-medium transition-all duration-200">Settings</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Recent Users
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {displayUsers.slice(0, 5).map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <div>
-                          <p className="font-medium">{user.username}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono font-bold">£{user.balance.toLocaleString()}</p>
-                          <Badge variant={user.status === "active" ? "default" : "destructive"} className="text-xs">
-                            {user.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Recent Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[...depositRequests, ...withdrawRequests].slice(0, 5).map((request) => (
-                      <div key={request.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <div>
-                          <p className="font-medium">{request.username}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {depositRequests.includes(request) ? "Deposit" : "Withdrawal"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono font-bold">£{request.amount?.toLocaleString()}</p>
-                          <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"} className="text-xs">
-                            {request.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="overflow-x-auto">
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-slate-100 dark:bg-slate-700 rounded-lg p-2 gap-1 min-w-max">
+                  <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">نظرة عامة</TabsTrigger>
+                  <TabsTrigger value="users" data-testid="tab-users" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">المستخدمين</TabsTrigger>
+                  <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الإيداعات</TabsTrigger>
+                  <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">السحوبات</TabsTrigger>
+                  <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">استرداد كلمة المرور</TabsTrigger>
+                  <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">أكواد الخصم</TabsTrigger>
+                  <TabsTrigger value="support" data-testid="tab-support" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الدعم الفني</TabsTrigger>
+                  <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الإعدادات</TabsTrigger>
+                </TabsList>
+              </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
-            <Card className="shadow-lg border-2 border-blue-100 dark:border-blue-800">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                    <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-                  </div>
-                  User Management
-                </CardTitle>
-                <CardDescription className="text-base mt-2">View and manage user accounts, balances, and status</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="mb-8">
-                  <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by username or email..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-12 text-base bg-white dark:bg-slate-800 border-2 focus:border-blue-400"
-                      data-testid="input-search-users"
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-card-border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
-                      <TableRow>
-                        <TableHead className="font-semibold">Username</TableHead>
-                        <TableHead className="font-semibold">Email</TableHead>
-                        <TableHead className="text-right font-semibold">Balance</TableHead>
-                        <TableHead className="text-right font-semibold">Wins/Losses</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="text-right font-semibold">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                            No users found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredUsers.map((user) => (
-                          <TableRow key={user.id} data-testid={`user-row-${user.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <TableCell className="font-medium">{user.username}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell className="text-right font-mono font-bold">
-                              £{user.balance.toLocaleString()}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <span className="text-green-600 font-semibold">{user.totalWins || 0}</span> /{" "}
-                              <span className="text-red-600 font-semibold">{user.totalLosses || 0}</span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={user.status === "active" ? "default" : "destructive"}>
-                                {user.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    const newBalance = prompt("Enter new balance:", user.balance.toString());
-                                    if (newBalance) onEditBalance(user.id, parseFloat(newBalance));
-                                  }}
-                                  data-testid={`button-edit-${user.id}`}
-                                  className="h-9 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => onSuspendUser(user.id)}
-                                  data-testid={`button-suspend-${user.id}`}
-                                  className={`h-9 px-3 ${user.status === "active" 
-                                    ? "bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700" 
-                                    : "bg-green-50 hover:bg-green-100 border-green-200 text-green-700"}`}
-                                >
-                                  {user.status === "active" ? (
-                                    <>
-                                      <ShieldOff className="h-4 w-4 mr-1" />
-                                      Suspend
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Shield className="h-4 w-4 mr-1" />
-                                      Activate
-                                    </>
-                                  )}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => onDeleteUser(user.id)}
-                                  data-testid={`button-delete-${user.id}`}
-                                  className="h-9 px-3 bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="deposits">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-green-600" />
-                  Deposit Requests
-                </CardTitle>
-                <CardDescription>Approve or reject deposit requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border border-card-border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
-                      <TableRow>
-                        <TableHead className="font-semibold">Username</TableHead>
-                        <TableHead className="text-right font-semibold">Amount</TableHead>
-                        <TableHead className="font-semibold">Date</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="text-right font-semibold">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {depositRequests.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                            No deposit requests
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        depositRequests.map((request) => (
-                          <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <TableCell className="font-medium">{request.username}</TableCell>
-                            <TableCell className="text-right font-mono font-bold text-green-600">
-                              £{request.amount?.toLocaleString()}
-                            </TableCell>
-                            <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
-                                {request.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {request.status === "pending" && (
-                                <div className="flex justify-end gap-3">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleDepositAction(request.id, "approve")}
-                                    data-testid={`button-approve-deposit-${request.id}`}
-                                    className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleDepositAction(request.id, "reject")}
-                                    data-testid={`button-reject-deposit-${request.id}`}
-                                    className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="withdrawals">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-red-600" />
-                  Withdrawal Requests
-                </CardTitle>
-                <CardDescription>Approve or reject withdrawal requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border border-card-border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-slate-50 dark:bg-slate-800">
-                      <TableRow>
-                        <TableHead className="font-semibold">Username</TableHead>
-                        <TableHead className="text-right font-semibold">Amount</TableHead>
-                        <TableHead className="font-semibold">Address</TableHead>
-                        <TableHead className="font-semibold">Date</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="text-right font-semibold">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {withdrawRequests.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                            No withdrawal requests
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        withdrawRequests.map((request) => (
-                          <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <TableCell className="font-medium">{request.username}</TableCell>
-                            <TableCell className="text-right font-mono font-bold text-red-600">
-                              £{request.amount?.toLocaleString()}
-                            </TableCell>
-                            <TableCell className="font-mono text-xs max-w-32 truncate">{request.address}</TableCell>
-                            <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
-                                {request.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {request.status === "pending" && (
-                                <div className="flex justify-end gap-3">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleWithdrawAction(request.id, "approve")}
-                                    data-testid={`button-approve-withdraw-${request.id}`}
-                                    className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleWithdrawAction(request.id, "reject")}
-                                    data-testid={`button-reject-withdraw-${request.id}`}
-                                    className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="recovery" className="space-y-6">
-            <Card className="shadow-lg border-2 border-purple-100 dark:border-purple-800">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
-                    <Link2 className="h-6 w-6 text-purple-600 dark:text-purple-300" />
-                  </div>
-                  Password Recovery Requests
-                </CardTitle>
-                <CardDescription className="text-base mt-2">Review and generate reset links for password recovery</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="space-y-6">
-                  {passwordRecoveryRequests.length === 0 ? (
-                    <div className="py-12 text-center">
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg inline-block mb-4">
-                        <Link2 className="h-12 w-12 text-gray-400 mx-auto" />
-                      </div>
-                      <p className="text-lg text-muted-foreground">No password recovery requests</p>
-                      <p className="text-sm text-muted-foreground mt-2">Recovery requests will appear here when users submit them</p>
-                    </div>
-                  ) : (
-                    passwordRecoveryRequests.map((request, index) => (
-                      <div key={request.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div className="flex items-start justify-between pb-4 border-b border-gray-200 dark:border-gray-600">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-medium text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">#{index + 1}</span>
-                              <div className="font-bold text-xl text-gray-900 dark:text-gray-100">{request.username}</div>
+            <div className="p-6">
+              <TabsContent value="overview" className="space-y-6 mt-0">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        أحدث المستخدمين
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {displayUsers.slice(0, 5).map((user) => (
+                          <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div>
+                              <p className="font-medium">{user.username}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
-                            <div className="text-base text-gray-600 dark:text-gray-300 font-medium">{request.email}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              Submitted: {new Date(request.createdAt).toLocaleString()}
+                            <div className="text-right">
+                              <p className="font-mono font-bold">£{user.balance.toLocaleString()}</p>
+                              <Badge variant={user.status === "active" ? "default" : "destructive"} className="text-xs">
+                                {user.status === "active" ? "نشط" : "معلق"}
+                              </Badge>
                             </div>
                           </div>
-                          <Badge 
-                            variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}
-                            className="text-sm px-3 py-1"
-                          >
-                            {request.status.toUpperCase()}
-                          </Badge>
-                        </div>
-                        
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">User Message:</span>
-                          </div>
-                          <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">{request.message}</p>
-                        </div>
-                        
-                        {request.status === "pending" && (
-                          <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                            <Button
-                              onClick={() => handlePasswordRecoveryAction(request.id, "approve")}
-                              data-testid={`button-approve-recovery-${request.id}`}
-                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-6 py-3 text-base font-medium shadow-lg"
-                            >
-                              <Link2 className="mr-2 h-5 w-5" />
-                              Generate Reset Link
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => handlePasswordRecoveryAction(request.id, "reject")}
-                              data-testid={`button-reject-recovery-${request.id}`}
-                              className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 px-6 py-3 text-base font-medium"
-                            >
-                              <X className="mr-2 h-5 w-5" />
-                              Reject Request
-                            </Button>
-                          </div>
-                        )}
+                        ))}
                       </div>
-                    ))
-                  )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Settings className="h-5 w-5" />
+                        النشاط الأخير
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {[...depositRequests, ...withdrawRequests].slice(0, 5).map((request) => (
+                          <div key={request.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div>
+                              <p className="font-medium">{request.username}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {depositRequests.includes(request) ? "إيداع" : "سحب"}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-mono font-bold">£{request.amount?.toLocaleString()}</p>
+                              <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"} className="text-xs">
+                                {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="promo">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Gift className="h-5 w-5 text-purple-600" />
-                  Promo Code Management
-                </CardTitle>
-                <CardDescription>Create and manage promotional codes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="promoCode">Promo Code</Label>
-                      <Input
-                        id="promoCode"
-                        placeholder="WELCOME50"
-                        value={newPromoCode}
-                        onChange={(e) => setNewPromoCode(e.target.value)}
-                        data-testid="input-promo-code"
-                      />
+              <TabsContent value="users" className="space-y-6 mt-0">
+                <Card className="shadow-lg border-2 border-blue-100 dark:border-blue-800">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                        <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                      </div>
+                      إدارة المستخدمين
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">عرض وإدارة حسابات المستخدمين والأرصدة والحالة</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="mb-6">
+                      <div className="relative max-w-md">
+                        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          placeholder="البحث باسم المستخدم أو البريد الإلكتروني..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 h-12 text-base bg-white dark:bg-slate-800 border-2 focus:border-blue-400"
+                          data-testid="input-search-users"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="promoValue">Value</Label>
-                      <Input
-                        id="promoValue"
-                        type="number"
-                        placeholder="50"
-                        value={newPromoValue}
-                        onChange={(e) => setNewPromoValue(e.target.value)}
-                        data-testid="input-promo-value"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="promoType">Type</Label>
-                      <select 
-                        id="promoType"
-                        value={newPromoType}
-                        onChange={(e) => setNewPromoType(e.target.value as "balance" | "percentage")}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="balance">Balance (£)</option>
-                        <option value="percentage">Percentage (%)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="promoLimit">Usage Limit</Label>
-                      <Input
-                        id="promoLimit"
-                        type="number"
-                        placeholder="100"
-                        value={newPromoLimit}
-                        onChange={(e) => setNewPromoLimit(e.target.value)}
-                        data-testid="input-promo-limit"
-                      />
-                    </div>
-                  </div>
-                  <Button onClick={handleCreatePromoCode} data-testid="button-create-promo">
-                    Create Promo Code
-                  </Button>
 
-                  <div className="rounded-lg border border-card-border overflow-hidden">
-                    <Table>
-                      <TableHeader className="bg-slate-50 dark:bg-slate-800">
-                        <TableRow>
-                          <TableHead className="font-semibold">Code</TableHead>
-                          <TableHead className="font-semibold">Value</TableHead>
-                          <TableHead className="font-semibold">Type</TableHead>
-                          <TableHead className="text-right font-semibold">Used/Limit</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="text-right font-semibold">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {promoCodes.length === 0 ? (
+                    <div className="rounded-lg border border-card-border overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-slate-50 dark:bg-slate-800">
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                              No promo codes created
-                            </TableCell>
+                            <TableHead className="font-semibold">اسم المستخدم</TableHead>
+                            <TableHead className="font-semibold">البريد الإلكتروني</TableHead>
+                            <TableHead className="text-right font-semibold">الرصيد</TableHead>
+                            <TableHead className="text-right font-semibold">مكاسب/خسائر</TableHead>
+                            <TableHead className="font-semibold">الحالة</TableHead>
+                            <TableHead className="text-right font-semibold">الإجراءات</TableHead>
                           </TableRow>
-                        ) : (
-                          promoCodes.map((promo) => (
-                            <TableRow key={promo.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                              <TableCell className="font-mono font-bold">{promo.code}</TableCell>
-                              <TableCell>
-                                {promo.value}{promo.type === "percentage" ? "%" : "£"}
-                              </TableCell>
-                              <TableCell className="capitalize">{promo.type}</TableCell>
-                              <TableCell className="text-right">
-                                {promo.usedCount}/{promo.usageLimit}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant={promo.isActive ? "default" : "destructive"}>
-                                  {promo.isActive ? "Active" : "Inactive"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleTogglePromoCode(promo.id, promo.isActive)}
-                                  data-testid={`button-toggle-promo-${promo.id}`}
-                                >
-                                  {promo.isActive ? "Disable" : "Enable"}
-                                </Button>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                لا توجد مستخدمين
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                          ) : (
+                            filteredUsers.map((user) => (
+                              <TableRow key={user.id} data-testid={`user-row-${user.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <TableCell className="font-medium">{user.username}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell className="text-right font-mono font-bold">
+                                  £{user.balance.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <span className="text-green-600 font-semibold">{user.totalWins || 0}</span> /{" "}
+                                  <span className="text-red-600 font-semibold">{user.totalLosses || 0}</span>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={user.status === "active" ? "default" : "destructive"}>
+                                    {user.status === "active" ? "نشط" : "معلق"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        const newBalance = prompt("أدخل الرصيد الجديد:", user.balance.toString());
+                                        if (newBalance) onEditBalance(user.id, parseFloat(newBalance));
+                                      }}
+                                      data-testid={`button-edit-${user.id}`}
+                                      className="h-9 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      تعديل
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onSuspendUser(user.id)}
+                                      data-testid={`button-suspend-${user.id}`}
+                                      className={`h-9 px-3 ${user.status === "active" 
+                                        ? "bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700" 
+                                        : "bg-green-50 hover:bg-green-100 border-green-200 text-green-700"}`}
+                                    >
+                                      {user.status === "active" ? (
+                                        <>
+                                          <ShieldOff className="h-4 w-4 mr-1" />
+                                          تعليق
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Shield className="h-4 w-4 mr-1" />
+                                          تفعيل
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onDeleteUser(user.id)}
+                                      data-testid={`button-delete-${user.id}`}
+                                      className="h-9 px-3 bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      حذف
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="support">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5 text-blue-600" />
-                  Support Management
-                </CardTitle>
-                <CardDescription>Manage user support tickets and communications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {supportTickets.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                      No support tickets
-                    </p>
-                  ) : (
-                    supportTickets.map((ticket) => (
-                      <div key={ticket.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2">
-                            <div className="font-semibold text-lg">{ticket.subject}</div>
-                            <div className="text-sm text-muted-foreground">From: {ticket.username}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(ticket.createdAt).toLocaleString()}
+              <TabsContent value="deposits" className="mt-0">
+                <Card className="shadow-lg border-2 border-green-100 dark:border-green-800">
+                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                        <Wallet className="h-6 w-6 text-green-600 dark:text-green-300" />
+                      </div>
+                      طلبات الإيداع
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">مراجعة والموافقة على أو رفض طلبات الإيداع</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="rounded-lg border border-card-border overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                          <TableRow>
+                            <TableHead className="font-semibold">اسم المستخدم</TableHead>
+                            <TableHead className="text-right font-semibold">المبلغ</TableHead>
+                            <TableHead className="font-semibold">التاريخ</TableHead>
+                            <TableHead className="font-semibold">الحالة</TableHead>
+                            <TableHead className="text-right font-semibold">الإجراءات</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {depositRequests.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                لا توجد طلبات إيداع
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            depositRequests.map((request) => (
+                              <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <TableCell className="font-medium">{request.username}</TableCell>
+                                <TableCell className="text-right font-mono font-bold text-green-600">
+                                  £{request.amount?.toLocaleString()}
+                                </TableCell>
+                                <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell>
+                                  <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
+                                    {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {request.status === "pending" && (
+                                    <div className="flex justify-end gap-3">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleDepositAction(request.id, "approve")}
+                                        data-testid={`button-approve-deposit-${request.id}`}
+                                        className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
+                                      >
+                                        <Check className="h-4 w-4 mr-1" />
+                                        موافق
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleDepositAction(request.id, "reject")}
+                                        data-testid={`button-reject-deposit-${request.id}`}
+                                        className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
+                                      >
+                                        <X className="h-4 w-4 mr-1" />
+                                        رفض
+                                      </Button>
+                                    </div>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="withdrawals" className="mt-0">
+                <Card className="shadow-lg border-2 border-red-100 dark:border-red-800">
+                  <CardHeader className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
+                        <Wallet className="h-6 w-6 text-red-600 dark:text-red-300" />
+                      </div>
+                      طلبات السحب
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">مراجعة والموافقة على أو رفض طلبات السحب</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="rounded-lg border border-card-border overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                          <TableRow>
+                            <TableHead className="font-semibold">اسم المستخدم</TableHead>
+                            <TableHead className="text-right font-semibold">المبلغ</TableHead>
+                            <TableHead className="font-semibold">العنوان</TableHead>
+                            <TableHead className="font-semibold">التاريخ</TableHead>
+                            <TableHead className="font-semibold">الحالة</TableHead>
+                            <TableHead className="text-right font-semibold">الإجراءات</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {withdrawRequests.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                لا توجد طلبات سحب
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            withdrawRequests.map((request) => (
+                              <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <TableCell className="font-medium">{request.username}</TableCell>
+                                <TableCell className="text-right font-mono font-bold text-red-600">
+                                  £{request.amount?.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="font-mono text-xs max-w-32 truncate">{request.address}</TableCell>
+                                <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell>
+                                  <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}>
+                                    {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {request.status === "pending" && (
+                                    <div className="flex justify-end gap-3">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleWithdrawAction(request.id, "approve")}
+                                        data-testid={`button-approve-withdraw-${request.id}`}
+                                        className="h-9 px-4 bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium"
+                                      >
+                                        <Check className="h-4 w-4 mr-1" />
+                                        موافق
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleWithdrawAction(request.id, "reject")}
+                                        data-testid={`button-reject-withdraw-${request.id}`}
+                                        className="h-9 px-4 bg-red-50 hover:bg-red-100 border-red-200 text-red-700 font-medium"
+                                      >
+                                        <X className="h-4 w-4 mr-1" />
+                                        رفض
+                                      </Button>
+                                    </div>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="recovery" className="mt-0">
+                <Card className="shadow-lg border-2 border-purple-100 dark:border-purple-800">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                        <Link2 className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                      </div>
+                      طلبات استرداد كلمة المرور
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">مراجعة وإنشاء روابط إعادة تعيين كلمة المرور</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      {passwordRecoveryRequests.length === 0 ? (
+                        <div className="py-12 text-center">
+                          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg inline-block mb-4">
+                            <Link2 className="h-12 w-12 text-gray-400 mx-auto" />
+                          </div>
+                          <p className="text-lg text-muted-foreground">لا توجد طلبات استرداد كلمة مرور</p>
+                          <p className="text-sm text-muted-foreground mt-2">ستظهر طلبات الاسترداد هنا عندما يقدمها المستخدمون</p>
+                        </div>
+                      ) : (
+                        passwordRecoveryRequests.map((request, index) => (
+                          <div key={request.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start justify-between pb-4 border-b border-gray-200 dark:border-gray-600">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-medium text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">#{index + 1}</span>
+                                  <div className="font-bold text-xl text-gray-900 dark:text-gray-100">{request.username}</div>
+                                </div>
+                                <div className="text-base text-gray-600 dark:text-gray-300 font-medium">{request.email}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  تاريخ التقديم: {new Date(request.createdAt).toLocaleString()}
+                                </div>
+                              </div>
+                              <Badge 
+                                variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}
+                                className="text-sm px-3 py-1"
+                              >
+                                {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
+                              </Badge>
                             </div>
+                            
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">رسالة المستخدم:</span>
+                              </div>
+                              <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">{request.message}</p>
+                            </div>
+                            
+                            {request.status === "pending" && (
+                              <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <Button
+                                  onClick={() => handlePasswordRecoveryAction(request.id, "approve")}
+                                  data-testid={`button-approve-recovery-${request.id}`}
+                                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-6 py-3 text-base font-medium shadow-lg"
+                                >
+                                  <Link2 className="mr-2 h-5 w-5" />
+                                  إنشاء رابط إعادة التعيين
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => handlePasswordRecoveryAction(request.id, "reject")}
+                                  data-testid={`button-reject-recovery-${request.id}`}
+                                  className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 px-6 py-3 text-base font-medium"
+                                >
+                                  <X className="mr-2 h-5 w-5" />
+                                  رفض الطلب
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          <Badge variant={ticket.status === "open" ? "default" : ticket.status === "in_progress" ? "default" : "destructive"}>
-                            {ticket.status.replace("_", " ")}
-                          </Badge>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="promo" className="mt-0">
+                <Card className="shadow-lg border-2 border-purple-100 dark:border-purple-800">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                        <Gift className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                      </div>
+                      إدارة أكواد الخصم
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">إنشاء وإدارة أكواد الخصم الترويجية</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div className="grid gap-4 md:grid-cols-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="promoCode">كود الخصم</Label>
+                          <Input
+                            id="promoCode"
+                            placeholder="WELCOME50"
+                            value={newPromoCode}
+                            onChange={(e) => setNewPromoCode(e.target.value)}
+                            data-testid="input-promo-code"
+                          />
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
-                          <span className="text-sm font-medium text-muted-foreground">Message: </span>
-                          <p className="text-sm mt-1">{ticket.message}</p>
+                        <div className="space-y-2">
+                          <Label htmlFor="promoValue">القيمة</Label>
+                          <Input
+                            id="promoValue"
+                            type="number"
+                            placeholder="50"
+                            value={newPromoValue}
+                            onChange={(e) => setNewPromoValue(e.target.value)}
+                            data-testid="input-promo-value"
+                          />
                         </div>
-                        {ticket.response && (
-                          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                            <span className="text-sm font-medium text-green-700 dark:text-green-300">Admin Response: </span>
-                            <p className="text-sm mt-1 text-green-800 dark:text-green-200">{ticket.response}</p>
-                          </div>
-                        )}
-                        {ticket.status === "open" && (
-                          <div className="flex gap-3 pt-2">
-                            <Input
-                              placeholder="Type your response..."
-                              onKeyPress={(e) => {
-                                if (e.key === "Enter") {
-                                  handleSupportResponse(ticket.id, e.currentTarget.value);
-                                  e.currentTarget.value = "";
-                                }
-                              }}
-                              data-testid={`input-support-response-${ticket.id}`}
-                            />
-                            <Button
-                              onClick={() => {
-                                const input = document.querySelector(`[data-testid="input-support-response-${ticket.id}"]`) as HTMLInputElement;
-                                if (input?.value) {
-                                  handleSupportResponse(ticket.id, input.value);
-                                  input.value = "";
-                                }
-                              }}
-                              data-testid={`button-send-response-${ticket.id}`}
-                            >
-                              Send Response
-                            </Button>
-                          </div>
-                        )}
+                        <div className="space-y-2">
+                          <Label htmlFor="promoType">النوع</Label>
+                          <select 
+                            id="promoType"
+                            value={newPromoType}
+                            onChange={(e) => setNewPromoType(e.target.value as "balance" | "percentage")}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="balance">رصيد (£)</option>
+                            <option value="percentage">نسبة مئوية (%)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="promoLimit">حد الاستخدام</Label>
+                          <Input
+                            id="promoLimit"
+                            type="number"
+                            placeholder="100"
+                            value={newPromoLimit}
+                            onChange={(e) => setNewPromoLimit(e.target.value)}
+                            data-testid="input-promo-limit"
+                          />
+                        </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      <Button onClick={handleCreatePromoCode} data-testid="button-create-promo">
+                        إنشاء كود خصم
+                      </Button>
 
-          <TabsContent value="settings">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Payment Settings
-                </CardTitle>
-                <CardDescription>Configure payment fees, limits, and addresses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {paymentSettings && (
-                  <div className="space-y-8">
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="depositFee">Deposit Fee (%)</Label>
-                        <Input
-                          id="depositFee"
-                          type="number"
-                          value={paymentSettings.depositFee}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, depositFee: parseFloat(e.target.value) })}
-                          data-testid="input-deposit-fee"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="withdrawFee">Withdraw Fee (%)</Label>
-                        <Input
-                          id="withdrawFee"
-                          type="number"
-                          value={paymentSettings.withdrawFee}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, withdrawFee: parseFloat(e.target.value) })}
-                          data-testid="input-withdraw-fee"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="minDeposit">Min Deposit (£)</Label>
-                        <Input
-                          id="minDeposit"
-                          type="number"
-                          value={paymentSettings.minDeposit}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, minDeposit: parseFloat(e.target.value) })}
-                          data-testid="input-min-deposit"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="maxDeposit">Max Deposit (£)</Label>
-                        <Input
-                          id="maxDeposit"
-                          type="number"
-                          value={paymentSettings.maxDeposit}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, maxDeposit: parseFloat(e.target.value) })}
-                          data-testid="input-max-deposit"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="minWithdraw">Min Withdraw (£)</Label>
-                        <Input
-                          id="minWithdraw"
-                          type="number"
-                          value={paymentSettings.minWithdraw}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, minWithdraw: parseFloat(e.target.value) })}
-                          data-testid="input-min-withdraw"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="maxWithdraw">Max Withdraw (£)</Label>
-                        <Input
-                          id="maxWithdraw"
-                          type="number"
-                          value={paymentSettings.maxWithdraw}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, maxWithdraw: parseFloat(e.target.value) })}
-                          data-testid="input-max-withdraw"
-                          className="bg-white dark:bg-slate-800"
-                        />
+                      <div className="rounded-lg border border-card-border overflow-hidden">
+                        <Table>
+                          <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                            <TableRow>
+                              <TableHead className="font-semibold">الكود</TableHead>
+                              <TableHead className="font-semibold">القيمة</TableHead>
+                              <TableHead className="font-semibold">النوع</TableHead>
+                              <TableHead className="text-right font-semibold">مستخدم/الحد</TableHead>
+                              <TableHead className="font-semibold">الحالة</TableHead>
+                              <TableHead className="text-right font-semibold">الإجراءات</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {promoCodes.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                  لم يتم إنشاء أكواد خصم
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              promoCodes.map((promo) => (
+                                <TableRow key={promo.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                  <TableCell className="font-mono font-bold">{promo.code}</TableCell>
+                                  <TableCell>
+                                    {promo.value}{promo.type === "percentage" ? "%" : "£"}
+                                  </TableCell>
+                                  <TableCell className="capitalize">{promo.type === "balance" ? "رصيد" : "نسبة مئوية"}</TableCell>
+                                  <TableCell className="text-right">
+                                    {promo.usedCount}/{promo.usageLimit}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={promo.isActive ? "default" : "destructive"}>
+                                      {promo.isActive ? "نشط" : "غير نشط"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleTogglePromoCode(promo.id, promo.isActive)}
+                                      data-testid={`button-toggle-promo-${promo.id}`}
+                                    >
+                                      {promo.isActive ? "تعطيل" : "تفعيل"}
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
+              <TabsContent value="support" className="mt-0">
+                <Card className="shadow-lg border-2 border-blue-100 dark:border-blue-800">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                        <HelpCircle className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                      </div>
+                      إدارة الدعم الفني
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">إدارة تذاكر الدعم الفني والتواصل مع المستخدمين</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="paymentMethod">Payment Method</Label>
-                        <Input
-                          id="paymentMethod"
-                          type="text"
-                          value={paymentSettings.paymentMethod}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
-                          data-testid="input-payment-method"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="depositAddress">Deposit Address</Label>
-                        <Input
-                          id="depositAddress"
-                          type="text"
-                          value={paymentSettings.depositAddress}
-                          onChange={(e) => setPaymentSettings({ ...paymentSettings, depositAddress: e.target.value })}
-                          data-testid="input-deposit-address"
-                          className="bg-white dark:bg-slate-800"
-                        />
-                      </div>
+                      {supportTickets.length === 0 ? (
+                        <p className="py-8 text-center text-sm text-muted-foreground">
+                          لا توجد تذاكر دعم فني
+                        </p>
+                      ) : (
+                        supportTickets.map((ticket) => (
+                          <div key={ticket.id} className="rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 space-y-4">
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-2">
+                                <div className="font-semibold text-lg">{ticket.subject}</div>
+                                <div className="text-sm text-muted-foreground">من: {ticket.username}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {new Date(ticket.createdAt).toLocaleString()}
+                                </div>
+                              </div>
+                              <Badge variant={ticket.status === "open" ? "default" : ticket.status === "in_progress" ? "default" : "destructive"}>
+                                {ticket.status === "open" ? "مفتوح" : ticket.status === "in_progress" ? "قيد المعالجة" : "مغلق"}
+                              </Badge>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">الرسالة: </span>
+                              <p className="text-sm mt-1">{ticket.message}</p>
+                            </div>
+                            {ticket.response && (
+                              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                                <span className="text-sm font-medium text-green-700 dark:text-green-300">رد الإدارة: </span>
+                                <p className="text-sm mt-1 text-green-800 dark:text-green-200">{ticket.response}</p>
+                              </div>
+                            )}
+                            {ticket.status === "open" && (
+                              <div className="flex gap-3 pt-2">
+                                <Input
+                                  placeholder="اكتب ردك..."
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSupportResponse(ticket.id, e.currentTarget.value);
+                                      e.currentTarget.value = "";
+                                    }
+                                  }}
+                                  data-testid={`input-support-response-${ticket.id}`}
+                                />
+                                <Button
+                                  onClick={() => {
+                                    const input = document.querySelector(`[data-testid="input-support-response-${ticket.id}"]`) as HTMLInputElement;
+                                    if (input?.value) {
+                                      handleSupportResponse(ticket.id, input.value);
+                                      input.value = "";
+                                    }
+                                  }}
+                                  data-testid={`button-send-response-${ticket.id}`}
+                                >
+                                  إرسال الرد
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                    <Button 
-                      onClick={handleUpdatePaymentSettings} 
-                      data-testid="button-save-settings"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Settings
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="settings" className="mt-0">
+                <Card className="shadow-lg border-2 border-gray-100 dark:border-gray-800">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <Settings className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                      </div>
+                      إعدادات الدفع
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">تكوين رسوم الدفع والحدود والعناوين</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {paymentSettings && (
+                      <div className="space-y-8">
+                        <div className="grid gap-6 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="depositFee">رسوم الإيداع (%)</Label>
+                            <Input
+                              id="depositFee"
+                              type="number"
+                              value={paymentSettings.depositFee}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, depositFee: parseFloat(e.target.value) })}
+                              data-testid="input-deposit-fee"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="withdrawFee">رسوم السحب (%)</Label>
+                            <Input
+                              id="withdrawFee"
+                              type="number"
+                              value={paymentSettings.withdrawFee}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, withdrawFee: parseFloat(e.target.value) })}
+                              data-testid="input-withdraw-fee"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="minDeposit">الحد الأدنى للإيداع (£)</Label>
+                            <Input
+                              id="minDeposit"
+                              type="number"
+                              value={paymentSettings.minDeposit}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, minDeposit: parseFloat(e.target.value) })}
+                              data-testid="input-min-deposit"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="maxDeposit">الحد الأقصى للإيداع (£)</Label>
+                            <Input
+                              id="maxDeposit"
+                              type="number"
+                              value={paymentSettings.maxDeposit}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, maxDeposit: parseFloat(e.target.value) })}
+                              data-testid="input-max-deposit"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="minWithdraw">الحد الأدنى للسحب (£)</Label>
+                            <Input
+                              id="minWithdraw"
+                              type="number"
+                              value={paymentSettings.minWithdraw}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, minWithdraw: parseFloat(e.target.value) })}
+                              data-testid="input-min-withdraw"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="maxWithdraw">الحد الأقصى للسحب (£)</Label>
+                            <Input
+                              id="maxWithdraw"
+                              type="number"
+                              value={paymentSettings.maxWithdraw}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, maxWithdraw: parseFloat(e.target.value) })}
+                              data-testid="input-max-withdraw"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="paymentMethod">طريقة الدفع</Label>
+                            <Input
+                              id="paymentMethod"
+                              type="text"
+                              value={paymentSettings.paymentMethod}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
+                              data-testid="input-payment-method"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="depositAddress">عنوان الإيداع</Label>
+                            <Input
+                              id="depositAddress"
+                              type="text"
+                              value={paymentSettings.depositAddress}
+                              onChange={(e) => setPaymentSettings({ ...paymentSettings, depositAddress: e.target.value })}
+                              data-testid="input-deposit-address"
+                              className="bg-white dark:bg-slate-800"
+                            />
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleUpdatePaymentSettings} 
+                          data-testid="button-save-settings"
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                          size="lg"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          حفظ الإعدادات
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
