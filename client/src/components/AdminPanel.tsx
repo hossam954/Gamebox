@@ -34,7 +34,7 @@ interface PaymentSettings {
   minWithdraw: number;
   maxWithdraw: number;
   depositAddress: string;
-  paymentMethod: string[];
+  paymentMethod: string;
 }
 
 interface Request {
@@ -663,14 +663,13 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">Available Payment Methods (comma-separated)</Label>
+                      <Label htmlFor="paymentMethod">Payment Method</Label>
                       <Input
                         id="paymentMethod"
                         type="text"
-                        value={Array.isArray(paymentSettings.paymentMethod) ? paymentSettings.paymentMethod.join(", ") : paymentSettings.paymentMethod}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value.split(", ").map(s => s.trim()) })}
+                        value={paymentSettings.paymentMethod}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
                         data-testid="input-payment-method"
-                        placeholder="Bank Transfer, Cryptocurrency, PayPal"
                       />
                     </div>
 

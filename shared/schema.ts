@@ -47,7 +47,6 @@ export const depositRequests = pgTable("deposit_requests", {
   userId: varchar("user_id").notNull(),
   username: text("username").notNull(),
   amount: integer("amount").notNull(),
-  paymentMethod: varchar("payment_method").notNull().default("Bank Transfer"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -56,7 +55,6 @@ export const insertDepositRequestSchema = createInsertSchema(depositRequests).pi
   userId: true,
   username: true,
   amount: true,
-  paymentMethod: true,
 });
 
 export type InsertDepositRequest = z.infer<typeof insertDepositRequestSchema>;
@@ -68,7 +66,6 @@ export const withdrawRequests = pgTable("withdraw_requests", {
   username: text("username").notNull(),
   amount: integer("amount").notNull(),
   address: text("address").notNull(),
-  paymentMethod: varchar("payment_method").notNull().default("Bank Transfer"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -78,7 +75,6 @@ export const insertWithdrawRequestSchema = createInsertSchema(withdrawRequests).
   username: true,
   amount: true,
   address: true,
-  paymentMethod: true,
 });
 
 export type InsertWithdrawRequest = z.infer<typeof insertWithdrawRequestSchema>;
@@ -93,7 +89,7 @@ export const paymentSettings = pgTable("payment_settings", {
   minWithdraw: integer("min_withdraw").notNull().default(100),
   maxWithdraw: integer("max_withdraw").notNull().default(50000),
   depositAddress: text("deposit_address").notNull().default(""),
-  paymentMethod: text("payment_method").notNull().default('["Bank Transfer", "Cryptocurrency", "PayPal"]'),
+  paymentMethod: text("payment_method").notNull().default("Bank Transfer"),
 });
 
 export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).omit({

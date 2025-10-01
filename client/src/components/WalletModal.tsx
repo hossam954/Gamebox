@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface Transaction {
   id: string;
@@ -29,7 +28,7 @@ interface PaymentSettings {
   minWithdraw: number;
   maxWithdraw: number;
   depositAddress: string;
-  paymentMethod: string[]; // Changed to array to support multiple methods
+  paymentMethod: string;
 }
 
 interface WalletModalProps {
@@ -43,20 +42,18 @@ interface WalletModalProps {
 
 const QUICK_AMOUNTS = [100, 500, 1000, 5000];
 
-export default function WalletModal({
-  isOpen,
-  onClose,
-  balance,
+export default function WalletModal({ 
+  isOpen, 
+  onClose, 
+  balance, 
   transactions,
   userId,
-  username
+  username 
 }: WalletModalProps) {
   const [activeTab, setActiveTab] = useState("transactions");
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
-  const [selectedDepositMethod, setSelectedDepositMethod] = useState('');
-  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const { toast } = useToast();
@@ -100,21 +97,12 @@ export default function WalletModal({
       return;
     }
 
-    if (!selectedDepositMethod) {
-      toast({
-        title: "Payment method required",
-        description: "Please select a payment method",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username, amount, paymentMethod: selectedDepositMethod }),
+        body: JSON.stringify({ userId, username, amount }),
       });
 
       const data = await response.json();
@@ -125,7 +113,6 @@ export default function WalletModal({
           description: `Your deposit of £${amount} is pending admin approval`,
         });
         setDepositAmount("");
-        setSelectedDepositMethod('');
         setActiveTab("transactions");
       } else {
         toast({
@@ -176,21 +163,12 @@ export default function WalletModal({
       return;
     }
 
-    if (!selectedWithdrawMethod) {
-      toast({
-        title: "Payment method required",
-        description: "Please select a payment method",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       const response = await fetch("/api/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username, amount, address: withdrawAddress, paymentMethod: selectedWithdrawMethod }),
+        body: JSON.stringify({ userId, username, amount, address: withdrawAddress }),
       });
 
       const data = await response.json();
@@ -202,7 +180,6 @@ export default function WalletModal({
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
-        setSelectedWithdrawMethod('');
         setActiveTab("transactions");
       } else {
         toast({
@@ -304,20 +281,10 @@ export default function WalletModal({
             <TabsContent value="deposit" className="space-y-4">
               {paymentSettings && (
                 <div className="rounded-lg border border-card-border bg-card p-4 space-y-2">
-                  <Label>Select Payment Method</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {paymentSettings.paymentMethod.map((method: string) => (
-                      <div key={method} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`deposit-${method}`}
-                          checked={selectedDepositMethod === method}
-                          onCheckedChange={() => setSelectedDepositMethod(method)}
-                        />
-                        <Label htmlFor={`deposit-${method}`}>{method}</Label>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Payment Method:</span>
+                    <span className="font-medium">{paymentSettings.paymentMethod}</span>
                   </div>
-
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Deposit Address:</span>
                     <span className="font-mono text-xs">{paymentSettings.depositAddress}</span>
@@ -362,9 +329,9 @@ export default function WalletModal({
                 />
               </div>
 
-              <Button
-                onClick={handleDeposit}
-                disabled={isLoading || !paymentSettings}
+              <Button 
+                onClick={handleDeposit} 
+                disabled={isLoading}
                 className="w-full"
                 data-testid="button-deposit"
               >
@@ -376,19 +343,6 @@ export default function WalletModal({
             <TabsContent value="withdraw" className="space-y-4">
               {paymentSettings && (
                 <div className="rounded-lg border border-card-border bg-card p-4 space-y-2">
-                  <Label>Select Payment Method</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {paymentSettings.paymentMethod.map((method: string) => (
-                      <div key={method} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`withdraw-${method}`}
-                          checked={selectedWithdrawMethod === method}
-                          onCheckedChange={() => setSelectedWithdrawMethod(method)}
-                        />
-                        <Label htmlFor={`withdraw-${method}`}>{method}</Label>
-                      </div>
-                    ))}
-                  </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Fee:</span>
                     <span className="font-medium">{paymentSettings.withdrawFee}%</span>
@@ -445,9 +399,9 @@ export default function WalletModal({
                 />
               </div>
 
-              <Button
-                onClick={handleWithdraw}
-                disabled={isLoading || !paymentSettings}
+              <Button 
+                onClick={handleWithdraw} 
+                disabled={isLoading}
                 className="w-full"
                 data-testid="button-withdraw"
               >
