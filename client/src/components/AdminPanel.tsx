@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save, Link2, Shield, ShieldOff, Eye, EyeOff, Gift, HelpCircle } from "lucide-react";
+import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Link2, Shield, ShieldOff, Eye, EyeOff, Gift, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,16 +26,7 @@ interface User {
   status: "active" | "suspended";
 }
 
-interface PaymentSettings {
-  depositFee: number;
-  withdrawFee: number;
-  minDeposit: number;
-  maxDeposit: number;
-  minWithdraw: number;
-  maxWithdraw: number;
-  depositAddress: string;
-  paymentMethod: string;
-}
+
 
 interface Request {
   id: string;
@@ -93,7 +84,7 @@ interface AdminPanelProps {
 export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDeleteUser }: AdminPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+  
   const [passwordRecoveryRequests, setPasswordRecoveryRequests] = useState<Request[]>([]);
   const [depositRequests, setDepositRequests] = useState<Request[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<Request[]>([]);
@@ -125,7 +116,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     try {
       await Promise.all([
         fetchUsers(),
-        fetchPaymentSettings(),
+        
         fetchPasswordRecoveryRequests(),
         fetchDepositRequests(),
         fetchWithdrawRequests(),
@@ -152,17 +143,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
-  const fetchPaymentSettings = async () => {
-    try {
-      const response = await fetch("/api/payment-settings");
-      if (response.ok) {
-        const data = await response.json();
-        setPaymentSettings(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch payment settings:", error);
-    }
-  };
+  
 
   const fetchPasswordRecoveryRequests = async () => {
     try {
@@ -314,36 +295,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
-  const handleUpdatePaymentSettings = async () => {
-    if (!paymentSettings) return;
-
-    try {
-      const response = await fetch("/api/payment-settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(paymentSettings),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Settings updated",
-          description: "Payment settings have been successfully updated",
-        });
-      } else {
-        toast({
-          title: "Update failed",
-          description: "Could not update payment settings",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
-      });
-    }
-  };
+  
 
   const generateResetLink = (userId: string) => {
     const resetToken = btoa(`${userId}:${Date.now()}`);
@@ -600,23 +552,131 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         </div>
 
         {/* Main Content */}
+        {/* Admin Tabs as Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "overview" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("overview")}
+          >
+            <CardContent className="p-6 text-center">
+              <Eye className="h-8 w-8 mx-auto mb-3 text-blue-600" />
+              <h3 className="font-semibold text-lg">نظرة عامة</h3>
+              <p className="text-sm text-muted-foreground mt-1">إحصائيات عامة</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "users" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("users")}
+          >
+            <CardContent className="p-6 text-center">
+              <Users className="h-8 w-8 mx-auto mb-3 text-green-600" />
+              <h3 className="font-semibold text-lg">المستخدمين</h3>
+              <p className="text-sm text-muted-foreground mt-1">إدارة الحسابات</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "deposits" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("deposits")}
+          >
+            <CardContent className="p-6 text-center">
+              <Wallet className="h-8 w-8 mx-auto mb-3 text-emerald-600" />
+              <h3 className="font-semibold text-lg">الإيداعات</h3>
+              <p className="text-sm text-muted-foreground mt-1">طلبات الإيداع</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "withdrawals" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("withdrawals")}
+          >
+            <CardContent className="p-6 text-center">
+              <Wallet className="h-8 w-8 mx-auto mb-3 text-red-600" />
+              <h3 className="font-semibold text-lg">السحوبات</h3>
+              <p className="text-sm text-muted-foreground mt-1">طلبات السحب</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "recovery" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("recovery")}
+          >
+            <CardContent className="p-6 text-center">
+              <Link2 className="h-8 w-8 mx-auto mb-3 text-purple-600" />
+              <h3 className="font-semibold text-lg">استرداد كلمة المرور</h3>
+              <p className="text-sm text-muted-foreground mt-1">طلبات الاسترداد</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "promo" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("promo")}
+          >
+            <CardContent className="p-6 text-center">
+              <Gift className="h-8 w-8 mx-auto mb-3 text-pink-600" />
+              <h3 className="font-semibold text-lg">أكواد الخصم</h3>
+              <p className="text-sm text-muted-foreground mt-1">إدارة الأكواد</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "support" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("support")}
+          >
+            <CardContent className="p-6 text-center">
+              <HelpCircle className="h-8 w-8 mx-auto mb-3 text-indigo-600" />
+              <h3 className="font-semibold text-lg">الدعم الفني</h3>
+              <p className="text-sm text-muted-foreground mt-1">تذاكر الدعم</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "payment-methods" 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("payment-methods")}
+          >
+            <CardContent className="p-6 text-center">
+              <Wallet className="h-8 w-8 mx-auto mb-3 text-orange-600" />
+              <h3 className="font-semibold text-lg">طرق الدفع</h3>
+              <p className="text-sm text-muted-foreground mt-1">إدارة الطرق</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-              <div className="overflow-x-auto">
-                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-slate-100 dark:bg-slate-700 rounded-lg p-2 gap-1 min-w-max">
-                  <TabsTrigger value="overview" data-testid="tab-overview" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">نظرة عامة</TabsTrigger>
-                  <TabsTrigger value="users" data-testid="tab-users" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">المستخدمين</TabsTrigger>
-                  <TabsTrigger value="deposits" data-testid="tab-deposits" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الإيداعات</TabsTrigger>
-                  <TabsTrigger value="withdrawals" data-testid="tab-withdrawals" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">السحوبات</TabsTrigger>
-                  <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">استرداد كلمة المرور</TabsTrigger>
-                  <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">أكواد الخصم</TabsTrigger>
-                  <TabsTrigger value="support" data-testid="tab-support" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الدعم الفني</TabsTrigger>
-                  <TabsTrigger value="payment-methods" data-testid="tab-payment-methods" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">طرق الدفع</TabsTrigger>
-                  <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الإعدادات</TabsTrigger>
-                </TabsList>
-              </div>
-            </div>
 
             <div className="p-6">
               <TabsContent value="overview" className="space-y-6 mt-0">
@@ -1371,134 +1431,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 </Card>
               </TabsContent>
 
-              <TabsContent value="settings" className="mt-0">
-                <Card className="shadow-lg border-2 border-gray-100 dark:border-gray-800">
-                  <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-t-lg">
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                      <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                        <Settings className="h-6 w-6 text-gray-600 dark:text-gray-300" />
-                      </div>
-                      إعدادات الدفع
-                    </CardTitle>
-                    <CardDescription className="text-base mt-2">تكوين رسوم الدفع والحدود والعناوين</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    {paymentSettings && (
-                      <div className="space-y-8">
-                        <div className="grid gap-6 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor="depositFee">رسوم الإيداع (%)</Label>
-                            <Input
-                              id="depositFee"
-                              type="number"
-                              value={paymentSettings.depositFee}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, depositFee: parseFloat(e.target.value) })}
-                              data-testid="input-deposit-fee"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="withdrawFee">رسوم السحب (%)</Label>
-                            <Input
-                              id="withdrawFee"
-                              type="number"
-                              value={paymentSettings.withdrawFee}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, withdrawFee: parseFloat(e.target.value) })}
-                              data-testid="input-withdraw-fee"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="minDeposit">الحد الأدنى للإيداع (£)</Label>
-                            <Input
-                              id="minDeposit"
-                              type="number"
-                              value={paymentSettings.minDeposit}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, minDeposit: parseFloat(e.target.value) })}
-                              data-testid="input-min-deposit"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="maxDeposit">الحد الأقصى للإيداع (£)</Label>
-                            <Input
-                              id="maxDeposit"
-                              type="number"
-                              value={paymentSettings.maxDeposit}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, maxDeposit: parseFloat(e.target.value) })}
-                              data-testid="input-max-deposit"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="minWithdraw">الحد الأدنى للسحب (£)</Label>
-                            <Input
-                              id="minWithdraw"
-                              type="number"
-                              value={paymentSettings.minWithdraw}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, minWithdraw: parseFloat(e.target.value) })}
-                              data-testid="input-min-withdraw"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="maxWithdraw">الحد الأقصى للسحب (£)</Label>
-                            <Input
-                              id="maxWithdraw"
-                              type="number"
-                              value={paymentSettings.maxWithdraw}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, maxWithdraw: parseFloat(e.target.value) })}
-                              data-testid="input-max-withdraw"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="paymentMethod">طريقة الدفع</Label>
-                            <Input
-                              id="paymentMethod"
-                              type="text"
-                              value={paymentSettings.paymentMethod}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
-                              data-testid="input-payment-method"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="depositAddress">عنوان الإيداع</Label>
-                            <Input
-                              id="depositAddress"
-                              type="text"
-                              value={paymentSettings.depositAddress}
-                              onChange={(e) => setPaymentSettings({ ...paymentSettings, depositAddress: e.target.value })}
-                              data-testid="input-deposit-address"
-                              className="bg-white dark:bg-slate-800"
-                            />
-                          </div>
-                        </div>
-
-                        <Button
-                          onClick={handleUpdatePaymentSettings}
-                          data-testid="button-save-settings"
-                          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                          size="lg"
-                        >
-                          <Save className="mr-2 h-4 w-4" />
-                          حفظ الإعدادات
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              
             </div>
           </Tabs>
         </div>
