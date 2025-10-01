@@ -105,6 +105,30 @@ export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).o
 export type InsertPaymentSettings = z.infer<typeof insertPaymentSettingsSchema>;
 export type PaymentSettings = typeof paymentSettings.$inferSelect;
 
+export const paymentMethods = pgTable("payment_methods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("both"), // "deposit", "withdraw", "both"
+  minAmount: integer("min_amount").notNull().default(0),
+  maxAmount: integer("max_amount").notNull().default(100000),
+  fee: integer("fee").notNull().default(0),
+  note: text("note").notNull().default(""),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick({
+  name: true,
+  type: true,
+  minAmount: true,
+  maxAmount: true,
+  fee: true,
+  note: true,
+});
+
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+
 export const promoCodes = pgTable("promo_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
