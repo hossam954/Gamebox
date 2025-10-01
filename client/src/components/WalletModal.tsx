@@ -31,6 +31,17 @@ interface PaymentSettings {
   paymentMethod: string;
 }
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  type: "deposit" | "withdraw" | "both";
+  fee: number;
+  minAmount: number;
+  maxAmount: number;
+  note: string | null;
+  isActive: boolean;
+}
+
 interface WalletModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,25 +53,30 @@ interface WalletModalProps {
 
 const QUICK_AMOUNTS = [100, 500, 1000, 5000];
 
-export default function WalletModal({ 
-  isOpen, 
-  onClose, 
-  balance, 
+export default function WalletModal({
+  isOpen,
+  onClose,
+  balance,
   transactions,
   userId,
-  username 
+  username
 }: WalletModalProps) {
   const [activeTab, setActiveTab] = useState("transactions");
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [transactionNumber, setTransactionNumber] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedDepositMethod, setSelectedDepositMethod] = useState<string | null>(null);
+  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
       fetchPaymentSettings();
+      fetchPaymentMethods();
     }
   }, [isOpen]);
 
@@ -68,11 +84,23 @@ export default function WalletModal({
     try {
       const response = await fetch("/api/payment-settings");
       if (response.ok) {
-        const data = await response.json();
-        setPaymentSettings(data);
+        const settings = await response.json();
+        setPaymentSettings(settings);
       }
     } catch (error) {
       console.error("Failed to fetch payment settings:", error);
+    }
+  };
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await fetch("/api/payment-methods");
+      if (response.ok) {
+        const methods = await response.json();
+        setPaymentMethods(methods);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment methods:", error);
     }
   };
 
@@ -85,13 +113,23 @@ export default function WalletModal({
   };
 
   const handleDeposit = async () => {
-    if (!userId || !username || !paymentSettings) return;
+    if (!userId || !username || !selectedDepositMethod || !transactionNumber) {
+      toast({
+        title: "Missing information",
+        description: "Please select a payment method, enter an amount, and provide a transaction number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const method = paymentMethods.find(m => m.id === selectedDepositMethod);
+    if (!method) return;
 
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount < paymentSettings.minDeposit || amount > paymentSettings.maxDeposit) {
+    if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
       toast({
         title: "Invalid amount",
-        description: `Deposit must be between £${paymentSettings.minDeposit} and £${paymentSettings.maxDeposit}`,
+        description: `Deposit must be between £${method.minAmount} and £${method.maxAmount}`,
         variant: "destructive",
       });
       return;
@@ -102,7 +140,7 @@ export default function WalletModal({
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username, amount }),
+        body: JSON.stringify({ userId, username, amount, paymentMethodId: selectedDepositMethod, transactionNumber }),
       });
 
       const data = await response.json();
@@ -113,6 +151,8 @@ export default function WalletModal({
           description: `Your deposit of £${amount} is pending admin approval`,
         });
         setDepositAmount("");
+        setTransactionNumber("");
+        setSelectedDepositMethod(null);
         setActiveTab("transactions");
       } else {
         toast({
@@ -133,13 +173,23 @@ export default function WalletModal({
   };
 
   const handleWithdraw = async () => {
-    if (!userId || !username || !paymentSettings) return;
+    if (!userId || !username || !selectedWithdrawMethod) {
+      toast({
+        title: "Missing information",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
+    if (!method) return;
 
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < paymentSettings.minWithdraw || amount > paymentSettings.maxWithdraw) {
+    if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
       toast({
         title: "Invalid amount",
-        description: `Withdrawal must be between £${paymentSettings.minWithdraw} and £${paymentSettings.maxWithdraw}`,
+        description: `Withdrawal must be between £${method.minAmount} and £${method.maxAmount}`,
         variant: "destructive",
       });
       return;
@@ -156,8 +206,8 @@ export default function WalletModal({
 
     if (!withdrawAddress.trim()) {
       toast({
-        title: "Address required",
-        description: "Please enter your wallet/bank address",
+        title: "Missing address",
+        description: "Please enter your withdrawal address",
         variant: "destructive",
       });
       return;
@@ -168,7 +218,13 @@ export default function WalletModal({
       const response = await fetch("/api/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username, amount, address: withdrawAddress }),
+        body: JSON.stringify({
+          userId,
+          username,
+          amount,
+          paymentMethodId: selectedWithdrawMethod,
+          address: withdrawAddress
+        }),
       });
 
       const data = await response.json();
@@ -180,6 +236,7 @@ export default function WalletModal({
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
+        setSelectedWithdrawMethod(null);
         setActiveTab("transactions");
       } else {
         toast({
@@ -279,30 +336,156 @@ export default function WalletModal({
             </TabsContent>
 
             <TabsContent value="deposit" className="space-y-4">
-              <div className="text-center py-8">
-                <div className="mb-4">
-                  <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Upload className="h-4 w-4" />
+                Add funds to your account
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="payment-method">Payment Method</Label>
+                  <select
+                    id="payment-method"
+                    className="w-full p-2 border rounded-md"
+                    value={selectedDepositMethod || ""}
+                    onChange={(e) => setSelectedDepositMethod(e.target.value || null)}
+                    disabled={isLoading}
+                  >
+                    <option value="">Select payment method</option>
+                    {paymentMethods
+                      .filter(method => method.isActive && (method.type === "deposit" || method.type === "both"))
+                      .map(method => (
+                        <option key={method.id} value={method.id}>
+                          {method.name} (Fee: {method.fee}%)
+                        </option>
+                      ))}
+                  </select>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Deposit Feature</h3>
-                <p className="text-muted-foreground">
-                  This feature is currently being developed.
-                  <br />
-                  Please check back later or contact support for assistance.
-                </p>
+
+                {selectedDepositMethod && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    {paymentMethods.find(m => m.id === selectedDepositMethod)?.note && (
+                      <p className="text-sm">{paymentMethods.find(m => m.id === selectedDepositMethod)?.note}</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="deposit-amount">Amount (£)</Label>
+                  <Input
+                    id="deposit-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    disabled={isLoading || !selectedDepositMethod}
+                    min={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount : 0}
+                    max={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount : 0}
+                  />
+                  {selectedDepositMethod && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Min: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount.toLocaleString()} |
+                      Max: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount.toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="transaction-number">Transaction Number</Label>
+                  <Input
+                    id="transaction-number"
+                    type="text"
+                    placeholder="Enter transaction number"
+                    value={transactionNumber}
+                    onChange={(e) => setTransactionNumber(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleDeposit}
+                  disabled={isLoading || !depositAmount || !selectedDepositMethod || !transactionNumber}
+                  className="w-full"
+                >
+                  {isLoading ? "Processing..." : "Submit Deposit Request"}
+                </Button>
               </div>
             </TabsContent>
 
             <TabsContent value="withdraw" className="space-y-4">
-              <div className="text-center py-8">
-                <div className="mb-4">
-                  <Download className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Download className="h-4 w-4" />
+                Withdraw funds from your account
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="withdraw-method">Withdrawal Method</Label>
+                  <select
+                    id="withdraw-method"
+                    className="w-full p-2 border rounded-md"
+                    value={selectedWithdrawMethod || ""}
+                    onChange={(e) => setSelectedWithdrawMethod(e.target.value || null)}
+                    disabled={isLoading}
+                  >
+                    <option value="">Select withdrawal method</option>
+                    {paymentMethods
+                      .filter(method => method.isActive && (method.type === "withdraw" || method.type === "both"))
+                      .map(method => (
+                        <option key={method.id} value={method.id}>
+                          {method.name} (Fee: {method.fee}%)
+                        </option>
+                      ))}
+                  </select>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Withdrawal Feature</h3>
-                <p className="text-muted-foreground">
-                  This feature is currently being developed.
-                  <br />
-                  Please check back later or contact support for assistance.
-                </p>
+
+                {selectedWithdrawMethod && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    {paymentMethods.find(m => m.id === selectedWithdrawMethod)?.note && (
+                      <p className="text-sm">{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.note}</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="withdraw-amount">Amount (£)</Label>
+                  <Input
+                    id="withdraw-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    disabled={isLoading || !selectedWithdrawMethod}
+                    min={selectedWithdrawMethod ? paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount : 0}
+                    max={selectedWithdrawMethod ? Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance) : balance}
+                  />
+                  {selectedWithdrawMethod && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Min: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
+                      Max: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="withdraw-address">Receiving Address</Label>
+                  <Input
+                    id="withdraw-address"
+                    type="text"
+                    placeholder="Enter your receiving address"
+                    value={withdrawAddress}
+                    onChange={(e) => setWithdrawAddress(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleWithdraw}
+                  disabled={isLoading || !withdrawAmount || !withdrawAddress || !selectedWithdrawMethod}
+                  className="w-full"
+                >
+                  {isLoading ? "Processing..." : "Submit Withdrawal Request"}
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

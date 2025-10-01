@@ -9,6 +9,8 @@ import {
   type InsertWithdrawRequest,
   type PaymentSettings,
   type InsertPaymentSettings,
+  type PaymentMethod,
+  type InsertPaymentMethod,
   type PromoCode,
   type InsertPromoCode,
   type SupportTicket,
@@ -40,6 +42,10 @@ export interface IStorage {
   getPaymentSettings(): Promise<PaymentSettings>;
   updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings>;
 
+  createPaymentMethod(data: InsertPaymentMethod): Promise<PaymentMethod>;
+  getPaymentMethods(): Promise<PaymentMethod[]>;
+  updatePaymentMethodStatus(id: string, isActive: boolean): Promise<void>;
+
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
 
   createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode>;
@@ -58,6 +64,7 @@ export class MemStorage implements IStorage {
   private depositRequests: Map<string, DepositRequest>;
   private withdrawRequests: Map<string, WithdrawRequest>;
   private paymentSettings: PaymentSettings;
+  private paymentMethods: Map<string, PaymentMethod>;
   private promoCodes: Map<string, PromoCode>;
   private supportTickets: Map<string, SupportTicket>;
 
@@ -66,6 +73,7 @@ export class MemStorage implements IStorage {
     this.passwordRecoveryRequests = new Map();
     this.depositRequests = new Map();
     this.withdrawRequests = new Map();
+    this.paymentMethods = new Map();
     this.promoCodes = new Map();
     this.supportTickets = new Map();
 
@@ -92,6 +100,30 @@ export class MemStorage implements IStorage {
       depositAddress: "SYP-WALLET-ADDRESS-12345",
       paymentMethod: "Bank Transfer / Mobile Wallet",
     };
+
+    const defaultPaymentMethod1: PaymentMethod = {
+      id: randomUUID(),
+      name: "Bank Transfer",
+      type: "bank",
+      minAmount: 50,
+      maxAmount: 50000,
+      note: "Please use your username as reference.",
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.paymentMethods.set(defaultPaymentMethod1.id, defaultPaymentMethod1);
+
+    const defaultPaymentMethod2: PaymentMethod = {
+      id: randomUUID(),
+      name: "Mobile Wallet",
+      type: "mobile",
+      minAmount: 50,
+      maxAmount: 10000,
+      note: "Please provide your mobile number.",
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.paymentMethods.set(defaultPaymentMethod2.id, defaultPaymentMethod2);
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -225,6 +257,30 @@ export class MemStorage implements IStorage {
     return this.paymentSettings;
   }
 
+  async createPaymentMethod(data: InsertPaymentMethod): Promise<PaymentMethod> {
+    const id = randomUUID();
+    const paymentMethod: PaymentMethod = {
+      ...data,
+      id,
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.paymentMethods.set(id, paymentMethod);
+    return paymentMethod;
+  }
+
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    return Array.from(this.paymentMethods.values());
+  }
+
+  async updatePaymentMethodStatus(id: string, isActive: boolean): Promise<void> {
+    const paymentMethod = this.paymentMethods.get(id);
+    if (paymentMethod) {
+      paymentMethod.isActive = isActive;
+      this.paymentMethods.set(id, paymentMethod);
+    }
+  }
+
   async updateUserPassword(userId: string, newPassword: string): Promise<void> {
     const user = this.users.get(userId);
     if (user) {
@@ -260,7 +316,7 @@ export class MemStorage implements IStorage {
 
   async redeemPromoCode(userId: string, code: string): Promise<{ success: boolean; message?: string; reward?: string }> {
     const promoCode = Array.from(this.promoCodes.values()).find(p => p.code === code);
-    
+
     if (!promoCode) {
       return { success: false, message: "Invalid promo code" };
     }

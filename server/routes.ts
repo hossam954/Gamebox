@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertPasswordRecoverySchema, insertDepositRequestSchema, insertWithdrawRequestSchema, insertPaymentSettingsSchema, insertPromoCodeSchema, insertSupportTicketSchema } from "@shared/schema";
+import { insertUserSchema, insertPasswordRecoverySchema, insertDepositRequestSchema, insertWithdrawRequestSchema, insertPaymentSettingsSchema, insertPaymentMethodSchema, insertPromoCodeSchema, insertSupportTicketSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
@@ -305,6 +305,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { response, status } = req.body;
       await storage.updateSupportTicket(id, response, status);
       res.json({ message: "Support ticket updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/payment-methods", async (req, res) => {
+    try {
+      const result = insertPaymentMethodSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error });
+      }
+
+      const paymentMethod = await storage.createPaymentMethod(result.data);
+      res.json({ message: "Payment method created", paymentMethod });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/payment-methods", async (req, res) => {
+    try {
+      const methods = await storage.getPaymentMethods();
+      res.json(methods);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.patch("/api/payment-methods/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      await storage.updatePaymentMethodStatus(id, isActive);
+      res.json({ message: "Payment method updated" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

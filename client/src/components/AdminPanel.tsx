@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Save, Link2, Shield, ShieldOff, Eye, EyeOff, Gift, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -72,6 +71,18 @@ interface SupportTicket {
   createdAt: Date;
 }
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  type: "deposit" | "withdraw" | "both";
+  minAmount: number;
+  maxAmount: number;
+  fee: number;
+  note: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 interface AdminPanelProps {
   users: User[];
   onEditBalance: (userId: string, newBalance: number) => void;
@@ -89,6 +100,15 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [newPaymentMethod, setNewPaymentMethod] = useState({
+    name: "",
+    type: "both",
+    minAmount: 0,
+    maxAmount: 100000,
+    fee: 0,
+    note: ""
+  });
   const [newPromoCode, setNewPromoCode] = useState("");
   const [newPromoValue, setNewPromoValue] = useState("");
   const [newPromoType, setNewPromoType] = useState<"balance" | "percentage">("balance");
@@ -111,6 +131,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         fetchWithdrawRequests(),
         fetchPromoCodes(),
         fetchSupportTickets(),
+        fetchPaymentMethods(),
       ]);
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -195,11 +216,23 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     try {
       const response = await fetch("/api/support");
       if (response.ok) {
-        const data = await response.json();
-        setSupportTickets(data);
+        const tickets = await response.json();
+        setSupportTickets(tickets);
       }
     } catch (error) {
       console.error("Failed to fetch support tickets:", error);
+    }
+  };
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await fetch("/api/payment-methods");
+      if (response.ok) {
+        const methods = await response.json();
+        setPaymentMethods(methods);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment methods:", error);
     }
   };
 
@@ -330,7 +363,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       const response = await fetch(`/api/password-recovery/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: action === "approve" ? "approved" : "rejected",
           resetLink: resetLink
         }),
@@ -414,6 +447,65 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
+  const handleCreatePaymentMethod = async () => {
+    if (!newPaymentMethod.name || newPaymentMethod.minAmount < 0 || newPaymentMethod.maxAmount <= newPaymentMethod.minAmount) {
+      toast({
+        title: "Invalid payment method",
+        description: "Please fill all fields correctly",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/payment-methods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPaymentMethod),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Payment method created",
+          description: "New payment method has been added",
+        });
+        setNewPaymentMethod({ name: "", type: "both", minAmount: 0, maxAmount: 100000, fee: 0, note: "" });
+        fetchPaymentMethods();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create payment method",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTogglePaymentMethod = async (id: string, isActive: boolean) => {
+    try {
+      const response = await fetch(`/api/payment-methods/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Payment method updated",
+          description: `Payment method ${isActive ? "activated" : "deactivated"}`,
+        });
+        fetchPaymentMethods();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update payment method",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   const displayUsers = allUsers.length > 0 ? allUsers : users;
   const filteredUsers = displayUsers.filter(
     (user) =>
@@ -440,8 +532,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mt-2">إدارة المستخدمين والمدفوعات وإعدادات المنصة</p>
           </div>
-          <Button 
-            onClick={fetchAllData} 
+          <Button
+            onClick={fetchAllData}
             disabled={isLoading}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 w-full md:w-auto"
             size="lg"
@@ -520,6 +612,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                   <TabsTrigger value="recovery" data-testid="tab-recovery" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">استرداد كلمة المرور</TabsTrigger>
                   <TabsTrigger value="promo" data-testid="tab-promo" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">أكواد الخصم</TabsTrigger>
                   <TabsTrigger value="support" data-testid="tab-support" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الدعم الفني</TabsTrigger>
+                  <TabsTrigger value="payment-methods" data-testid="tab-payment-methods" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">طرق الدفع</TabsTrigger>
                   <TabsTrigger value="settings" data-testid="tab-settings" className="rounded-md py-3 px-4 font-medium transition-all duration-200 whitespace-nowrap">الإعدادات</TabsTrigger>
                 </TabsList>
               </div>
@@ -667,8 +760,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                                       variant="outline"
                                       onClick={() => onSuspendUser(user.id)}
                                       data-testid={`button-suspend-${user.id}`}
-                                      className={`h-9 px-3 ${user.status === "active" 
-                                        ? "bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700" 
+                                      className={`h-9 px-3 ${user.status === "active"
+                                        ? "bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700"
                                         : "bg-green-50 hover:bg-green-100 border-green-200 text-green-700"}`}
                                     >
                                       {user.status === "active" ? (
@@ -900,21 +993,21 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                                   تاريخ التقديم: {new Date(request.createdAt).toLocaleString()}
                                 </div>
                               </div>
-                              <Badge 
+                              <Badge
                                 variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"}
                                 className="text-sm px-3 py-1"
                               >
                                 {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
                               </Badge>
                             </div>
-                            
+
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
                               <div className="flex items-center gap-2 mb-3">
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">رسالة المستخدم:</span>
                               </div>
                               <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">{request.message}</p>
                             </div>
-                            
+
                             {request.status === "pending" && (
                               <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                                 <Button
@@ -981,7 +1074,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="promoType">النوع</Label>
-                          <select 
+                          <select
                             id="promoType"
                             value={newPromoType}
                             onChange={(e) => setNewPromoType(e.target.value as "balance" | "percentage")}
@@ -1139,6 +1232,145 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 </Card>
               </TabsContent>
 
+              <TabsContent value="payment-methods" className="mt-0">
+                <Card className="shadow-lg border-2 border-purple-100 dark:border-purple-800">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                        <Wallet className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                      </div>
+                      إدارة طرق الدفع
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">إنشاء وإدارة طرق الإيداع والسحب المتاحة</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div className="grid gap-4 md:grid-cols-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="paymentMethodName">اسم الطريقة</Label>
+                          <Input
+                            id="paymentMethodName"
+                            placeholder="Bitcoin"
+                            value={newPaymentMethod.name}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, name: e.target.value })}
+                            data-testid="input-payment-method-name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="paymentMethodType">النوع</Label>
+                          <select
+                            id="paymentMethodType"
+                            value={newPaymentMethod.type}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, type: e.target.value as any })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="deposit">إيداع</option>
+                            <option value="withdraw">سحب</option>
+                            <option value="both">كلاهما</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="minAmount">الحد الأدنى</Label>
+                          <Input
+                            id="minAmount"
+                            type="number"
+                            placeholder="10"
+                            value={newPaymentMethod.minAmount}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmount: parseFloat(e.target.value) })}
+                            data-testid="input-payment-method-min-amount"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maxAmount">الحد الأقصى</Label>
+                          <Input
+                            id="maxAmount"
+                            type="number"
+                            placeholder="100000"
+                            value={newPaymentMethod.maxAmount}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmount: parseFloat(e.target.value) })}
+                            data-testid="input-payment-method-max-amount"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="paymentFee">الرسوم (%)</Label>
+                          <Input
+                            id="paymentFee"
+                            type="number"
+                            placeholder="0.5"
+                            value={newPaymentMethod.fee}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, fee: parseFloat(e.target.value) })}
+                            data-testid="input-payment-method-fee"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentNote">ملاحظة</Label>
+                        <Input
+                          id="paymentNote"
+                          placeholder="رسوم شبكة قد تنطبق"
+                          value={newPaymentMethod.note}
+                          onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, note: e.target.value })}
+                          data-testid="input-payment-method-note"
+                        />
+                      </div>
+                      <Button onClick={handleCreatePaymentMethod} data-testid="button-create-payment-method">
+                        إنشاء طريقة دفع
+                      </Button>
+
+                      <div className="rounded-lg border border-card-border overflow-hidden">
+                        <Table>
+                          <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                            <TableRow>
+                              <TableHead className="font-semibold">الاسم</TableHead>
+                              <TableHead className="font-semibold">النوع</TableHead>
+                              <TableHead className="text-right font-semibold">الحدود</TableHead>
+                              <TableHead className="text-right font-semibold">الرسوم</TableHead>
+                              <TableHead className="font-semibold">الحالة</TableHead>
+                              <TableHead className="text-right font-semibold">الإجراءات</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paymentMethods.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                  لم يتم إنشاء طرق دفع
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              paymentMethods.map((method) => (
+                                <TableRow key={method.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                  <TableCell className="font-medium">{method.name}</TableCell>
+                                  <TableCell className="capitalize">{method.type}</TableCell>
+                                  <TableCell className="text-right">
+                                    {method.minAmount} - {method.maxAmount} £
+                                  </TableCell>
+                                  <TableCell className="text-right">{method.fee}%</TableCell>
+                                  <TableCell>
+                                    <Badge variant={method.isActive ? "default" : "destructive"}>
+                                      {method.isActive ? "نشط" : "غير نشط"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleTogglePaymentMethod(method.id, method.isActive)}
+                                      data-testid={`button-toggle-payment-method-${method.id}`}
+                                    >
+                                      {method.isActive ? "تعطيل" : "تفعيل"}
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="settings" className="mt-0">
                 <Card className="shadow-lg border-2 border-gray-100 dark:border-gray-800">
                   <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-t-lg">
@@ -1253,8 +1485,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           </div>
                         </div>
 
-                        <Button 
-                          onClick={handleUpdatePaymentSettings} 
+                        <Button
+                          onClick={handleUpdatePaymentSettings}
                           data-testid="button-save-settings"
                           className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                           size="lg"

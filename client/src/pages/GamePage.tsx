@@ -100,11 +100,12 @@ export default function GamePage() {
           },
           ...prev,
         ]);
-        toast({
+        const { dismiss } = toast({
           title: `You won ${prizeMultiplier}x!`,
           description: `+£${winnings.toLocaleString()}`,
           className: "bg-success text-success-foreground",
         });
+        setTimeout(() => dismiss(), 1500);
       } else {
         setTransactions((prev) => [
           {
@@ -115,11 +116,12 @@ export default function GamePage() {
           },
           ...prev,
         ]);
-        toast({
+        const { dismiss } = toast({
           title: "Better luck next time!",
           description: `Lost £${selectedBet!.toLocaleString()}`,
           variant: "destructive",
         });
+        setTimeout(() => dismiss(), 1500);
       }
     }, 3500);
   };
