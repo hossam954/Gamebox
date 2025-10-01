@@ -34,7 +34,7 @@ interface PaymentSettings {
   minWithdraw: number;
   maxWithdraw: number;
   depositAddress: string;
-  paymentMethod: string;
+  paymentMethod: string[];
 }
 
 interface Request {
@@ -663,25 +663,14 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">Default Payment Method</Label>
+                      <Label htmlFor="paymentMethod">Available Payment Methods (comma-separated)</Label>
                       <Input
                         id="paymentMethod"
                         type="text"
-                        value={paymentSettings.paymentMethod}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value })}
+                        value={Array.isArray(paymentSettings.paymentMethod) ? paymentSettings.paymentMethod.join(", ") : paymentSettings.paymentMethod}
+                        onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentMethod: e.target.value.split(", ").map(s => s.trim()) })}
                         data-testid="input-payment-method"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="availablePaymentMethods">Available Payment Methods (JSON array)</Label>
-                      <Input
-                        id="availablePaymentMethods"
-                        type="text"
-                        value={paymentSettings.availablePaymentMethods || '["Bank Transfer", "Cryptocurrency", "PayPal"]'}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, availablePaymentMethods: e.target.value })}
-                        data-testid="input-available-payment-methods"
-                        placeholder='["Bank Transfer", "Cryptocurrency", "PayPal"]'
+                        placeholder="Bank Transfer, Cryptocurrency, PayPal"
                       />
                     </div>
 

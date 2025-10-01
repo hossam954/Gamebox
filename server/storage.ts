@@ -1,5 +1,5 @@
-import { 
-  type User, 
+import {
+  type User,
   type InsertUser,
   type PasswordRecoveryRequest,
   type InsertPasswordRecovery,
@@ -20,19 +20,19 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(userId: string, amount: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
-  
+
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;
   getPasswordRecoveryRequests(): Promise<PasswordRecoveryRequest[]>;
   updatePasswordRecoveryStatus(id: string, status: string): Promise<void>;
-  
+
   createDepositRequest(request: InsertDepositRequest): Promise<DepositRequest>;
   getDepositRequests(): Promise<DepositRequest[]>;
   updateDepositStatus(id: string, status: string): Promise<void>;
-  
+
   createWithdrawRequest(request: InsertWithdrawRequest): Promise<WithdrawRequest>;
   getWithdrawRequests(): Promise<WithdrawRequest[]>;
   updateWithdrawStatus(id: string, status: string): Promise<void>;
-  
+
   getPaymentSettings(): Promise<PaymentSettings>;
   updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings>;
 }
@@ -49,7 +49,7 @@ export class MemStorage implements IStorage {
     this.passwordRecoveryRequests = new Map();
     this.depositRequests = new Map();
     this.withdrawRequests = new Map();
-    
+
     const adminId = randomUUID();
     const adminUser: User = {
       id: adminId,
@@ -61,7 +61,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.users.set(adminId, adminUser);
-    
+
     this.paymentSettings = {
       id: randomUUID(),
       depositFee: 0,
@@ -99,8 +99,8 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
+      ...insertUser,
       id,
       balance: 1000,
       isAdmin: false,
@@ -195,15 +195,43 @@ export class MemStorage implements IStorage {
   }
 
   async getPaymentSettings(): Promise<PaymentSettings> {
-    return this.paymentSettings;
+    let settings = await db.select().from(paymentSettingsTable).limit(1);
+    if (settings.length === 0) {
+      const newSettings = await db.insert(paymentSettingsTable).values({}).returning();
+      const parsed = { ...newSettings[0] };
+      try {
+        parsed.paymentMethod = JSON.parse(newSettings[0].paymentMethod);
+      } catch {
+        parsed.paymentMethod = ["Bank Transfer", "Cryptocurrency", "PayPal"];
+      }
+      return parsed;
+    }
+    const parsed = { ...settings[0] };
+    try {
+      parsed.paymentMethod = JSON.parse(settings[0].paymentMethod);
+    } catch {
+      parsed.paymentMethod = ["Bank Transfer", "Cryptocurrency", "PayPal"];
+    }
+    return parsed;
   }
 
-  async updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings> {
-    this.paymentSettings = {
-      ...this.paymentSettings,
-      ...settings,
-    };
-    return this.paymentSettings;
+  async updatePaymentSettings(settings: any) {
+    const existing = await this.getPaymentSettings();
+    const settingsToSave = { ...settings };
+    if (Array.isArray(settings.paymentMethod)) {
+      settingsToSave.paymentMethod = JSON.stringify(settings.paymentMethod);
+    }
+    const updated = await db.update(paymentSettingsTable)
+      .set(settingsToSave)
+      .where(eq(paymentSettingsTable.id, existing.id))
+      .returning();
+    const parsed = { ...updated[0] };
+    try {
+      parsed.paymentMethod = JSON.parse(updated[0].paymentMethod);
+    } catch {
+      parsed.paymentMethod = ["Bank Transfer", "Cryptocurrency", "PayPal"];
+    }
+    return parsed;
   }
 }
 

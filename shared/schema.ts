@@ -93,7 +93,7 @@ export const paymentSettings = pgTable("payment_settings", {
   minWithdraw: integer("min_withdraw").notNull().default(100),
   maxWithdraw: integer("max_withdraw").notNull().default(50000),
   depositAddress: text("deposit_address").notNull().default(""),
-  paymentMethod: text("payment_method").notNull().default("Bank Transfer"),
+  paymentMethod: text("payment_method").notNull().default('["Bank Transfer", "Cryptocurrency", "PayPal"]'),
 });
 
 export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).omit({
