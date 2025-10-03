@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Settings, Key, Gift } from "lucide-react";
+import { Settings, Key, Gift, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,8 @@ interface SettingsModalProps {
   userId: string;
   username: string;
   onLogout: () => void;
+  isAdmin?: boolean;
+  onAdminClick?: () => void;
 }
 
 export default function SettingsModal({ 
@@ -27,7 +29,9 @@ export default function SettingsModal({
   onClose, 
   userId, 
   username, 
-  onLogout 
+  onLogout,
+  isAdmin = false,
+  onAdminClick
 }: SettingsModalProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -257,9 +261,21 @@ export default function SettingsModal({
             <div className="space-y-4">
               <h3 className="font-semibold">Account Actions</h3>
               
+              {isAdmin && onAdminClick && (
+                <Button 
+                  onClick={onAdminClick}
+                  className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                  data-testid="button-admin-panel"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  لوحة التحكم
+                </Button>
+              )}
+              
               <Button 
                 variant="destructive" 
                 onClick={onLogout}
+                className="w-full"
                 data-testid="button-logout"
               >
                 Logout

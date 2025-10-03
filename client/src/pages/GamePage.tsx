@@ -232,6 +232,8 @@ export default function GamePage() {
         userId={userId || ""}
         username={username}
         onLogout={handleLogout}
+        isAdmin={isAdmin}
+        onAdminClick={handleAdminClick}
       />
 
       <SupportModal
