@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   totalWins: integer("total_wins").notNull().default(0),
   totalLosses: integer("total_losses").notNull().default(0),
   isAdmin: boolean("is_admin").notNull().default(false),
+  referralCode: text("referral_code").unique(),
+  referredBy: text("referred_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -19,6 +21,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
   password: true,
+  referredBy: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

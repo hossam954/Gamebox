@@ -22,6 +22,7 @@ interface SettingsModalProps {
   onLogout: () => void;
   isAdmin?: boolean;
   onAdminClick?: () => void;
+  referralCode?: string;
 }
 
 export default function SettingsModal({ 
@@ -31,7 +32,8 @@ export default function SettingsModal({
   username, 
   onLogout,
   isAdmin = false,
-  onAdminClick
+  onAdminClick,
+  referralCode
 }: SettingsModalProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -159,8 +161,9 @@ export default function SettingsModal({
         </DialogHeader>
 
         <Tabs defaultValue="account" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="account" data-testid="tab-account">Account</TabsTrigger>
+            <TabsTrigger value="referral" data-testid="tab-referral">الإحالة</TabsTrigger>
             <TabsTrigger value="promo" data-testid="tab-promo">Promo Codes</TabsTrigger>
             <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
           </TabsList>
@@ -223,6 +226,79 @@ export default function SettingsModal({
                 >
                   {isLoading ? "Changing..." : "Change Password"}
                 </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="referral" className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Gift className="h-4 w-4" />
+                رابط الإحالة
+              </h3>
+              
+              <div className="rounded-lg border bg-card p-4 space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="referral-code">رمز الدعوة الخاص بك</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="referral-code"
+                      type="text"
+                      value={referralCode || ""}
+                      readOnly
+                      className="font-mono"
+                      data-testid="input-referral-code-display"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (referralCode) {
+                          navigator.clipboard.writeText(referralCode);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ رمز الدعوة بنجاح",
+                          });
+                        }
+                      }}
+                      data-testid="button-copy-referral-code"
+                    >
+                      نسخ
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="referral-link">رابط الإحالة الخاص بك</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="referral-link"
+                      type="text"
+                      value={`${window.location.origin}/register?ref=${referralCode || ""}`}
+                      readOnly
+                      className="font-mono text-xs"
+                      data-testid="input-referral-link-display"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (referralCode) {
+                          navigator.clipboard.writeText(`${window.location.origin}/register?ref=${referralCode}`);
+                          toast({
+                            title: "تم النسخ",
+                            description: "تم نسخ رابط الإحالة بنجاح",
+                          });
+                        }
+                      }}
+                      data-testid="button-copy-referral-link"
+                    >
+                      نسخ
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    💜 احصل على 5% من كل عملية شحن يقوم بها المستخدمون الذين يسجلون من خلال رابطك!
+                  </p>
+                </div>
               </div>
             </div>
           </TabsContent>

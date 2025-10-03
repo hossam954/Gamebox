@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const urlParams = new URLSearchParams(window.location.search);
+  const [referralCode, setReferralCode] = useState(urlParams.get("ref") || "");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -43,7 +45,7 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, referredBy: referralCode || undefined }),
       });
 
       const data = await response.json();
@@ -145,6 +147,18 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 data-testid="input-confirm-password"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referralCode">رمز الدعوة (اختياري)</Label>
+              <Input
+                id="referralCode"
+                type="text"
+                placeholder="أدخل رمز الدعوة إن وجد"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                data-testid="input-referral-code"
               />
             </div>
 

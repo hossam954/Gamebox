@@ -23,6 +23,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined>;
+  getUserByReferralCode(referralCode: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(userId: string, amount: number): Promise<void>;
   updateUserStats(userId: string, balance: number, won: boolean): Promise<void>;
@@ -160,6 +161,7 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
+    const referralCode = this.generateReferralCode(insertUser.username);
     const user: User = {
       ...insertUser,
       id,
@@ -167,10 +169,23 @@ export class MemStorage implements IStorage {
       totalWins: 0,
       totalLosses: 0,
       isAdmin: false,
+      referralCode,
+      referredBy: insertUser.referredBy || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
     return user;
+  }
+
+  private generateReferralCode(username: string): string {
+    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${username.substring(0, 3).toUpperCase()}${randomStr}`;
+  }
+
+  async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.referralCode === referralCode,
+    );
   }
 
   async updateUserBalance(userId: string, amount: number): Promise<void> {

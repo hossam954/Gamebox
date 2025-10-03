@@ -22,7 +22,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(result.data);
-      res.json({ userId: user.id, message: "Account created successfully" });
+      
+      // إرسال إشعار للمستخدم الجديد إذا كان لديه محيل
+      if (result.data.referredBy) {
+        const referrer = await storage.getUserByReferralCode(result.data.referredBy);
+        if (referrer) {
+          await storage.createNotification({
+            userId: user.id,
+            title: "تم التسجيل من خلال إحالة 💜",
+            message: `لقد قمت بالتسجيل من خلال إحالة صديقك: ${referrer.username}\nأهلاً وسهلاً 💜`
+          });
+          
+          // إرسال إشعار للمحيل
+          await storage.createNotification({
+            userId: referrer.id,
+            title: "مستخدم جديد من إحالتك 💜",
+            message: `انضم المستخدم ${user.username} من خلال رابط إحالتك ستحصل الآن على 5% من أي عملية شحن يقوم بها 💜`
+          });
+        }
+      }
+      
+      res.json({ userId: user.id, referralCode: user.referralCode, message: "Account created successfully" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
@@ -156,6 +176,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             await storage.updateUserBalance(user.id, user.balance + totalAmount);
+            
+            // معالجة مكافأة الإحالة
+            if (user.referredBy) {
+              const referrer = await storage.getUserByReferralCode(user.referredBy);
+              if (referrer) {
+                const referralBonus = Math.floor((request.amount * 5) / 100);
+                await storage.updateUserBalance(referrer.id, referrer.balance + referralBonus);
+                
+                await storage.createNotification({
+                  userId: referrer.id,
+                  title: "مكافأة من نظام الإحالة 💜",
+                  message: `لقد حصلت على £${referralBonus.toLocaleString()} من نظام الإحالة\n💜 بالتوفيق`
+                });
+              }
+            }
             
             await storage.createNotification({
               userId: user.id,

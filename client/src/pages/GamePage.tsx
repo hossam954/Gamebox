@@ -17,11 +17,13 @@ interface User {
   email: string;
   balance: number;
   isAdmin: boolean;
+  referralCode?: string; // Added for referral code
 }
 
 export default function GamePage() {
   const [, setLocation] = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null); // State to hold user data including referral code
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -42,7 +44,8 @@ export default function GamePage() {
     const storedUsername = localStorage.getItem("username");
     const adminStatus = localStorage.getItem("isAdmin") === "true";
     const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
-    
+    const storedUser = localStorage.getItem("user"); // Retrieve user data from local storage
+
     if (!storedUserId) {
       setLocation("/login");
     } else {
@@ -50,8 +53,40 @@ export default function GamePage() {
       setUsername(storedUsername || "");
       setIsAdmin(adminStatus);
       setNotifications(storedNotifications);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser)); // Set user state
+      }
+
+      // Check for referral code in URL params on initial load
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralCode = urlParams.get('ref');
+      if (referralCode) {
+        localStorage.setItem('referredBy', referralCode); // Store referral code for later use
+        // Optionally, show a welcome message or redirect to registration with code pre-filled
+      }
     }
   }, [setLocation]);
+
+  // Function to send notification
+  const sendNotification = (message: string, type: "success" | "error" | "info" = "info") => {
+    const newNotification = {
+      id: Date.now().toString(),
+      message,
+      read: false,
+      timestamp: new Date().toISOString(),
+      type,
+    };
+    setNotifications((prev) => {
+      const updatedNotifications = [newNotification, ...prev];
+      localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+      return updatedNotifications;
+    });
+    toast({
+      title: type.charAt(0).toUpperCase() + type.slice(1),
+      description: message,
+      variant: type === "error" ? "destructive" : "default",
+    });
+  };
 
   const handleOpenBox = () => {
     if (!selectedBet) {
@@ -115,6 +150,21 @@ export default function GamePage() {
           className: "bg-success text-success-foreground",
         });
         setTimeout(() => dismiss(), 1500);
+
+        // Referral bonus logic for the referrer
+        const referredBy = localStorage.getItem('referredBy');
+        if (referredBy && user?.id) {
+          // Here you would typically call an API to get the referrer's username and update their balance
+          // For now, we'll simulate getting the referrer's username and sending a notification
+          const referrerUsername = "Friend"; // Replace with actual fetched username
+          const bonusAmount = winnings * 0.05;
+          if (bonusAmount > 0) {
+            sendNotification(`You have earned £${bonusAmount.toLocaleString()} from your friend ${referrerUsername}'s win!`, "success");
+            // Update referrer's balance via API call
+          }
+          localStorage.removeItem('referredBy'); // Clear after processing
+        }
+
       } else {
         setTransactions((prev) => [
           {
@@ -144,6 +194,8 @@ export default function GamePage() {
   const handleLogout = () => {
     localStorage.removeItem("userId");
     localStorage.removeItem("username");
+    localStorage.removeItem("user"); // Clear user data
+    localStorage.removeItem("referredBy"); // Clear referral code
     setLocation("/login");
   };
 
@@ -234,6 +286,7 @@ export default function GamePage() {
         onLogout={handleLogout}
         isAdmin={isAdmin}
         onAdminClick={handleAdminClick}
+        referralCode={user?.referralCode} // Pass referral code to SettingsModal
       />
 
       <SupportModal
