@@ -49,10 +49,16 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
-          title: "Account created!",
-          description: "Welcome to Mystery Box. Starting balance: £1,000",
-        });
+        const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+        const newNotification = {
+          id: Date.now().toString(),
+          title: `أهلاً بك ${username}`,
+          message: `بريدك الإلكتروني: ${email}\nتاريخ ووقت الانضمام: ${new Date().toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}\n\nحظاً موفقاً 🍀 Good Luck`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        };
+        notifications.unshift(newNotification);
+        localStorage.setItem("notifications", JSON.stringify(notifications));
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("username", username);
         setLocation("/");

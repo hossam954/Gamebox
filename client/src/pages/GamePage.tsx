@@ -7,6 +7,7 @@ import BetSelector from "@/components/BetSelector";
 import WalletModal from "@/components/WalletModal";
 import SettingsModal from "@/components/SettingsModal";
 import SupportModal from "@/components/SupportModal";
+import NotificationsModal from "@/components/NotificationsModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,6 +25,8 @@ export default function GamePage() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -38,6 +41,7 @@ export default function GamePage() {
     const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
     const adminStatus = localStorage.getItem("isAdmin") === "true";
+    const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
     
     if (!storedUserId) {
       setLocation("/login");
@@ -45,6 +49,7 @@ export default function GamePage() {
       setUserId(storedUserId);
       setUsername(storedUsername || "");
       setIsAdmin(adminStatus);
+      setNotifications(storedNotifications);
     }
   }, [setLocation]);
 
@@ -146,6 +151,21 @@ export default function GamePage() {
     setLocation("/admin");
   };
 
+  const handleMarkAsRead = (id: string) => {
+    const updatedNotifications = notifications.map((n) =>
+      n.id === id ? { ...n, read: true } : n
+    );
+    setNotifications(updatedNotifications);
+    localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+  };
+
+  const handleClearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.setItem("notifications", JSON.stringify([]));
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   if (!userId) {
     return null;
   }
@@ -157,8 +177,8 @@ export default function GamePage() {
         onWalletClick={() => setShowWalletModal(true)}
         onSupportClick={() => setShowSupportModal(true)}
         onSettingsClick={() => setShowSettingsModal(true)}
-        onNotificationsClick={() => toast({ title: "Notifications", description: "No new notifications" })}
-        hasNotifications={false}
+        onNotificationsClick={() => setShowNotificationsModal(true)}
+        hasNotifications={unreadCount > 0}
         isAdmin={isAdmin}
         onAdminClick={handleAdminClick}
       />
@@ -219,6 +239,14 @@ export default function GamePage() {
         onClose={() => setShowSupportModal(false)}
         userId={userId || ""}
         username={username}
+      />
+
+      <NotificationsModal
+        isOpen={showNotificationsModal}
+        onClose={() => setShowNotificationsModal(false)}
+        notifications={notifications}
+        onMarkAsRead={handleMarkAsRead}
+        onClearAll={handleClearAllNotifications}
       />
     </div>
   );
