@@ -49,6 +49,33 @@ export default function GamePage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const { toast } = useToast();
 
+  const loadUserBalance = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users`);
+      if (response.ok) {
+        const users = await response.json();
+        const currentUser = users.find((u: any) => u.id === userId);
+        if (currentUser) {
+          setBalance(currentUser.balance);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading balance:", error);
+    }
+  };
+
+  const loadNotifications = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
+  };
+
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
@@ -131,34 +158,6 @@ export default function GamePage() {
       refreshUserData();
     }
   }, [showSettingsModal, userId]);
-
-  const loadUserBalance = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/users`);
-      if (response.ok) {
-        const users = await response.json();
-        const currentUser = users.find((u: any) => u.id === userId);
-        if (currentUser) {
-          setBalance(currentUser.balance);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading balance:", error);
-    }
-  };
-
-  const loadNotifications = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/notifications/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data);
-      }
-    } catch (error) {
-      console.error("Error loading notifications:", error);
-    }
-  };
-
 
   // Function to send notification
   const sendNotification = (message: string, type: "success" | "error" | "info" = "info") => {
