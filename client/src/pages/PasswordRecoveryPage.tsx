@@ -149,11 +149,9 @@ export default function PasswordRecoveryPage() {
             </Button>
 
             <div className="text-center">
-              <Link href="/login">
-                <a className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline" data-testid="link-back-login">
-                  <ArrowLeft className="h-3 w-3" />
-                  Back to Login
-                </a>
+              <Link href="/login" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline" data-testid="link-back-login">
+                <ArrowLeft className="h-3 w-3" />
+                Back to Login
               </Link>
             </div>
           </form>

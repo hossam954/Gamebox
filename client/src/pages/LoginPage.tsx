@@ -117,19 +117,15 @@ export default function LoginPage() {
 
             <div className="space-y-2 text-center text-sm">
               <div>
-                <Link href="/password-recovery">
-                  <a className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
-                    Forgot your password?
-                  </a>
+                <Link href="/password-recovery" className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
+                  Forgot your password?
                 </Link>
               </div>
 
               <div>
                 <span className="text-muted-foreground">Don't have an account? </span>
-                <Link href="/register">
-                  <a className="font-medium text-primary hover:underline" data-testid="link-register">
-                    Register
-                  </a>
+                <Link href="/register" className="font-medium text-primary hover:underline" data-testid="link-register">
+                  Register
                 </Link>
               </div>
             </div>
