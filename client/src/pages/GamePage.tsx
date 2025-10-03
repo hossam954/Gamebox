@@ -55,7 +55,7 @@ export default function GamePage() {
       if (response.ok) {
         const users = await response.json();
         const currentUser = users.find((u: any) => u.id === userId);
-        if (currentUser) {
+        if (currentUser && currentUser.balance !== balance) {
           setBalance(currentUser.balance);
         }
       }
@@ -69,7 +69,10 @@ export default function GamePage() {
       const response = await fetch(`/api/notifications/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data);
+        // فقط تحديث إذا كان هناك تغيير
+        if (JSON.stringify(data) !== JSON.stringify(notifications)) {
+          setNotifications(data);
+        }
       }
     } catch (error) {
       console.error("Error loading notifications:", error);
@@ -107,8 +110,8 @@ export default function GamePage() {
               referralCode: currentUser.referralCode || ""
             };
             setUser(userData);
+            setBalance(currentUser.balance);
             localStorage.setItem("user", JSON.stringify(userData));
-            console.log("User data loaded with referral code:", userData.referralCode);
           }
         }
       } catch (error) {
@@ -117,7 +120,6 @@ export default function GamePage() {
     };
 
     fetchUserData();
-    loadUserBalance(storedUserId);
     loadNotifications(storedUserId);
 
     // Auto-refresh balance and notifications every 10 seconds

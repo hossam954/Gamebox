@@ -69,11 +69,17 @@ export default function DepositsManagementPage() {
       });
 
       if (response.ok) {
+        // تحديث البيانات محلياً بدون إعادة تحميل كاملة
+        setDepositRequests(prev => prev.map(req => 
+          req.id === id 
+            ? { ...req, status: action === "approve" ? "approved" : "rejected" }
+            : req
+        ));
+        
         toast({
           title: `تم ${action === "approve" ? "قبول" : "رفض"} الطلب`,
           description: `تم ${action === "approve" ? "قبول" : "رفض"} طلب الإيداع بنجاح`,
         });
-        fetchData();
       }
     } catch (error) {
       toast({
