@@ -57,7 +57,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      res.json({ userId: user.id, username: user.username, isAdmin: user.isAdmin });
+      res.json({ 
+        userId: user.id, 
+        username: user.username, 
+        email: user.email,
+        isAdmin: user.isAdmin,
+        referralCode: user.referralCode 
+      });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

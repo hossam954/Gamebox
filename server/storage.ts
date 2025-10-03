@@ -95,6 +95,8 @@ export class MemStorage implements IStorage {
       totalWins: 0,
       totalLosses: 0,
       isAdmin: true,
+      referralCode: this.generateReferralCode("abodiab"),
+      referredBy: null,
       createdAt: new Date(),
     };
     this.users.set(adminId, adminUser);
@@ -178,8 +180,12 @@ export class MemStorage implements IStorage {
   }
 
   private generateReferralCode(username: string): string {
-    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `${username.substring(0, 3).toUpperCase()}${randomStr}`;
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
   }
 
   async getUserByReferralCode(referralCode: string): Promise<User | undefined> {

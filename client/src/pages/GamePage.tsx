@@ -20,6 +20,16 @@ interface User {
   referralCode?: string; // Added for referral code
 }
 
+// Function to generate a unique 8-character referral code
+function generateReferralCode(): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
+}
+
 export default function GamePage() {
   const [, setLocation] = useLocation();
   const [userId, setUserId] = useState<string | null>(null);

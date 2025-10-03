@@ -54,46 +54,40 @@ export default function TopBar({
             </div>
           </div>
 
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             onClick={onWalletClick}
             data-testid="button-wallet"
-            className="relative"
+            className="relative p-2 hover:opacity-70 transition-opacity"
           >
             <Wallet className="h-5 w-5" />
-          </Button>
+          </button>
 
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             onClick={onSupportClick}
             data-testid="button-support"
+            className="p-2 hover:opacity-70 transition-opacity"
           >
             <HelpCircle className="h-5 w-5" />
-          </Button>
+          </button>
 
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             onClick={onSettingsClick}
             data-testid="button-settings"
+            className="p-2 hover:opacity-70 transition-opacity"
           >
             <Settings className="h-5 w-5" />
-          </Button>
+          </button>
 
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             onClick={onNotificationsClick}
             data-testid="button-notifications"
-            className="relative"
+            className="relative p-2 hover:opacity-70 transition-opacity"
           >
             <Bell className="h-5 w-5" />
             {hasNotifications && (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
             )}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
