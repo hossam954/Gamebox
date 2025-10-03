@@ -121,7 +121,7 @@ if (!adminExists) {
   db.prepare(`
     INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 50000, 0, 0, 1, new Date().toISOString());
+  `).run(adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 0, 0, 0, 1, new Date().toISOString());
 }
 
 // Initialize payment settings if not exists
@@ -204,6 +204,14 @@ export class SQLiteStorage {
 
   async updateUserBalance(userId: string, amount: number): Promise<void> {
     db.prepare("UPDATE users SET balance = ? WHERE id = ?").run(amount, userId);
+  }
+
+  async updateUserStats(userId: string, balance: number, won: boolean): Promise<void> {
+    if (won) {
+      db.prepare("UPDATE users SET balance = ?, totalWins = totalWins + 1 WHERE id = ?").run(balance, userId);
+    } else {
+      db.prepare("UPDATE users SET balance = ?, totalLosses = totalLosses + 1 WHERE id = ?").run(balance, userId);
+    }
   }
 
   async getAllUsers(): Promise<User[]> {

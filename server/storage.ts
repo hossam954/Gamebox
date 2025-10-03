@@ -25,6 +25,7 @@ export interface IStorage {
   getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(userId: string, amount: number): Promise<void>;
+  updateUserStats(userId: string, balance: number, won: boolean): Promise<void>;
   getAllUsers(): Promise<User[]>;
 
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;

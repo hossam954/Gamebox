@@ -227,6 +227,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id/balance", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { balance } = req.body;
+      await storage.updateUserBalance(id, balance);
+      res.json({ message: "Balance updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/users/:id/game-result", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { balance, won } = req.body;
+      await storage.updateUserStats(id, balance, won);
+      res.json({ message: "Stats updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/promo-codes", async (req, res) => {
     try {
       const result = insertPromoCodeSchema.safeParse(req.body);
