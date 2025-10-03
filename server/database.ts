@@ -198,11 +198,12 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     const referralCode = this.generateReferralCode();
+    const referredBy = insertUser.referredBy && insertUser.referredBy.trim() !== "" ? insertUser.referredBy : null;
     
     db.prepare(`
       INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, referralCode, referredBy, createdAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, referralCode, insertUser.referredBy || null, createdAt);
+    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, referralCode, referredBy, createdAt);
 
     return {
       id,
@@ -212,7 +213,7 @@ export class SQLiteStorage {
       totalLosses: 0,
       isAdmin: false,
       referralCode,
-      referredBy: insertUser.referredBy || null,
+      referredBy: referredBy,
       createdAt: new Date(createdAt)
     };
   }

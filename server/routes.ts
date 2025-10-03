@@ -24,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(result.data);
       
       // إرسال إشعار للمستخدم الجديد إذا كان لديه محيل
-      if (result.data.referredBy) {
+      if (result.data.referredBy && result.data.referredBy.trim() !== "") {
         const referrer = await storage.getUserByReferralCode(result.data.referredBy);
         if (referrer) {
           await storage.createNotification({
@@ -44,6 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ userId: user.id, referralCode: user.referralCode, message: "Account created successfully" });
     } catch (error) {
+      console.error("Registration error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
