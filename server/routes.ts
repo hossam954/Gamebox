@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./database";
 import { insertUserSchema, insertPasswordRecoverySchema, insertDepositRequestSchema, insertWithdrawRequestSchema, insertPaymentSettingsSchema, insertPaymentMethodSchema, insertPromoCodeSchema, insertSupportTicketSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -339,6 +339,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { isActive } = req.body;
       await storage.updatePaymentMethodStatus(id, isActive);
       res.json({ message: "Payment method updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete("/api/payment-methods/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deletePaymentMethod(id);
+      res.json({ message: "Payment method deleted" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

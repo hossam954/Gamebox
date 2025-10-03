@@ -45,6 +45,7 @@ export interface IStorage {
   createPaymentMethod(data: InsertPaymentMethod): Promise<PaymentMethod>;
   getPaymentMethods(): Promise<PaymentMethod[]>;
   updatePaymentMethodStatus(id: string, isActive: boolean): Promise<void>;
+  deletePaymentMethod(id: string): Promise<void>;
 
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
 

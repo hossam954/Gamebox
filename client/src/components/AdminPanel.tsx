@@ -84,7 +84,7 @@ interface AdminPanelProps {
 export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDeleteUser }: AdminPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  
+
   const [passwordRecoveryRequests, setPasswordRecoveryRequests] = useState<Request[]>([]);
   const [depositRequests, setDepositRequests] = useState<Request[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<Request[]>([]);
@@ -116,7 +116,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     try {
       await Promise.all([
         fetchUsers(),
-        
+
         fetchPasswordRecoveryRequests(),
         fetchDepositRequests(),
         fetchWithdrawRequests(),
@@ -143,7 +143,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
-  
+
 
   const fetchPasswordRecoveryRequests = async () => {
     try {
@@ -295,7 +295,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
-  
+
 
   const generateResetLink = (userId: string) => {
     const resetToken = btoa(`${userId}:${Date.now()}`);
@@ -457,6 +457,28 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     }
   };
 
+  const handleDeletePaymentMethod = async (id: string) => {
+    try {
+      const response = await fetch(`/api/payment-methods/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Payment method deleted",
+          description: "Payment method has been removed",
+        });
+        fetchPaymentMethods();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete payment method",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const displayUsers = allUsers.length > 0 ? allUsers : users;
   const filteredUsers = displayUsers.filter(
@@ -554,10 +576,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         {/* Main Content */}
         {/* Admin Tabs as Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "overview" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "overview"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("overview")}
@@ -569,10 +591,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "users" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "users"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("users")}
@@ -584,10 +606,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "deposits" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "deposits"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("deposits")}
@@ -599,10 +621,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "withdrawals" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "withdrawals"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("withdrawals")}
@@ -614,10 +636,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "recovery" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "recovery"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("recovery")}
@@ -629,10 +651,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "promo" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "promo"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("promo")}
@@ -644,10 +666,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "support" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "support"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("support")}
@@ -659,10 +681,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "payment-methods" 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
+              activeTab === "payment-methods"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                 : "border-gray-200 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("payment-methods")}
@@ -1420,6 +1442,16 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                                       {method.isActive ? "تعطيل" : "تفعيل"}
                                     </Button>
                                   </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => handleDeletePaymentMethod(method.id)}
+                                      data-testid={`button-delete-payment-method-${method.id}`}
+                                    >
+                                      حذف
+                                    </Button>
+                                  </TableCell>
                                 </TableRow>
                               ))
                             )}
@@ -1431,7 +1463,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 </Card>
               </TabsContent>
 
-              
+
             </div>
           </Tabs>
         </div>
