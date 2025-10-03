@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import AdminPanel from "@/components/AdminPanel";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,35 +17,15 @@ interface User {
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      username: 'abodiab',
-      email: 'abojafar1327@gmail.com',
-      balance: 50000,
-      totalWins: 45,
-      totalLosses: 23,
-      status: 'active',
-    },
-    {
-      id: '2',
-      username: 'player123',
-      email: 'player123@example.com',
-      balance: 10500,
-      totalWins: 12,
-      totalLosses: 8,
-      status: 'active',
-    },
-    {
-      id: '3',
-      username: 'lucky_gamer',
-      email: 'lucky@example.com',
-      balance: 25000,
-      totalWins: 78,
-      totalLosses: 34,
-      status: 'active',
-    },
-  ]);
+  const [, setLocation] = useLocation();
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    if (!isAdmin) {
+      setLocation("/");
+    }
+  }, [setLocation]);
 
   const handleEditBalance = (userId: string, newBalance: number) => {
     setUsers((prev) =>

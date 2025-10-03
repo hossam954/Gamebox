@@ -36,8 +36,12 @@ export default function GamePage() {
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    
     if (!storedUserId) {
       setLocation("/login");
+    } else if (isAdmin) {
+      setLocation("/admin");
     } else {
       setUserId(storedUserId);
       setUsername(storedUsername || "");
