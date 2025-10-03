@@ -38,3 +38,10 @@ export default defineConfig({
     },
   },
 });
+export default {
+  server: {
+    hmr: {
+      overlay: false
+    }
+  }
+};
