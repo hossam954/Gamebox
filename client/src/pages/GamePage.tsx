@@ -24,8 +24,9 @@ export default function GamePage() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
-  const [balance, setBalance] = useState(1000);
+  const [balance, setBalance] = useState(0);
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selectedBet, setSelectedBet] = useState<number | null>(null);
   const [isOpening, setIsOpening] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -36,15 +37,14 @@ export default function GamePage() {
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    const adminStatus = localStorage.getItem("isAdmin") === "true";
     
     if (!storedUserId) {
       setLocation("/login");
-    } else if (isAdmin) {
-      setLocation("/admin");
     } else {
       setUserId(storedUserId);
       setUsername(storedUsername || "");
+      setIsAdmin(adminStatus);
     }
   }, [setLocation]);
 
@@ -142,6 +142,10 @@ export default function GamePage() {
     setLocation("/login");
   };
 
+  const handleAdminClick = () => {
+    setLocation("/admin");
+  };
+
   if (!userId) {
     return null;
   }
@@ -155,6 +159,8 @@ export default function GamePage() {
         onSettingsClick={() => setShowSettingsModal(true)}
         onNotificationsClick={() => toast({ title: "Notifications", description: "No new notifications" })}
         hasNotifications={false}
+        isAdmin={isAdmin}
+        onAdminClick={handleAdminClick}
       />
 
       <div className="flex flex-col items-center justify-center gap-8 px-4 py-12 md:min-h-[calc(100vh-4rem)]">

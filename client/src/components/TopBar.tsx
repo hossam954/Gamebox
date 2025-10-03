@@ -9,6 +9,8 @@ interface TopBarProps {
   onSettingsClick: () => void;
   onNotificationsClick: () => void;
   hasNotifications?: boolean;
+  isAdmin?: boolean;
+  onAdminClick?: () => void;
 }
 
 export default function TopBar({
@@ -18,6 +20,8 @@ export default function TopBar({
   onSettingsClick,
   onNotificationsClick,
   hasNotifications = false,
+  isAdmin = false,
+  onAdminClick,
 }: TopBarProps) {
   return (
     <div className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -30,6 +34,15 @@ export default function TopBar({
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
+          {isAdmin && onAdminClick && (
+            <Button
+              onClick={onAdminClick}
+              className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+              size="sm"
+            >
+              لوحة التحكم
+            </Button>
+          )}
           <div 
             className="flex items-center gap-2 rounded-md border border-card-border bg-card px-3 py-2 md:px-4"
             data-testid="balance-display"
