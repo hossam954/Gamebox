@@ -77,10 +77,11 @@ export default function GamePage() {
               email: currentUser.email,
               balance: currentUser.balance,
               isAdmin: currentUser.isAdmin,
-              referralCode: currentUser.referralCode
+              referralCode: currentUser.referralCode || ""
             };
             setUser(userData);
             localStorage.setItem("user", JSON.stringify(userData));
+            console.log("User data loaded with referral code:", userData.referralCode);
           }
         }
       } catch (error) {
@@ -93,6 +94,36 @@ export default function GamePage() {
     loadNotifications(storedUserId);
   }, [setLocation]);
 
+  // Refresh user data when settings modal opens
+  useEffect(() => {
+    if (showSettingsModal && userId) {
+      const refreshUserData = async () => {
+        try {
+          const response = await fetch(`/api/users`);
+          if (response.ok) {
+            const users = await response.json();
+            const currentUser = users.find((u: any) => u.id === userId);
+            if (currentUser) {
+              const userData = {
+                id: currentUser.id,
+                username: currentUser.username,
+                email: currentUser.email,
+                balance: currentUser.balance,
+                isAdmin: currentUser.isAdmin,
+                referralCode: currentUser.referralCode || ""
+              };
+              setUser(userData);
+              localStorage.setItem("user", JSON.stringify(userData));
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing user data:", error);
+        }
+      };
+      refreshUserData();
+    }
+  }, [showSettingsModal, userId]);
+
   // Dummy functions for balance and notifications loading
   const loadUserBalance = async (userId: string) => {
     // Replace with actual API call to fetch balance
@@ -100,8 +131,8 @@ export default function GamePage() {
     if (storedBalance) {
       setBalance(parseInt(storedBalance, 10));
     } else {
-      setBalance(1000); // Default balance if not found
-      localStorage.setItem("balance", "1000");
+      setBalance(0); // Default balance if not found
+      localStorage.setItem("balance", "0");
     }
   };
 
