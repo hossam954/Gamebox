@@ -108,6 +108,7 @@ export default function LoginPage() {
                   value={usernameOrEmail}
                   onChange={(e) => setUsernameOrEmail(e.target.value)}
                   required
+                  autoComplete="username"
                   data-testid="input-username-email"
                 />
               </div>
@@ -121,6 +122,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   data-testid="input-password"
                 />
               </div>
