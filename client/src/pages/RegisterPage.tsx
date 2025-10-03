@@ -157,14 +157,14 @@ export default function RegisterPage() {
                 </>
               )}
             </Button>
-
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
-              <Link href="/login" className="font-medium text-primary hover:underline" data-testid="link-login">
-                Login
-              </Link>
-            </div>
           </form>
+          
+          <div className="mt-4 text-center text-sm border-t pt-4">
+            <span className="text-muted-foreground">Already have an account? </span>
+            <Link href="/login" className="font-medium text-primary hover:underline" data-testid="link-login">
+              Login
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
