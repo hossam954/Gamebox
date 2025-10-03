@@ -92,6 +92,14 @@ export default function GamePage() {
     fetchUserData();
     loadUserBalance(storedUserId);
     loadNotifications(storedUserId);
+
+    // Auto-refresh balance and notifications every 10 seconds
+    const refreshInterval = setInterval(() => {
+      loadUserBalance(storedUserId);
+      loadNotifications(storedUserId);
+    }, 10000);
+
+    return () => clearInterval(refreshInterval);
   }, [setLocation]);
 
   // Refresh user data when settings modal opens
@@ -124,21 +132,31 @@ export default function GamePage() {
     }
   }, [showSettingsModal, userId]);
 
-  // Dummy functions for balance and notifications loading
   const loadUserBalance = async (userId: string) => {
-    // Replace with actual API call to fetch balance
-    const storedBalance = localStorage.getItem("balance");
-    if (storedBalance) {
-      setBalance(parseInt(storedBalance, 10));
-    } else {
-      setBalance(0); // Default balance if not found
-      localStorage.setItem("balance", "0");
+    try {
+      const response = await fetch(`/api/users`);
+      if (response.ok) {
+        const users = await response.json();
+        const currentUser = users.find((u: any) => u.id === userId);
+        if (currentUser) {
+          setBalance(currentUser.balance);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading balance:", error);
     }
   };
 
   const loadNotifications = async (userId: string) => {
-    const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
-    setNotifications(storedNotifications);
+    try {
+      const response = await fetch(`/api/notifications/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
   };
 
 
