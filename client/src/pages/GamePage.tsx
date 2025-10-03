@@ -52,30 +52,64 @@ export default function GamePage() {
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
-    const adminStatus = localStorage.getItem("isAdmin") === "true";
-    const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
-    const storedUser = localStorage.getItem("user"); // Retrieve user data from local storage
+    const storedIsAdmin = localStorage.getItem("isAdmin") === "true";
 
-    if (!storedUserId) {
+    if (!storedUserId || !storedUsername) {
       setLocation("/login");
-    } else {
-      setUserId(storedUserId);
-      setUsername(storedUsername || "");
-      setIsAdmin(adminStatus);
-      setNotifications(storedNotifications);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser)); // Set user state
-      }
-
-      // Check for referral code in URL params on initial load
-      const urlParams = new URLSearchParams(window.location.search);
-      const referralCode = urlParams.get('ref');
-      if (referralCode) {
-        localStorage.setItem('referredBy', referralCode); // Store referral code for later use
-        // Optionally, show a welcome message or redirect to registration with code pre-filled
-      }
+      return;
     }
+
+    setUserId(storedUserId);
+    setUsername(storedUsername);
+    setIsAdmin(storedIsAdmin);
+
+    // Fetch user data from server to get referral code
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`/api/users`);
+        if (response.ok) {
+          const users = await response.json();
+          const currentUser = users.find((u: any) => u.id === storedUserId);
+          if (currentUser) {
+            const userData = {
+              id: currentUser.id,
+              username: currentUser.username,
+              email: currentUser.email,
+              balance: currentUser.balance,
+              isAdmin: currentUser.isAdmin,
+              referralCode: currentUser.referralCode
+            };
+            setUser(userData);
+            localStorage.setItem("user", JSON.stringify(userData));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+    loadUserBalance(storedUserId);
+    loadNotifications(storedUserId);
   }, [setLocation]);
+
+  // Dummy functions for balance and notifications loading
+  const loadUserBalance = async (userId: string) => {
+    // Replace with actual API call to fetch balance
+    const storedBalance = localStorage.getItem("balance");
+    if (storedBalance) {
+      setBalance(parseInt(storedBalance, 10));
+    } else {
+      setBalance(1000); // Default balance if not found
+      localStorage.setItem("balance", "1000");
+    }
+  };
+
+  const loadNotifications = async (userId: string) => {
+    const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+    setNotifications(storedNotifications);
+  };
+
 
   // Function to send notification
   const sendNotification = (message: string, type: "success" | "error" | "info" = "info") => {
@@ -145,6 +179,7 @@ export default function GamePage() {
       if (prizeMultiplier) {
         const winnings = selectedBet! * prizeMultiplier;
         setBalance((prev) => prev + winnings);
+        localStorage.setItem("balance", (balance + winnings).toString()); // Update local storage
         setTransactions((prev) => [
           {
             id: Date.now().toString(),
@@ -206,6 +241,8 @@ export default function GamePage() {
     localStorage.removeItem("username");
     localStorage.removeItem("user"); // Clear user data
     localStorage.removeItem("referredBy"); // Clear referral code
+    localStorage.removeItem("balance"); // Clear balance
+    localStorage.removeItem("notifications"); // Clear notifications
     setLocation("/login");
   };
 
