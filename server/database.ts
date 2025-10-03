@@ -70,7 +70,6 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS payment_settings (
     id TEXT PRIMARY KEY,
-    depositFee INTEGER DEFAULT 0,
     withdrawFee INTEGER DEFAULT 5,
     minDeposit INTEGER DEFAULT 50,
     maxDeposit INTEGER DEFAULT 50000,
@@ -130,9 +129,9 @@ const settingsExists = db.prepare("SELECT * FROM payment_settings").get();
 if (!settingsExists) {
   const settingsId = randomUUID();
   db.prepare(`
-    INSERT INTO payment_settings (id, depositFee, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(settingsId, 0, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet");
+    INSERT INTO payment_settings (id, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(settingsId, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet");
 }
 
 export class SQLiteStorage {
@@ -325,10 +324,9 @@ export class SQLiteStorage {
     const current = await this.getPaymentSettings();
     db.prepare(`
       UPDATE payment_settings 
-      SET depositFee = ?, withdrawFee = ?, minDeposit = ?, maxDeposit = ?, minWithdraw = ?, maxWithdraw = ?, depositAddress = ?, paymentMethod = ?
+      SET withdrawFee = ?, minDeposit = ?, maxDeposit = ?, minWithdraw = ?, maxWithdraw = ?, depositAddress = ?, paymentMethod = ?
       WHERE id = ?
     `).run(
-      settings.depositFee,
       settings.withdrawFee,
       settings.minDeposit,
       settings.maxDeposit,

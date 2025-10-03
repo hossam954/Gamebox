@@ -21,7 +21,6 @@ interface Transaction {
 }
 
 interface PaymentSettings {
-  depositFee: number;
   withdrawFee: number;
   minDeposit: number;
   maxDeposit: number;

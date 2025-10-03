@@ -90,7 +90,6 @@ export type WithdrawRequest = typeof withdrawRequests.$inferSelect;
 
 export const paymentSettings = pgTable("payment_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  depositFee: integer("deposit_fee").notNull().default(0),
   withdrawFee: integer("withdraw_fee").notNull().default(0),
   minDeposit: integer("min_deposit").notNull().default(50),
   maxDeposit: integer("max_deposit").notNull().default(50000),

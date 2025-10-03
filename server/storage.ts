@@ -95,7 +95,6 @@ export class MemStorage implements IStorage {
 
     this.paymentSettings = {
       id: randomUUID(),
-      depositFee: 0,
       withdrawFee: 5,
       minDeposit: 50,
       maxDeposit: 50000,
