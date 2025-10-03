@@ -487,7 +487,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalBalance = allUsers.reduce((sum, user) => sum + (user.balance || 0), 0);
+  const totalBalance = displayUsers.reduce((sum, user) => sum + (user.balance || 0), 0);
   const activeUsers = allUsers.filter((u) => u.status === "active").length;
   const suspendedUsers = allUsers.filter((u) => u.status === "suspended").length;
   const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +

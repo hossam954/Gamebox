@@ -53,14 +53,33 @@ export default function AdminPage() {
     });
   };
 
-  const handleDeleteUser = (userId: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      setUsers((prev) => prev.filter((user) => user.id !== userId));
-      toast({
-        title: "User deleted",
-        description: "User has been removed from the system",
-        variant: "destructive",
-      });
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm("Are you sure you want to delete this user? All related data will be permanently removed.")) {
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          setUsers((prev) => prev.filter((user) => user.id !== userId));
+          toast({
+            title: "User deleted",
+            description: "User and all related data have been removed from the system",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to delete user",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Something went wrong",
+          variant: "destructive",
+        });
+      }
     }
   };
 

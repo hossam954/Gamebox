@@ -33,6 +33,8 @@ db.exec(`
     totalWins INTEGER DEFAULT 0,
     totalLosses INTEGER DEFAULT 0,
     isAdmin INTEGER DEFAULT 0,
+    referralCode TEXT UNIQUE,
+    referredBy TEXT,
     createdAt TEXT NOT NULL
   );
 
@@ -112,6 +114,15 @@ db.exec(`
     status TEXT DEFAULT 'open',
     createdAt TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    read INTEGER DEFAULT 0,
+    createdAt TEXT NOT NULL
+  );
 `);
 
 // Initialize admin user if not exists
@@ -186,10 +197,12 @@ export class SQLiteStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
+    const referralCode = this.generateReferralCode();
+    
     db.prepare(`
-      INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, createdAt);
+      INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, referralCode, referredBy, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, referralCode, insertUser.referredBy || null, createdAt);
 
     return {
       id,
@@ -198,8 +211,19 @@ export class SQLiteStorage {
       totalWins: 0,
       totalLosses: 0,
       isAdmin: false,
+      referralCode,
+      referredBy: insertUser.referredBy || null,
       createdAt: new Date(createdAt)
     };
+  }
+
+  private generateReferralCode(): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
   }
 
   async updateUserBalance(userId: string, amount: number): Promise<void> {
@@ -221,6 +245,28 @@ export class SQLiteStorage {
       isAdmin: Boolean(user.isAdmin),
       createdAt: new Date(user.createdAt)
     }));
+  }
+
+  async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
+    const user = db.prepare("SELECT * FROM users WHERE referralCode = ?").get(referralCode) as any;
+    if (user) {
+      return {
+        ...user,
+        isAdmin: Boolean(user.isAdmin),
+        createdAt: new Date(user.createdAt)
+      };
+    }
+    return undefined;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete all user-related data
+    db.prepare("DELETE FROM password_recovery WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM deposit_requests WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM withdraw_requests WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM support_tickets WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM notifications WHERE userId = ?").run(userId);
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId);
   }
 
   async createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest> {
@@ -480,6 +526,32 @@ export class SQLiteStorage {
 
   async updateSupportTicket(id: string, response: string, status: string): Promise<void> {
     db.prepare("UPDATE support_tickets SET response = ?, status = ? WHERE id = ?").run(response, status, id);
+  }
+
+  async createNotification(data: { userId: string; title: string; message: string }): Promise<void> {
+    const id = randomUUID();
+    const createdAt = new Date().toISOString();
+    db.prepare(`
+      INSERT INTO notifications (id, userId, title, message, read, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, data.userId, data.title, data.message, 0, createdAt);
+  }
+
+  async getNotificationsByUserId(userId: string): Promise<any[]> {
+    const notifications = db.prepare("SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC").all(userId) as any[];
+    return notifications.map(notif => ({
+      ...notif,
+      read: Boolean(notif.read),
+      createdAt: new Date(notif.createdAt)
+    }));
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    db.prepare("UPDATE notifications SET read = 1 WHERE id = ?").run(id);
+  }
+
+  async clearAllNotifications(userId: string): Promise<void> {
+    db.prepare("DELETE FROM notifications WHERE userId = ?").run(userId);
   }
 }
 
