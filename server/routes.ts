@@ -156,24 +156,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { status } = req.body;
       
+      console.log(`Processing deposit ${id} with status: ${status}`);
+      
       const requests = await storage.getDepositRequests();
       const request = requests.find((r) => r.id === id);
       
+      console.log(`Request found:`, request);
+      
       if (request && request.status === "pending") {
+        console.log(`Request is pending, processing...`);
         const user = await storage.getUserByUsername(request.username);
+        console.log(`User found:`, user ? user.username : 'NOT FOUND');
+        
         if (user) {
           const methods = await storage.getPaymentMethods();
           const paymentMethod = methods.find(m => m.id === request.paymentMethodId);
           const methodName = paymentMethod?.name || "غير محدد";
 
           if (status === "approved") {
-            // إضافة الرصيد فوريًا
+            console.log(`Approving deposit for user ${user.username}, amount: ${request.amount}`);
+            
             let totalAmount = request.amount;
             
-            // التحقق من وجود بونص
             if (paymentMethod && paymentMethod.fee > 0) {
               const bonusAmount = Math.floor((request.amount * paymentMethod.fee) / 100);
               totalAmount += bonusAmount;
+              console.log(`Bonus added: ${bonusAmount}, total: ${totalAmount}`);
               
               await storage.createNotification({
                 userId: user.id,
@@ -182,13 +190,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
             
+            console.log(`Updating user balance from ${user.balance} to ${user.balance + totalAmount}`);
             await storage.updateUserBalance(user.id, user.balance + totalAmount);
             
-            // معالجة مكافأة الإحالة
             if (user.referredBy) {
               const referrer = await storage.getUserByReferralCode(user.referredBy);
               if (referrer) {
                 const referralBonus = Math.floor((request.amount * 5) / 100);
+                console.log(`Adding referral bonus ${referralBonus} to referrer ${referrer.username}`);
                 await storage.updateUserBalance(referrer.id, referrer.balance + referralBonus);
                 
                 await storage.createNotification({
@@ -199,6 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
+            console.log(`Creating approval notification for user ${user.username}`);
             await storage.createNotification({
               userId: user.id,
               title: "تم قبول عملية الإيداع ✅",
@@ -212,11 +222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
+      } else {
+        console.log(`Request is not pending or not found. Status: ${request?.status}`);
       }
 
+      console.log(`Updating deposit status to: ${status}`);
       await storage.updateDepositStatus(id, status);
       res.json({ message: "Deposit status updated" });
     } catch (error) {
+      console.error("Deposit approval error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
