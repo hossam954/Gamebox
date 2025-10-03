@@ -36,12 +36,8 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-  },
-});
-export default {
-  server: {
     hmr: {
       overlay: false
     }
-  }
-};
+  },
+});
