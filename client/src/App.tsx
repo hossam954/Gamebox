@@ -8,6 +8,8 @@ import AdminPage from "@/pages/AdminPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import PasswordRecoveryPage from "@/pages/PasswordRecoveryPage";
+import DepositsManagementPage from "@/pages/DepositsManagementPage";
+import WithdrawalsManagementPage from "@/pages/WithdrawalsManagementPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/password-recovery" component={PasswordRecoveryPage} />
       <Route path="/" component={GamePage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/deposits" component={DepositsManagementPage} />
+      <Route path="/admin/withdrawals" component={WithdrawalsManagementPage} />
       <Route component={NotFound} />
     </Switch>
   );

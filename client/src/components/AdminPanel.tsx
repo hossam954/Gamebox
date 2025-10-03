@@ -607,12 +607,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "deposits"
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-200 hover:border-blue-300"
-            }`}
-            onClick={() => setActiveTab("deposits")}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 border-gray-200 hover:border-emerald-300`}
+            onClick={() => window.location.href = "/admin/deposits"}
           >
             <CardContent className="p-6 text-center">
               <Wallet className="h-8 w-8 mx-auto mb-3 text-emerald-600" />
@@ -622,12 +618,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-              activeTab === "withdrawals"
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-200 hover:border-blue-300"
-            }`}
-            onClick={() => setActiveTab("withdrawals")}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 border-gray-200 hover:border-red-300`}
+            onClick={() => window.location.href = "/admin/withdrawals"}
           >
             <CardContent className="p-6 text-center">
               <Wallet className="h-8 w-8 mx-auto mb-3 text-red-600" />
@@ -693,6 +685,23 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
               <Wallet className="h-8 w-8 mx-auto mb-3 text-orange-600" />
               <h3 className="font-semibold text-lg">طرق الدفع</h3>
               <p className="text-sm text-muted-foreground mt-1">إدارة الطرق</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              activeTab === "messaging"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+            onClick={() => setActiveTab("messaging")}
+          >
+            <CardContent className="p-6 text-center">
+              <svg className="h-8 w-8 mx-auto mb-3 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <h3 className="font-semibold text-lg">الإذاعة والرسائل</h3>
+              <p className="text-sm text-muted-foreground mt-1">إرسال الإشعارات</p>
             </CardContent>
           </Card>
         </div>
@@ -1310,6 +1319,172 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         ))
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="messaging" className="mt-0">
+                <Card className="shadow-lg border-2 border-cyan-100 dark:border-cyan-800">
+                  <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 bg-cyan-100 dark:bg-cyan-800 rounded-lg">
+                        <svg className="h-6 w-6 text-cyan-600 dark:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                      </div>
+                      الإذاعة العامة والرسائل الخاصة
+                    </CardTitle>
+                    <CardDescription className="text-base mt-2">إرسال إشعارات لجميع المستخدمين أو لمستخدم محدد</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <Tabs defaultValue="broadcast">
+                      <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="broadcast">إذاعة عامة</TabsTrigger>
+                        <TabsTrigger value="private">رسالة خاصة</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="broadcast" className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="broadcast-title">عنوان الإذاعة</Label>
+                          <Input
+                            id="broadcast-title"
+                            placeholder="أدخل عنوان الإذاعة"
+                            data-testid="input-broadcast-title"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="broadcast-message">نص الإذاعة</Label>
+                          <textarea
+                            id="broadcast-message"
+                            placeholder="أدخل نص الإذاعة"
+                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            data-testid="input-broadcast-message"
+                          />
+                        </div>
+                        <Button
+                          onClick={async () => {
+                            const title = (document.getElementById("broadcast-title") as HTMLInputElement).value;
+                            const message = (document.getElementById("broadcast-message") as HTMLTextAreaElement).value;
+                            
+                            if (!title || !message) {
+                              toast({
+                                title: "خطأ",
+                                description: "يرجى ملء جميع الحقول",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+
+                            try {
+                              const response = await fetch("/api/broadcast", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ title, message })
+                              });
+
+                              if (response.ok) {
+                                const data = await response.json();
+                                toast({
+                                  title: "تم إرسال الإذاعة",
+                                  description: `تم إرسال الإذاعة إلى ${data.count} مستخدم بنجاح`
+                                });
+                                (document.getElementById("broadcast-title") as HTMLInputElement).value = "";
+                                (document.getElementById("broadcast-message") as HTMLTextAreaElement).value = "";
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "خطأ",
+                                description: "فشل إرسال الإذاعة",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                          className="w-full"
+                          data-testid="button-send-broadcast"
+                        >
+                          إرسال الإذاعة لجميع المستخدمين
+                        </Button>
+                      </TabsContent>
+
+                      <TabsContent value="private" className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="private-user">اسم المستخدم أو البريد الإلكتروني</Label>
+                          <Input
+                            id="private-user"
+                            placeholder="أدخل اسم المستخدم أو البريد"
+                            data-testid="input-private-user"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="private-title">عنوان الرسالة</Label>
+                          <Input
+                            id="private-title"
+                            placeholder="أدخل عنوان الرسالة"
+                            data-testid="input-private-title"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="private-message">نص الرسالة</Label>
+                          <textarea
+                            id="private-message"
+                            placeholder="أدخل نص الرسالة"
+                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            data-testid="input-private-message"
+                          />
+                        </div>
+                        <Button
+                          onClick={async () => {
+                            const usernameOrEmail = (document.getElementById("private-user") as HTMLInputElement).value;
+                            const title = (document.getElementById("private-title") as HTMLInputElement).value;
+                            const message = (document.getElementById("private-message") as HTMLTextAreaElement).value;
+                            
+                            if (!usernameOrEmail || !title || !message) {
+                              toast({
+                                title: "خطأ",
+                                description: "يرجى ملء جميع الحقول",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+
+                            try {
+                              const response = await fetch("/api/send-message", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ usernameOrEmail, title, message })
+                              });
+
+                              if (response.ok) {
+                                toast({
+                                  title: "تم إرسال الرسالة",
+                                  description: "تم إرسال الرسالة بنجاح"
+                                });
+                                (document.getElementById("private-user") as HTMLInputElement).value = "";
+                                (document.getElementById("private-title") as HTMLInputElement).value = "";
+                                (document.getElementById("private-message") as HTMLTextAreaElement).value = "";
+                              } else {
+                                const data = await response.json();
+                                toast({
+                                  title: "خطأ",
+                                  description: data.message || "المستخدم غير موجود",
+                                  variant: "destructive"
+                                });
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "خطأ",
+                                description: "فشل إرسال الرسالة",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                          className="w-full"
+                          data-testid="button-send-private"
+                        >
+                          إرسال الرسالة
+                        </Button>
+                      </TabsContent>
+                    </Tabs>
                   </CardContent>
                 </Card>
               </TabsContent>
