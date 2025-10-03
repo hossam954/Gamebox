@@ -86,6 +86,7 @@ db.exec(`
     type TEXT NOT NULL,
     minAmount INTEGER DEFAULT 0,
     maxAmount INTEGER DEFAULT 100000,
+    fee INTEGER DEFAULT 0,
     note TEXT DEFAULT '',
     isActive INTEGER DEFAULT 1,
     createdAt TEXT NOT NULL
@@ -261,7 +262,11 @@ export class SQLiteStorage {
 
     return {
       id,
-      ...request,
+      userId: request.userId,
+      username: request.username,
+      amount: request.amount,
+      paymentMethodId: request.paymentMethodId || null,
+      transactionNumber: request.transactionNumber || null,
       status: 'pending',
       createdAt: new Date(createdAt)
     };
@@ -289,7 +294,11 @@ export class SQLiteStorage {
 
     return {
       id,
-      ...request,
+      userId: request.userId,
+      username: request.username,
+      amount: request.amount,
+      paymentMethodId: request.paymentMethodId || null,
+      address: request.address,
       status: 'pending',
       createdAt: new Date(createdAt)
     };
@@ -337,13 +346,18 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
-      INSERT INTO payment_methods (id, name, type, minAmount, maxAmount, note, isActive, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, data.name, data.type, data.minAmount, data.maxAmount, data.note, 1, createdAt);
+      INSERT INTO payment_methods (id, name, type, minAmount, maxAmount, fee, note, isActive, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, data.name, data.type || "both", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.note || "", 1, createdAt);
 
     return {
       id,
-      ...data,
+      name: data.name,
+      type: data.type || "both",
+      minAmount: data.minAmount || 0,
+      maxAmount: data.maxAmount || 100000,
+      fee: data.fee || 0,
+      note: data.note || "",
       isActive: true,
       createdAt: new Date(createdAt)
     };
@@ -376,11 +390,14 @@ export class SQLiteStorage {
     db.prepare(`
       INSERT INTO promo_codes (id, code, value, type, usageLimit, usedCount, isActive, createdAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, promoCode.code, promoCode.value, promoCode.type, promoCode.usageLimit, 0, 1, createdAt);
+    `).run(id, promoCode.code, promoCode.value, promoCode.type || "balance", promoCode.usageLimit || 1, 0, 1, createdAt);
 
     return {
       id,
-      ...promoCode,
+      code: promoCode.code,
+      value: promoCode.value,
+      type: promoCode.type || "balance",
+      usageLimit: promoCode.usageLimit || 1,
       usedCount: 0,
       isActive: true,
       createdAt: new Date(createdAt)
@@ -445,7 +462,11 @@ export class SQLiteStorage {
 
     return {
       id,
-      ...ticket,
+      userId: ticket.userId,
+      username: ticket.username,
+      subject: ticket.subject,
+      message: ticket.message,
+      response: null,
       status: 'open',
       createdAt: new Date(createdAt)
     };

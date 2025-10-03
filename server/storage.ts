@@ -86,6 +86,8 @@ export class MemStorage implements IStorage {
       email: "abojafar1327@gmail.com",
       password: "aaa123ddd",
       balance: 50000,
+      totalWins: 0,
+      totalLosses: 0,
       isAdmin: true,
       createdAt: new Date(),
     };
@@ -109,6 +111,7 @@ export class MemStorage implements IStorage {
       type: "bank",
       minAmount: 50,
       maxAmount: 50000,
+      fee: 0,
       note: "Please use your username as reference.",
       isActive: true,
       createdAt: new Date(),
@@ -121,6 +124,7 @@ export class MemStorage implements IStorage {
       type: "mobile",
       minAmount: 50,
       maxAmount: 10000,
+      fee: 0,
       note: "Please provide your mobile number.",
       isActive: true,
       createdAt: new Date(),
@@ -156,6 +160,8 @@ export class MemStorage implements IStorage {
       ...insertUser,
       id,
       balance: 0,
+      totalWins: 0,
+      totalLosses: 0,
       isAdmin: false,
       createdAt: new Date(),
     };
@@ -167,6 +173,19 @@ export class MemStorage implements IStorage {
     const user = this.users.get(userId);
     if (user) {
       user.balance = amount;
+      this.users.set(userId, user);
+    }
+  }
+
+  async updateUserStats(userId: string, balance: number, won: boolean): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.balance = balance;
+      if (won) {
+        user.totalWins += 1;
+      } else {
+        user.totalLosses += 1;
+      }
       this.users.set(userId, user);
     }
   }
@@ -202,7 +221,11 @@ export class MemStorage implements IStorage {
   async createDepositRequest(request: InsertDepositRequest): Promise<DepositRequest> {
     const id = randomUUID();
     const deposit: DepositRequest = {
-      ...request,
+      userId: request.userId,
+      username: request.username,
+      amount: request.amount,
+      paymentMethodId: request.paymentMethodId || null,
+      transactionNumber: request.transactionNumber || null,
       id,
       status: "pending",
       createdAt: new Date(),
@@ -226,7 +249,11 @@ export class MemStorage implements IStorage {
   async createWithdrawRequest(request: InsertWithdrawRequest): Promise<WithdrawRequest> {
     const id = randomUUID();
     const withdraw: WithdrawRequest = {
-      ...request,
+      userId: request.userId,
+      username: request.username,
+      amount: request.amount,
+      paymentMethodId: request.paymentMethodId || null,
+      address: request.address,
       id,
       status: "pending",
       createdAt: new Date(),
@@ -262,8 +289,13 @@ export class MemStorage implements IStorage {
   async createPaymentMethod(data: InsertPaymentMethod): Promise<PaymentMethod> {
     const id = randomUUID();
     const paymentMethod: PaymentMethod = {
-      ...data,
       id,
+      name: data.name,
+      type: data.type || "both",
+      minAmount: data.minAmount || 0,
+      maxAmount: data.maxAmount || 100000,
+      fee: data.fee || 0,
+      note: data.note || "",
       isActive: true,
       createdAt: new Date(),
     };
@@ -283,6 +315,10 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async deletePaymentMethod(id: string): Promise<void> {
+    this.paymentMethods.delete(id);
+  }
+
   async updateUserPassword(userId: string, newPassword: string): Promise<void> {
     const user = this.users.get(userId);
     if (user) {
@@ -294,8 +330,11 @@ export class MemStorage implements IStorage {
   async createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode> {
     const id = randomUUID();
     const newPromoCode: PromoCode = {
-      ...promoCode,
       id,
+      code: promoCode.code,
+      value: promoCode.value,
+      type: promoCode.type || "balance",
+      usageLimit: promoCode.usageLimit || 1,
       usedCount: 0,
       isActive: true,
       createdAt: new Date(),
@@ -358,8 +397,12 @@ export class MemStorage implements IStorage {
   async createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket> {
     const id = randomUUID();
     const newTicket: SupportTicket = {
-      ...ticket,
       id,
+      userId: ticket.userId,
+      username: ticket.username,
+      subject: ticket.subject,
+      message: ticket.message,
+      response: null,
       status: "open",
       createdAt: new Date(),
     };
