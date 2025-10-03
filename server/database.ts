@@ -29,7 +29,9 @@ db.exec(`
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    balance INTEGER DEFAULT 1000,
+    balance INTEGER DEFAULT 0,
+    totalWins INTEGER DEFAULT 0,
+    totalLosses INTEGER DEFAULT 0,
     isAdmin INTEGER DEFAULT 0,
     createdAt TEXT NOT NULL
   );
@@ -117,9 +119,9 @@ const adminExists = db.prepare("SELECT * FROM users WHERE username = ?").get("ab
 if (!adminExists) {
   const adminId = randomUUID();
   db.prepare(`
-    INSERT INTO users (id, username, email, password, balance, isAdmin, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 50000, 1, new Date().toISOString());
+    INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 50000, 0, 0, 1, new Date().toISOString());
 }
 
 // Initialize payment settings if not exists
@@ -185,14 +187,16 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
-      INSERT INTO users (id, username, email, password, balance, isAdmin, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, insertUser.username, insertUser.email, insertUser.password, 1000, 0, createdAt);
+      INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, createdAt);
 
     return {
       id,
       ...insertUser,
-      balance: 1000,
+      balance: 0,
+      totalWins: 0,
+      totalLosses: 0,
       isAdmin: false,
       createdAt: new Date(createdAt)
     };

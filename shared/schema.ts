@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   balance: integer("balance").notNull().default(0),
+  totalWins: integer("total_wins").notNull().default(0),
+  totalLosses: integer("total_losses").notNull().default(0),
   isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
