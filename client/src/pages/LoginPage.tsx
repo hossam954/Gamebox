@@ -114,23 +114,16 @@ export default function LoginPage() {
                 </>
               )}
             </Button>
-
-            <div className="space-y-2 text-center text-sm">
-              <div>
-                <Link href="/password-recovery" className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
-                  Forgot your password?
-                </Link>
-              </div>
-
-              <div>
-                <span className="text-muted-foreground">Don't have an account? </span>
-                <Link href="/register" className="font-medium text-primary hover:underline" data-testid="link-register">
-                  Register
-                </Link>
-              </div>
-            </div>
           </form>
         </CardContent>
+        <CardFooter className="flex justify-center pt-4">
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-primary hover:underline" data-testid="link-register">
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
