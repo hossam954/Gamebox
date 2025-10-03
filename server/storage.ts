@@ -58,6 +58,11 @@ export interface IStorage {
   createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
   getSupportTickets(): Promise<SupportTicket[]>;
   updateSupportTicket(id: string, response: string, status: string): Promise<void>;
+
+  createNotification(notification: { userId: string; title: string; message: string }): Promise<any>;
+  getNotificationsByUserId(userId: string): Promise<any[]>;
+  markNotificationAsRead(id: string): Promise<void>;
+  clearAllNotifications(userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -420,6 +425,54 @@ export class MemStorage implements IStorage {
       ticket.status = status;
       this.supportTickets.set(id, ticket);
     }
+  }
+
+  async createNotification(notification: { userId: string; title: string; message: string }) {
+    const id = randomUUID();
+    const newNotification = {
+      ...notification,
+      id,
+      read: false,
+      createdAt: new Date(),
+    };
+    // In-memory storage for notifications
+    if (!this.notifications) {
+      this.notifications = new Map();
+    }
+    this.notifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async getNotificationsByUserId(userId: string) {
+    // In-memory storage for notifications
+    if (!this.notifications) {
+      this.notifications = new Map();
+    }
+    return Array.from(this.notifications.values()).filter(n => n.userId === userId);
+  }
+
+  async markNotificationAsRead(id: string) {
+    // In-memory storage for notifications
+    if (!this.notifications) {
+      this.notifications = new Map();
+    }
+    const notification = this.notifications.get(id);
+    if (notification) {
+      notification.read = true;
+      this.notifications.set(id, notification);
+    }
+  }
+
+  async clearAllNotifications(userId: string) {
+    // In-memory storage for notifications
+    if (!this.notifications) {
+      this.notifications = new Map();
+    }
+    this.notifications.forEach((notification, key) => {
+      if (notification.userId === userId) {
+        this.notifications.delete(key);
+      }
+    });
   }
 }
 

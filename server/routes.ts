@@ -130,13 +130,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
       await storage.updateDepositStatus(id, status);
 
-      if (status === "approved") {
-        const requests = await storage.getDepositRequests();
-        const request = requests.find((r) => r.id === id);
-        if (request) {
-          const user = await storage.getUserByUsername(request.username);
-          if (user) {
+      const requests = await storage.getDepositRequests();
+      const request = requests.find((r) => r.id === id);
+      
+      if (request) {
+        const user = await storage.getUserByUsername(request.username);
+        if (user) {
+          const methods = await storage.getPaymentMethods();
+          const paymentMethod = methods.find(m => m.id === request.paymentMethodId);
+          const methodName = paymentMethod?.name || "غير محدد";
+
+          if (status === "approved") {
             await storage.updateUserBalance(user.id, user.balance + request.amount);
+            
+            // إشعار بقبول الإيداع
+            await storage.createNotification({
+              userId: user.id,
+              title: "تم قبول عملية الإيداع ✅",
+              message: `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"} وتم إضافة مبلغ £${request.amount.toLocaleString()} إلى رصيدك بنجاح ✅`
+            });
+
+            // التحقق من وجود بونص (إذا كانت طريقة الدفع تحتوي على fee موجب كبونص)
+            if (paymentMethod && paymentMethod.fee > 0) {
+              const bonusAmount = Math.floor((request.amount * paymentMethod.fee) / 100);
+              if (bonusAmount > 0) {
+                await storage.updateUserBalance(user.id, user.balance + request.amount + bonusAmount);
+                await storage.createNotification({
+                  userId: user.id,
+                  title: "بونص إضافي 💜",
+                  message: `لقد حصلت على بونص إضافي بقيمة £${bonusAmount.toLocaleString()} من آخر عملية إيداع أهلاً وسهلاً 💜✅`
+                });
+              }
+            }
+          } else if (status === "rejected") {
+            // إشعار برفض الإيداع
+            await storage.createNotification({
+              userId: user.id,
+              title: "تم رفض عملية الإيداع 🚫",
+              message: `🚫 تم رفض عملية إيداع بواسطة ${methodName}\nرقم العملية: ${request.transactionNumber || "غير متوفر"}\nالمبلغ: £${request.amount.toLocaleString()}\nإذا كان هذا عن طريق الخطأ تواصل مع الدعم من خلال الموقع أو البوت.`
+            });
           }
         }
       }
@@ -176,13 +208,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
       await storage.updateWithdrawStatus(id, status);
 
-      if (status === "approved") {
-        const requests = await storage.getWithdrawRequests();
-        const request = requests.find((r) => r.id === id);
-        if (request) {
-          const user = await storage.getUserByUsername(request.username);
-          if (user) {
+      const requests = await storage.getWithdrawRequests();
+      const request = requests.find((r) => r.id === id);
+      
+      if (request) {
+        const user = await storage.getUserByUsername(request.username);
+        if (user) {
+          const methods = await storage.getPaymentMethods();
+          const paymentMethod = methods.find(m => m.id === request.paymentMethodId);
+          const methodName = paymentMethod?.name || "غير محدد";
+
+          if (status === "approved") {
             await storage.updateUserBalance(user.id, user.balance - request.amount);
+            
+            // إشعار بقبول السحب
+            await storage.createNotification({
+              userId: user.id,
+              title: "تمت الموافقة على طلب السحب 💜",
+              message: `تمت الموافقة على طلب السحب الخاص بك:\nالمبلغ: £${request.amount.toLocaleString()}\nطريقة السحب: ${methodName}\nعنوان الاستلام: ${request.address}\n\nسيتم تحويل المبلغ إلى حسابك في غضون 24 ساعة.\nمبارك لك 💜`
+            });
+          } else if (status === "rejected") {
+            // إشعار برفض السحب
+            await storage.createNotification({
+              userId: user.id,
+              title: "تم رفض طلب السحب 🚫",
+              message: `تم رفض طلب سحب £${request.amount.toLocaleString()} عبر ${methodName} 🚫🚫🚫\nإذا استمرت المشكلة تواصل مع الدعم من خلال الموقع أو البوت.`
+            });
           }
         }
       }
@@ -371,6 +422,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       await storage.deletePaymentMethod(id);
       res.json({ message: "Payment method deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/notifications/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const userNotifications = await storage.getNotificationsByUserId(userId);
+      res.json(userNotifications);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.markNotificationAsRead(id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete("/api/notifications/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.clearAllNotifications(userId);
+      res.json({ message: "All notifications cleared" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
