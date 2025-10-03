@@ -63,6 +63,12 @@ export default function RegisterPage() {
         localStorage.setItem("notifications", JSON.stringify(notifications));
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("username", username);
+        localStorage.setItem("user", JSON.stringify({ 
+          id: data.userId, 
+          username: username,
+          email: email,
+          referralCode: data.referralCode 
+        }));
         setLocation("/");
       } else {
         toast({
@@ -151,11 +157,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="referralCode">رمز الدعوة (اختياري)</Label>
+              <Label htmlFor="referralCode">Referral Code (optional)</Label>
               <Input
                 id="referralCode"
                 type="text"
-                placeholder="أدخل رمز الدعوة إن وجد"
+                placeholder="Enter referral code if you have one"
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
                 data-testid="input-referral-code"

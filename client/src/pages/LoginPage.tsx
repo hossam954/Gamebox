@@ -43,12 +43,12 @@ export default function LoginPage() {
         });
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("username", data.username);
-        localStorage.setItem("isAdmin", data.isAdmin.toString());
+        localStorage.setItem("isAdmin", data.isAdmin ? "true" : "false");
         localStorage.setItem("user", JSON.stringify({
           id: data.userId,
           username: data.username,
           email: data.email,
-          referralCode: data.referralCode || generateReferralCode() // Assign generated code if null
+          referralCode: data.referralCode
         }));
         setLocation("/");
       } else {
