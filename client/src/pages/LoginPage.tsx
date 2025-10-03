@@ -34,6 +34,7 @@ export default function LoginPage() {
         });
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("username", data.username);
+        localStorage.setItem("isAdmin", data.isAdmin ? "true" : "false");
         if (data.isAdmin) {
           setLocation("/admin");
         } else {
