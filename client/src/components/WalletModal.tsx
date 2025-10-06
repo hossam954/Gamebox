@@ -240,6 +240,11 @@ export default function WalletModal({
         setWithdrawAddress("");
         setSelectedWithdrawMethod(null);
         setActiveTab("transactions");
+        
+        // إعادة تحميل الصفحة بعد ثانية واحدة لتطبيق التغيير
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         toast({
           title: "Withdrawal failed",
