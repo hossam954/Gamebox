@@ -270,6 +270,11 @@ export class SQLiteStorage {
     db.prepare("DELETE FROM users WHERE id = ?").run(userId);
   }
 
+  async getReferralCount(referralCode: string): Promise<number> {
+    const result = db.prepare("SELECT COUNT(*) as count FROM users WHERE referredBy = ?").get(referralCode) as any;
+    return result?.count || 0;
+  }
+
   async createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();

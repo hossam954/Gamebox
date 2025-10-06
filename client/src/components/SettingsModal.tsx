@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings, Key, Gift, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,25 @@ export default function SettingsModal({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCount, setReferralCount] = useState<number>(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen && referralCode) {
+      const fetchReferralCount = async () => {
+        try {
+          const response = await fetch(`/api/referrals/${referralCode}/count`);
+          if (response.ok) {
+            const data = await response.json();
+            setReferralCount(data.count);
+          }
+        } catch (error) {
+          console.error("Error fetching referral count:", error);
+        }
+      };
+      fetchReferralCount();
+    }
+  }, [isOpen, referralCode]);
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
@@ -264,6 +282,9 @@ export default function SettingsModal({
                       نسخ
                     </Button>
                   </div>
+                  <p className="text-sm text-muted-foreground" data-testid="text-referral-count">
+                    عدد الدعوات: {referralCount}
+                  </p>
                 </div>
                 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
