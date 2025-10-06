@@ -52,6 +52,7 @@ export interface IStorage {
   deletePaymentMethod(id: string): Promise<void>;
 
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
+  updateUserLanguage(userId: string, language: string): Promise<void>;
 
   createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode>;
   getPromoCodes(): Promise<PromoCode[]>;
@@ -101,6 +102,7 @@ export class MemStorage implements IStorage {
       isAdmin: true,
       referralCode: this.generateReferralCode("abodiab"),
       referredBy: null,
+      language: "en",
       createdAt: new Date(),
     };
     this.users.set(adminId, adminUser);
@@ -124,7 +126,8 @@ export class MemStorage implements IStorage {
       minAmount: 50,
       maxAmount: 50000,
       fee: 0,
-      note: "Please use your username as reference.",
+      noteEn: "Please use your username as reference.",
+      noteAr: "يرجى استخدام اسم المستخدم الخاص بك كمرجع.",
       isActive: true,
       createdAt: new Date(),
     };
@@ -137,7 +140,8 @@ export class MemStorage implements IStorage {
       minAmount: 50,
       maxAmount: 10000,
       fee: 0,
-      note: "Please provide your mobile number.",
+      noteEn: "Please provide your mobile number.",
+      noteAr: "يرجى تقديم رقم الهاتف المحمول الخاص بك.",
       isActive: true,
       createdAt: new Date(),
     };
@@ -178,6 +182,7 @@ export class MemStorage implements IStorage {
       isAdmin: false,
       referralCode,
       referredBy: insertUser.referredBy || null,
+      language: insertUser.language || "en",
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -364,7 +369,8 @@ export class MemStorage implements IStorage {
       minAmount: data.minAmount || 0,
       maxAmount: data.maxAmount || 100000,
       fee: data.fee || 0,
-      note: data.note || "",
+      noteEn: data.noteEn || "",
+      noteAr: data.noteAr || "",
       isActive: true,
       createdAt: new Date(),
     };
@@ -392,6 +398,14 @@ export class MemStorage implements IStorage {
     const user = this.users.get(userId);
     if (user) {
       user.password = newPassword;
+      this.users.set(userId, user);
+    }
+  }
+
+  async updateUserLanguage(userId: string, language: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.language = language;
       this.users.set(userId, user);
     }
   }

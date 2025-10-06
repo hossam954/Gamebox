@@ -27,17 +27,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (result.data.referredBy && result.data.referredBy.trim() !== "") {
         const referrer = await storage.getUserByReferralCode(result.data.referredBy);
         if (referrer) {
+          const userLang = user.language || 'en';
+          const referrerLang = referrer.language || 'en';
+          
           await storage.createNotification({
             userId: user.id,
-            title: "تم التسجيل من خلال إحالة 💜",
-            message: `لقد قمت بالتسجيل من خلال إحالة صديقك: ${referrer.username}\nأهلاً وسهلاً 💜`
+            title: userLang === 'ar' ? "تم التسجيل من خلال إحالة 💜" : "Registered via Referral 💜",
+            message: userLang === 'ar' 
+              ? `لقد قمت بالتسجيل من خلال إحالة صديقك: ${referrer.username}\nأهلاً وسهلاً 💜`
+              : `You registered through your friend: ${referrer.username}\nWelcome 💜`
           });
           
-          // إرسال إشعار للمحيل
           await storage.createNotification({
             userId: referrer.id,
-            title: "مستخدم جديد من إحالتك 💜",
-            message: `انضم المستخدم ${user.username} من خلال رابط إحالتك ستحصل الآن على 5% من أي عملية شحن يقوم بها 💜`
+            title: referrerLang === 'ar' ? "مستخدم جديد من إحالتك 💜" : "New Referral 💜",
+            message: referrerLang === 'ar'
+              ? `انضم المستخدم ${user.username} من خلال رابط إحالتك ستحصل الآن على 5% من أي عملية شحن يقوم بها 💜`
+              : `User ${user.username} joined through your referral link. You will now get 5% from any deposit they make 💜`
           });
         }
       }
@@ -81,6 +87,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateUserPassword(userId, newPassword);
       res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/users/language", async (req, res) => {
+    try {
+      const { userId, language } = req.body;
+      await storage.updateUserLanguage(userId, language);
+      res.json({ message: "Language updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
@@ -173,10 +189,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const bonusAmount = Math.floor((request.amount * paymentMethod.fee) / 100);
               totalAmount += bonusAmount;
               
+              const userLang = user.language || 'en';
               await storage.createNotification({
                 userId: user.id,
-                title: "بونص إضافي 💜",
-                message: `لقد حصلت على بونص إضافي بقيمة £${bonusAmount.toLocaleString()} من آخر عملية إيداع أهلاً وسهلاً 💜✅`
+                title: userLang === 'ar' ? "بونص إضافي 💜" : "Extra Bonus 💜",
+                message: userLang === 'ar'
+                  ? `لقد حصلت على بونص إضافي بقيمة £${bonusAmount.toLocaleString()} من آخر عملية إيداع أهلاً وسهلاً 💜✅`
+                  : `You received an extra bonus of £${bonusAmount.toLocaleString()} from your last deposit. Welcome 💜✅`
               });
             }
             
@@ -188,24 +207,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const referralBonus = Math.floor((request.amount * 5) / 100);
                 await storage.updateUserBalance(referrer.id, referrer.balance + referralBonus);
                 
+                const referrerLang = referrer.language || 'en';
                 await storage.createNotification({
                   userId: referrer.id,
-                  title: "مكافأة من نظام الإحالة 💜",
-                  message: `لقد حصلت على £${referralBonus.toLocaleString()} من نظام الإحالة\n💜 بالتوفيق`
+                  title: referrerLang === 'ar' ? "مكافأة من نظام الإحالة 💜" : "Referral Reward 💜",
+                  message: referrerLang === 'ar'
+                    ? `لقد حصلت على £${referralBonus.toLocaleString()} من نظام الإحالة\n💜 بالتوفيق`
+                    : `You received £${referralBonus.toLocaleString()} from the referral system\n💜 Good luck`
                 });
               }
             }
             
+            const userLang = user.language || 'en';
             await storage.createNotification({
               userId: user.id,
-              title: "تم قبول عملية الإيداع ✅",
-              message: `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"} وتم إضافة مبلغ £${request.amount.toLocaleString()} إلى رصيدك بنجاح ✅`
+              title: userLang === 'ar' ? "تم قبول عملية الإيداع ✅" : "Deposit Approved ✅",
+              message: userLang === 'ar'
+                ? `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"} وتم إضافة مبلغ £${request.amount.toLocaleString()} إلى رصيدك بنجاح ✅`
+                : `Your deposit via ${methodName} with transaction number ${request.transactionNumber || "Not available"} has been approved and £${request.amount.toLocaleString()} has been added to your balance ✅`
             });
           } else if (status === "rejected") {
+            const userLang = user.language || 'en';
             await storage.createNotification({
               userId: user.id,
-              title: "تم رفض عملية الإيداع 🚫",
-              message: `🚫 تم رفض عملية إيداع بواسطة ${methodName}\nرقم العملية: ${request.transactionNumber || "غير متوفر"}\nالمبلغ: £${request.amount.toLocaleString()}\nإذا كان هذا عن طريق الخطأ تواصل مع الدعم من خلال الموقع أو البوت.`
+              title: userLang === 'ar' ? "تم رفض عملية الإيداع 🚫" : "Deposit Rejected 🚫",
+              message: userLang === 'ar'
+                ? `🚫 تم رفض عملية إيداع بواسطة ${methodName}\nرقم العملية: ${request.transactionNumber || "غير متوفر"}\nالمبلغ: £${request.amount.toLocaleString()}\nإذا كان هذا عن طريق الخطأ تواصل مع الدعم من خلال الموقع أو البوت.`
+                : `🚫 Your deposit via ${methodName} has been rejected\nTransaction Number: ${request.transactionNumber || "Not available"}\nAmount: £${request.amount.toLocaleString()}\nIf this was a mistake, contact support through the website or bot.`
             });
           }
         }
