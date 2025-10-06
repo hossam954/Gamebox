@@ -353,7 +353,7 @@ export default function WalletModal({
                   <Label htmlFor="payment-method">Payment Method</Label>
                   <select
                     id="payment-method"
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background text-foreground"
                     value={selectedDepositMethod || ""}
                     onChange={(e) => setSelectedDepositMethod(e.target.value || null)}
                     disabled={isLoading}
@@ -430,7 +430,7 @@ export default function WalletModal({
                   <Label htmlFor="withdraw-method">Withdrawal Method</Label>
                   <select
                     id="withdraw-method"
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background text-foreground"
                     value={selectedWithdrawMethod || ""}
                     onChange={(e) => setSelectedWithdrawMethod(e.target.value || null)}
                     disabled={isLoading}
