@@ -206,7 +206,6 @@ export default function GamePage() {
       return;
     }
 
-    setBalance((prev) => prev - selectedBet);
     setIsOpening(true);
     setIsOpen(false);
     setPrize(undefined);
@@ -233,8 +232,18 @@ export default function GamePage() {
 
       if (prizeMultiplier) {
         const winnings = selectedBet! * prizeMultiplier;
-        setBalance((prev) => prev + winnings);
-        localStorage.setItem("balance", (balance + winnings).toString()); // Update local storage
+        const newBalance = balance - selectedBet! + winnings;
+        setBalance(newBalance);
+        
+        // حفظ النتيجة في السيرفر
+        if (userId) {
+          fetch(`/api/users/${userId}/game-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ balance: newBalance, won: true })
+          }).catch(err => console.error('Failed to save game result:', err));
+        }
+        
         setTransactions((prev) => [
           {
             id: Date.now().toString(),
@@ -254,18 +263,27 @@ export default function GamePage() {
         // Referral bonus logic for the referrer
         const referredBy = localStorage.getItem('referredBy');
         if (referredBy && user?.id) {
-          // Here you would typically call an API to get the referrer's username and update their balance
-          // For now, we'll simulate getting the referrer's username and sending a notification
-          const referrerUsername = "Friend"; // Replace with actual fetched username
+          const referrerUsername = "Friend";
           const bonusAmount = winnings * 0.05;
           if (bonusAmount > 0) {
             sendNotification(`You have earned £${bonusAmount.toLocaleString()} from your friend ${referrerUsername}'s win!`, "success");
-            // Update referrer's balance via API call
           }
-          localStorage.removeItem('referredBy'); // Clear after processing
+          localStorage.removeItem('referredBy');
         }
 
       } else {
+        const newBalance = balance - selectedBet!;
+        setBalance(newBalance);
+        
+        // حفظ النتيجة في السيرفر
+        if (userId) {
+          fetch(`/api/users/${userId}/game-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ balance: newBalance, won: false })
+          }).catch(err => console.error('Failed to save game result:', err));
+        }
+        
         setTransactions((prev) => [
           {
             id: Date.now().toString(),
