@@ -356,6 +356,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      await storage.updateUserStatus(id, status);
+      res.json({ message: "User status updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.delete("/api/users/:id", async (req, res) => {
     try {
       const { id } = req.params;

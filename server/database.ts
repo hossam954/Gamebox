@@ -33,6 +33,7 @@ db.exec(`
     totalWins INTEGER DEFAULT 0,
     totalLosses INTEGER DEFAULT 0,
     isAdmin INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
     referralCode TEXT UNIQUE,
     referredBy TEXT,
     createdAt TEXT NOT NULL
@@ -229,6 +230,10 @@ export class SQLiteStorage {
 
   async updateUserBalance(userId: string, amount: number): Promise<void> {
     db.prepare("UPDATE users SET balance = ? WHERE id = ?").run(amount, userId);
+  }
+
+  async updateUserStatus(userId: string, status: string): Promise<void> {
+    db.prepare("UPDATE users SET status = ? WHERE id = ?").run(status, userId);
   }
 
   async updateUserStats(userId: string, balance: number, won: boolean): Promise<void> {

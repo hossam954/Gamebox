@@ -27,30 +27,77 @@ export default function AdminPage() {
     }
   }, [setLocation]);
 
-  const handleEditBalance = (userId: string, newBalance: number) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, balance: newBalance } : user
-      )
-    );
-    toast({
-      title: "Balance updated",
-      description: `User balance updated to £${newBalance.toLocaleString()}`,
-    });
+  const handleEditBalance = async (userId: string, newBalance: number) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/balance`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ balance: newBalance }),
+      });
+
+      if (response.ok) {
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, balance: newBalance } : user
+          )
+        );
+        toast({
+          title: "تم تحديث الرصيد",
+          description: `تم تحديث رصيد المستخدم إلى £${newBalance.toLocaleString()}`,
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل تحديث الرصيد",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث الرصيد",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSuspendUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId
-          ? { ...user, status: (user.status === "active" ? "suspended" : "active") as UserStatus }
-          : user
-      )
-    );
-    toast({
-      title: "User status updated",
-      description: "User status has been changed",
-    });
+  const handleSuspendUser = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const newStatus = user.status === "active" ? "suspended" : "active";
+
+    try {
+      const response = await fetch(`/api/users/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId ? { ...u, status: newStatus as UserStatus } : u
+          )
+        );
+        toast({
+          title: "تم تحديث حالة المستخدم",
+          description: newStatus === "active" ? "تم تفعيل المستخدم" : "تم تعليق المستخدم",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل تحديث حالة المستخدم",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث حالة المستخدم",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteUser = async (userId: string) => {
