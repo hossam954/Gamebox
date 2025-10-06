@@ -229,29 +229,27 @@ export default function GamePage() {
       let prizeMultiplier: number | null = null;
 
       // خوارزمية الربح بناءً على نسبة الربح (0-100)
-      // كلما زادت نسبة الربح، زادت فرص الفوز وقيمة المكافآت
       const lossThreshold = 100 - winRate; // نسبة الخسارة
       
       if (random < lossThreshold) {
         // خسارة
         prizeMultiplier = null;
       } else {
-        // فوز - توزيع الأرباح بناءً على نسبة الربح
+        // فوز - توزيع الأرباح بشكل واقعي
         const winRandom = Math.random() * 100;
-        const winBonus = winRate / 100; // معامل الربح
         
-        if (winRandom < 60 * winBonus) {
-          // ربح صغير (1x - 10x)
-          prizeMultiplier = Math.floor(Math.random() * 10) + 1;
-        } else if (winRandom < 85 * winBonus) {
-          // ربح متوسط (10x - 100x)
-          prizeMultiplier = Math.floor(Math.random() * 90) + 10;
-        } else if (winRandom < 95 * winBonus) {
-          // ربح كبير (100x - 1000x)
-          prizeMultiplier = Math.floor(Math.random() * 900) + 100;
+        if (winRandom < 70) {
+          // ربح صغير (1x - 3x) - 70% من الفوزات
+          prizeMultiplier = Math.floor(Math.random() * 3) + 1;
+        } else if (winRandom < 90) {
+          // ربح متوسط (3x - 10x) - 20% من الفوزات
+          prizeMultiplier = Math.floor(Math.random() * 8) + 3;
+        } else if (winRandom < 98) {
+          // ربح كبير (10x - 50x) - 8% من الفوزات
+          prizeMultiplier = Math.floor(Math.random() * 41) + 10;
         } else {
-          // ربح ضخم (1000x - 5000x)
-          prizeMultiplier = Math.floor(Math.random() * 4000) + 1000;
+          // ربح ضخم (50x - 100x) - 2% من الفوزات
+          prizeMultiplier = Math.floor(Math.random() * 51) + 50;
         }
       }
 
