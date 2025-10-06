@@ -551,7 +551,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
   const totalWithdrawals = withdrawRequests
     .filter(req => req.status === "approved")
-    .reduce((sum, req) => sum + (req.amount || 0), 0);
+    .reduce((sum, req) => sum + (req.amount ?? 0), 0);
   
   const pendingDeposits = depositRequests.filter((r) => r.status === "pending").length;
   const pendingWithdrawals = withdrawRequests.filter((r) => r.status === "pending").length;
@@ -1028,7 +1028,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <TableCell className="font-medium">{request.username}</TableCell>
                                 <TableCell className="text-right font-mono font-bold text-green-600">
-                                  £{request.amount?.toLocaleString()}
+                                  £{(request.amount ?? 0).toLocaleString()}
                                 </TableCell>
                                 <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
                                 <TableCell>
@@ -1108,7 +1108,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <TableCell className="font-medium">{request.username}</TableCell>
                                 <TableCell className="text-right font-mono font-bold text-red-600">
-                                  £{request.amount?.toLocaleString()}
+                                  £{(request.amount ?? 0).toLocaleString()}
                                 </TableCell>
                                 <TableCell className="font-mono text-xs max-w-32 truncate">{request.address}</TableCell>
                                 <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
