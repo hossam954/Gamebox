@@ -4,14 +4,12 @@ import { KeyRound, Gift, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PasswordRecoveryPage() {
   const [, setLocation] = useLocation();
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
@@ -24,7 +22,7 @@ export default function PasswordRecoveryPage() {
       const response = await fetch("/api/auth/password-recovery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usernameOrEmail, message }),
+        body: JSON.stringify({ usernameOrEmail }),
       });
 
       const data = await response.json();
@@ -114,22 +112,6 @@ export default function PasswordRecoveryPage() {
                 required
                 data-testid="input-username-email"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message">Additional Information</Label>
-              <Textarea
-                id="message"
-                placeholder="Provide any information that can help verify your identity (e.g., registration date, last transaction, etc.)"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                required
-                rows={4}
-                data-testid="input-message"
-              />
-              <p className="text-xs text-muted-foreground">
-                Admin will review this information to verify your identity
-              </p>
             </div>
 
             <Button
