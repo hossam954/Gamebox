@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Slider } from "@/components/ui/slider";
 
 interface User {
   id: string;
@@ -106,6 +107,55 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [newPromoLimit, setNewPromoLimit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const [newBalanceUserId, setNewBalanceUserId] = useState("");
+  const [newBalance, setNewBalance] = useState("");
+  const [winRate, setWinRate] = useState(50);
+
+  useEffect(() => {
+    const fetchWinRate = async () => {
+      try {
+        const response = await fetch('/api/payment-settings');
+        if (response.ok) {
+          const data = await response.json();
+          setWinRate(data.winRate || 50);
+        }
+      } catch (error) {
+        console.error('Error fetching win rate:', error);
+      }
+    };
+    fetchWinRate();
+  }, []);
+
+  const handleSaveSettings = async () => {
+    try {
+      const response = await fetch('/api/payment-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ winRate }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "تم حفظ الإعدادات بنجاح",
+          description: "تم حفظ إعدادات نسبة الربح بنجاح.",
+        });
+      } else {
+        toast({
+          title: "فشل حفظ الإعدادات",
+          description: "حدث خطأ أثناء حفظ إعدادات نسبة الربح.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   useEffect(() => {
     fetchAllData();
@@ -536,7 +586,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
               <div className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100" data-testid="stat-total-users">
                 {displayUsers.length}
               </div>
-              <p className="text-xs md:text-sm text-blue-600 dark:text-blue-400">
+              <p className="text-xs md:text-sm text-blue-600 dark:text-green-400">
                 {activeUsers} نشط • {suspendedUsers} معلق
               </p>
             </CardContent>
@@ -717,6 +767,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-7 px-3">
+              <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+              <TabsTrigger value="users">المستخدمين</TabsTrigger>
+              <TabsTrigger value="deposits">الإيداعات</TabsTrigger>
+              <TabsTrigger value="withdrawals">السحوبات</TabsTrigger>
+              <TabsTrigger value="recovery">استرداد</TabsTrigger>
+              <TabsTrigger value="promo">أكواد الخصم</TabsTrigger>
+              <TabsTrigger value="support">الدعم</TabsTrigger>
+              <TabsTrigger value="messaging">الرسائل</TabsTrigger>
+              <TabsTrigger value="payment-methods">طرق الدفع</TabsTrigger>
+              <TabsTrigger value="settings">الإعدادات</TabsTrigger>
+            </TabsList>
 
             <div className="p-6">
               <TabsContent value="overview" className="space-y-6 mt-0">
@@ -1647,7 +1709,56 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 </Card>
               </TabsContent>
 
-
+              <TabsContent value="settings" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>إعدادات النظام</CardTitle>
+                    <CardDescription>
+                      إدارة إعدادات النظام العامة
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="winRate" className="text-base font-semibold">
+                            نسبة الربح للاعبين
+                          </Label>
+                          <Badge variant="outline" className="text-lg font-bold">
+                            {winRate}%
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {winRate === 0 && "لا يوجد ربح - خسارة دائمة"}
+                          {winRate > 0 && winRate < 30 && "نسبة ربح منخفضة جداً"}
+                          {winRate >= 30 && winRate < 50 && "نسبة ربح منخفضة"}
+                          {winRate >= 50 && winRate < 70 && "نسبة ربح متوسطة"}
+                          {winRate >= 70 && winRate < 90 && "نسبة ربح عالية"}
+                          {winRate >= 90 && winRate < 100 && "نسبة ربح عالية جداً"}
+                          {winRate === 100 && "أرباح كثيرة - ربح دائم"}
+                        </p>
+                        <Slider
+                          id="winRate"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={[winRate]}
+                          onValueChange={(value) => setWinRate(value[0])}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>0% (خسارة فقط)</span>
+                          <span>50% (متوازن)</span>
+                          <span>100% (ربح دائم)</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button onClick={handleSaveSettings} className="w-full">
+                      حفظ الإعدادات
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </div>
           </Tabs>
         </div>

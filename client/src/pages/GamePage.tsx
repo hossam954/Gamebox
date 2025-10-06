@@ -189,7 +189,7 @@ export default function GamePage() {
     });
   };
 
-  const handleOpenBox = () => {
+  const handleOpenBox = async () => {
     if (!selectedBet) {
       toast({
         title: "Select a bet amount",
@@ -212,20 +212,47 @@ export default function GamePage() {
     setIsOpen(false);
     setPrize(undefined);
 
+    // الحصول على نسبة الربح من الإعدادات
+    let winRate = 50; // القيمة الافتراضية
+    try {
+      const response = await fetch('/api/win-rate');
+      if (response.ok) {
+        const data = await response.json();
+        winRate = data.winRate;
+      }
+    } catch (error) {
+      console.error('Error fetching win rate:', error);
+    }
+
     setTimeout(() => {
-      const random = Math.random();
+      const random = Math.random() * 100;
       let prizeMultiplier: number | null = null;
 
-      if (random < 0.4) {
+      // خوارزمية الربح بناءً على نسبة الربح (0-100)
+      // كلما زادت نسبة الربح، زادت فرص الفوز وقيمة المكافآت
+      const lossThreshold = 100 - winRate; // نسبة الخسارة
+      
+      if (random < lossThreshold) {
+        // خسارة
         prizeMultiplier = null;
-      } else if (random < 0.7) {
-        prizeMultiplier = Math.floor(Math.random() * 10) + 1;
-      } else if (random < 0.9) {
-        prizeMultiplier = Math.floor(Math.random() * 100) + 10;
-      } else if (random < 0.98) {
-        prizeMultiplier = Math.floor(Math.random() * 1000) + 100;
       } else {
-        prizeMultiplier = Math.floor(Math.random() * 4000) + 1000;
+        // فوز - توزيع الأرباح بناءً على نسبة الربح
+        const winRandom = Math.random() * 100;
+        const winBonus = winRate / 100; // معامل الربح
+        
+        if (winRandom < 60 * winBonus) {
+          // ربح صغير (1x - 10x)
+          prizeMultiplier = Math.floor(Math.random() * 10) + 1;
+        } else if (winRandom < 85 * winBonus) {
+          // ربح متوسط (10x - 100x)
+          prizeMultiplier = Math.floor(Math.random() * 90) + 10;
+        } else if (winRandom < 95 * winBonus) {
+          // ربح كبير (100x - 1000x)
+          prizeMultiplier = Math.floor(Math.random() * 900) + 100;
+        } else {
+          // ربح ضخم (1000x - 5000x)
+          prizeMultiplier = Math.floor(Math.random() * 4000) + 1000;
+        }
       }
 
       setPrize(prizeMultiplier);

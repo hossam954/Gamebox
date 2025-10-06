@@ -303,6 +303,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/win-rate", async (req, res) => {
+    try {
+      const settings = await storage.getPaymentSettings();
+      res.json({ winRate: settings.winRate || 50 });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.put("/api/payment-settings", async (req, res) => {
     try {
       const result = insertPaymentSettingsSchema.safeParse(req.body);

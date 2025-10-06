@@ -114,6 +114,7 @@ export class MemStorage implements IStorage {
       maxWithdraw: 50000,
       depositAddress: "SYP-WALLET-ADDRESS-12345",
       paymentMethod: "Bank Transfer / Mobile Wallet",
+      winRate: 50, // نسبة الربح الافتراضية 50%
     };
 
     const defaultPaymentMethod1: PaymentMethod = {

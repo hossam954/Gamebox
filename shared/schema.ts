@@ -100,6 +100,7 @@ export const paymentSettings = pgTable("payment_settings", {
   maxWithdraw: integer("max_withdraw").notNull().default(50000),
   depositAddress: text("deposit_address").notNull().default(""),
   paymentMethod: text("payment_method").notNull().default("Bank Transfer"),
+  winRate: integer("win_rate").notNull().default(50), // 0-100: نسبة الربح
 });
 
 export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).omit({
