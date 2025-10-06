@@ -127,9 +127,8 @@ export default function GamePage() {
     fetchUserData();
     loadNotifications(storedUserId);
 
-    // Auto-refresh balance and notifications every 10 seconds
+    // Auto-refresh notifications only every 10 seconds
     const refreshInterval = setInterval(() => {
-      loadUserBalance(storedUserId);
       loadNotifications(storedUserId);
     }, 10000);
 
