@@ -861,7 +861,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-mono font-bold">£{request.amount?.toLocaleString()}</p>
+                              <p className="font-mono font-bold">£{(request.amount ?? 0).toLocaleString()}</p>
                               <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"} className="text-xs">
                                 {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
                               </Badge>
