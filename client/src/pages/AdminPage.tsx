@@ -56,16 +56,30 @@ export default function AdminPage() {
   const handleDeleteUser = async (userId: string) => {
     if (confirm("Are you sure you want to delete this user? All related data will be permanently removed.")) {
       try {
+        const currentUserId = localStorage.getItem("userId");
+        
         const response = await fetch(`/api/users/${userId}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
           setUsers((prev) => prev.filter((user) => user.id !== userId));
-          toast({
-            title: "User deleted",
-            description: "User and all related data have been removed from the system",
-          });
+          
+          if (currentUserId === userId) {
+            localStorage.clear();
+            toast({
+              title: "Account deleted",
+              description: "Your account has been deleted. You will be logged out.",
+            });
+            setTimeout(() => {
+              setLocation("/login");
+            }, 1500);
+          } else {
+            toast({
+              title: "User deleted",
+              description: "User and all related data have been removed from the system",
+            });
+          }
         } else {
           toast({
             title: "Error",
