@@ -29,6 +29,7 @@ export interface IStorage {
   updateUserStats(userId: string, balance: number, won: boolean): Promise<void>;
   getAllUsers(): Promise<User[]>;
   deleteUser(userId: string): Promise<void>;
+  getReferralCount(referralCode: string): Promise<number>;
 
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;
   getPasswordRecoveryRequests(): Promise<PasswordRecoveryRequest[]>;
@@ -254,6 +255,11 @@ export class MemStorage implements IStorage {
         this.notifications.delete(key);
       }
     });
+  }
+
+  async getReferralCount(referralCode: string): Promise<number> {
+    const users = Array.from(this.users.values());
+    return users.filter(user => user.referredBy === referralCode).length;
   }
 
   async createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest> {

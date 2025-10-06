@@ -366,6 +366,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/referrals/:referralCode/count", async (req, res) => {
+    try {
+      const { referralCode } = req.params;
+      const count = await storage.getReferralCount(referralCode);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/users/:id/game-result", async (req, res) => {
     try {
       const { id } = req.params;
