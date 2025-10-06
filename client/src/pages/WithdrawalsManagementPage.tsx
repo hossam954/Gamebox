@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Check, X, Wallet } from "lucide-react";
@@ -43,12 +42,12 @@ export default function WithdrawalsManagementPage() {
         fetch("/api/withdraw"),
         fetch("/api/payment-methods")
       ]);
-      
+
       if (withdrawsRes.ok) {
         const data = await withdrawsRes.json();
         setWithdrawRequests(data);
       }
-      
+
       if (methodsRes.ok) {
         const data = await methodsRes.json();
         setPaymentMethods(data);
@@ -140,7 +139,9 @@ export default function WithdrawalsManagementPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>اسم المستخدم</TableHead>
-                      <TableHead className="text-right">المبلغ</TableHead>
+                      <TableHead className="text-right">المبلغ الأساسي</TableHead>
+                      <TableHead className="text-right">الرسوم</TableHead>
+                      <TableHead className="text-right">المبلغ الصافي</TableHead>
                       <TableHead>طريقة السحب</TableHead>
                       <TableHead>العنوان</TableHead>
                       <TableHead>التاريخ</TableHead>
@@ -150,44 +151,56 @@ export default function WithdrawalsManagementPage() {
                   <TableBody>
                     {pendingRequests.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           لا توجد طلبات قيد الانتظار
                         </TableCell>
                       </TableRow>
                     ) : (
-                      pendingRequests.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell className="font-medium">{request.username}</TableCell>
-                          <TableCell className="text-right font-mono font-bold text-red-600">
-                            £{request.amount.toLocaleString()}
-                          </TableCell>
-                          <TableCell>{getPaymentMethodName(request.paymentMethodId)}</TableCell>
-                          <TableCell className="font-mono text-sm">{request.address}</TableCell>
-                          <TableCell>{new Date(request.createdAt).toLocaleString()}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleWithdrawAction(request.id, "approve")}
-                                className="bg-green-50 hover:bg-green-100 text-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-1" />
-                                موافقة
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleWithdrawAction(request.id, "reject")}
-                                className="bg-red-50 hover:bg-red-100 text-red-700"
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                رفض
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      pendingRequests.map((request) => {
+                        const method = paymentMethods.find(m => m.id === request.paymentMethodId);
+                        const fee = method ? Math.floor((request.amount * method.fee) / 100) : 0;
+                        const netAmount = request.amount - fee;
+
+                        return (
+                          <TableRow key={request.id}>
+                            <TableCell className="font-medium">{request.username}</TableCell>
+                            <TableCell className="text-right font-mono font-bold text-blue-600">
+                              £{request.amount.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-orange-600">
+                              £{fee.toLocaleString()} ({method?.fee || 0}%)
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-red-600">
+                              £{netAmount.toLocaleString()}
+                            </TableCell>
+                            <TableCell>{getPaymentMethodName(request.paymentMethodId)}</TableCell>
+                            <TableCell className="font-mono text-sm">{request.address}</TableCell>
+                            <TableCell>{new Date(request.createdAt).toLocaleString()}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleWithdrawAction(request.id, "approve")}
+                                  className="bg-green-50 hover:bg-green-100 text-green-700"
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  موافقة
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleWithdrawAction(request.id, "reject")}
+                                  className="bg-red-50 hover:bg-red-100 text-red-700"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  رفض
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     )}
                   </TableBody>
                 </Table>

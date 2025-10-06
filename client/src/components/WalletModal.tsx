@@ -229,9 +229,12 @@ export default function WalletModal({
       const data = await response.json();
 
       if (response.ok) {
+        const fee = Math.floor((amount * method.fee) / 100);
+        const netAmount = amount - fee;
+        
         toast({
           title: "Withdrawal request submitted",
-          description: `Your withdrawal of £${amount} is pending admin approval`,
+          description: `Your withdrawal of £${amount} (net: £${netAmount} after ${method.fee}% fee) is pending admin approval`,
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
@@ -458,7 +461,33 @@ export default function WalletModal({
                     min={selectedWithdrawMethod ? paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount : 0}
                     max={selectedWithdrawMethod ? Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance) : balance}
                   />
-                  {selectedWithdrawMethod && (
+                  {selectedWithdrawMethod && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
+                    <>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Min: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
+                        Max: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                      </p>
+                      {(() => {
+                        const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
+                        const amount = parseFloat(withdrawAmount);
+                        const fee = Math.floor((amount * (method?.fee || 0)) / 100);
+                        const netAmount = amount - fee;
+                        return (
+                          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              سيتم سحب: £{netAmount.toLocaleString()}
+                            </p>
+                            {fee > 0 && (
+                              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                (المبلغ المطلوب: £{amount.toLocaleString()} - الرسوم {method?.fee}%: £{fee.toLocaleString()})
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
+                  {selectedWithdrawMethod && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Min: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
                       Max: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
