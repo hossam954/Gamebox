@@ -348,45 +348,47 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
 
 
-  const generateResetLink = (userId: string) => {
-    const resetToken = btoa(`${userId}:${Date.now()}`);
-    return `${window.location.origin}/reset-password?token=${resetToken}`;
-  };
-
   const handlePasswordRecoveryAction = async (id: string, action: "approve" | "reject") => {
     try {
       const request = passwordRecoveryRequests.find(r => r.id === id);
       if (!request) return;
 
-      let resetLink = "";
       if (action === "approve") {
-        resetLink = generateResetLink(request.userId!);
-      }
+        const tokenResponse = await fetch("/api/auth/generate-reset-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: request.userId }),
+        });
 
-      const response = await fetch(`/api/password-recovery/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: action === "approve" ? "approved" : "rejected",
-          resetLink: resetLink
-        }),
-      });
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json();
+          navigator.clipboard.writeText(tokenData.resetLink);
+          
+          await fetch(`/api/password-recovery/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "approved" }),
+          });
 
-      if (response.ok) {
-        if (action === "approve") {
-          navigator.clipboard.writeText(resetLink);
           toast({
             title: "Reset link generated",
-            description: `Reset link copied to clipboard. Send this to ${request.email}`,
-          });
-        } else {
-          toast({
-            title: "Request rejected",
-            description: "Password recovery request has been rejected",
+            description: `Reset link copied to clipboard. Send this to ${request.email}. Link expires in 30 minutes.`,
           });
         }
-        fetchPasswordRecoveryRequests();
+      } else {
+        await fetch(`/api/password-recovery/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "rejected" }),
+        });
+        
+        toast({
+          title: "Request rejected",
+          description: "Password recovery request has been rejected",
+        });
       }
+      
+      fetchPasswordRecoveryRequests();
     } catch (error) {
       toast({
         title: "Error",

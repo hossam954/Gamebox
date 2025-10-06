@@ -16,7 +16,9 @@ import {
   type SupportTicket,
   type InsertSupportTicket,
   type GameSettings,
-  type InsertGameSettings
+  type InsertGameSettings,
+  type PasswordResetToken,
+  type InsertPasswordResetToken
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -36,6 +38,10 @@ export interface IStorage {
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;
   getPasswordRecoveryRequests(): Promise<PasswordRecoveryRequest[]>;
   updatePasswordRecoveryStatus(id: string, status: string): Promise<void>;
+
+  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markTokenAsUsed(token: string): Promise<void>;
 
   createDepositRequest(request: InsertDepositRequest): Promise<DepositRequest>;
   getDepositRequests(): Promise<DepositRequest[]>;
@@ -86,6 +92,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private passwordRecoveryRequests: Map<string, PasswordRecoveryRequest>;
+  private passwordResetTokens: Map<string, PasswordResetToken>;
   private depositRequests: Map<string, DepositRequest>;
   private withdrawRequests: Map<string, WithdrawRequest>;
   private paymentSettings: PaymentSettings;
@@ -98,6 +105,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.users = new Map();
     this.passwordRecoveryRequests = new Map();
+    this.passwordResetTokens = new Map();
     this.depositRequests = new Map();
     this.withdrawRequests = new Map();
     this.paymentMethods = new Map();
@@ -340,6 +348,32 @@ export class MemStorage implements IStorage {
     if (request) {
       request.status = status;
       this.passwordRecoveryRequests.set(id, request);
+    }
+  }
+
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    const id = randomUUID();
+    const resetToken: PasswordResetToken = {
+      id,
+      userId,
+      token,
+      expiresAt,
+      used: false,
+      createdAt: new Date(),
+    };
+    this.passwordResetTokens.set(token, resetToken);
+    return resetToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    return this.passwordResetTokens.get(token);
+  }
+
+  async markTokenAsUsed(token: string): Promise<void> {
+    const resetToken = this.passwordResetTokens.get(token);
+    if (resetToken) {
+      resetToken.used = true;
+      this.passwordResetTokens.set(token, resetToken);
     }
   }
 

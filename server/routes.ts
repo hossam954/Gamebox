@@ -144,6 +144,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/auth/generate-reset-token", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      const { randomBytes } = await import('crypto');
+      const token = randomBytes(32).toString('base64url');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+      
+      await storage.createPasswordResetToken(userId, token, expiresAt);
+      
+      res.json({ 
+        token,
+        resetLink: `${req.protocol}://${req.get('host')}/reset-password?token=${token}`
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      const resetToken = await storage.getPasswordResetToken(token);
+
+      if (!resetToken) {
+        return res.status(404).json({ message: "Invalid reset token" });
+      }
+
+      if (resetToken.used) {
+        return res.status(400).json({ message: "This reset link has already been used" });
+      }
+
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "This reset link has expired" });
+      }
+
+      await storage.updateUserPassword(resetToken.userId, newPassword);
+      await storage.markTokenAsUsed(token);
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/deposit", async (req, res) => {
     try {
       const result = insertDepositRequestSchema.safeParse(req.body);

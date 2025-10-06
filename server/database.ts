@@ -17,7 +17,11 @@ import type {
   PromoCode,
   InsertPromoCode,
   SupportTicket,
-  InsertSupportTicket
+  InsertSupportTicket,
+  PasswordResetToken,
+  InsertPasswordResetToken,
+  GameSettings,
+  InsertGameSettings
 } from "@shared/schema";
 
 const db = new Database("database.db");
@@ -122,6 +126,15 @@ db.exec(`
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     read INTEGER DEFAULT 0,
+    createdAt TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    expiresAt TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
     createdAt TEXT NOT NULL
   );
 `);
@@ -563,6 +576,78 @@ export class SQLiteStorage {
 
   async clearAllNotifications(userId: string): Promise<void> {
     db.prepare("DELETE FROM notifications WHERE userId = ?").run(userId);
+  }
+
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    const id = randomUUID();
+    const resetToken: PasswordResetToken = {
+      id,
+      userId,
+      token,
+      expiresAt,
+      used: false,
+      createdAt: new Date(),
+    };
+    
+    db.prepare(`
+      INSERT INTO password_reset_tokens (id, userId, token, expiresAt, used, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, userId, token, expiresAt.toISOString(), 0, new Date().toISOString());
+    
+    return resetToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const resetToken = db.prepare("SELECT * FROM password_reset_tokens WHERE token = ?").get(token) as any;
+    if (resetToken) {
+      return {
+        ...resetToken,
+        used: Boolean(resetToken.used),
+        expiresAt: new Date(resetToken.expiresAt),
+        createdAt: new Date(resetToken.createdAt)
+      };
+    }
+    return undefined;
+  }
+
+  async markTokenAsUsed(token: string): Promise<void> {
+    db.prepare("UPDATE password_reset_tokens SET used = 1 WHERE token = ?").run(token);
+  }
+
+  async updateUserLanguage(userId: string, language: string): Promise<void> {
+    db.prepare("UPDATE users SET language = ? WHERE id = ?").run(language, userId);
+  }
+
+  async getGameSettings(): Promise<GameSettings> {
+    return {
+      id: randomUUID(),
+      baseWinRate: 50,
+      targetLossRate: 70,
+      maxMultiplier: 50,
+      strategy: "balanced",
+      phase1Rounds: 10,
+      phase2Rounds: 20,
+      multiplier2to5Chance: 40,
+      multiplier5to10Chance: 30,
+      multiplier10to25Chance: 20,
+      multiplier25to50Chance: 8,
+      multiplier50PlusChance: 2,
+      highBetThreshold: 5000,
+      highBetMaxMultiplier: 20,
+      updatedAt: new Date(),
+    };
+  }
+
+  async updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings> {
+    return this.getGameSettings();
+  }
+
+  async updateUserGameStats(userId: string, stats: {
+    betAmount: number;
+    won: boolean;
+    multiplier: number | null;
+    newBalance: number;
+  }): Promise<void> {
   }
 }
 

@@ -9,6 +9,7 @@ import AdminPage from "@/pages/AdminPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import PasswordRecoveryPage from "@/pages/PasswordRecoveryPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import DepositsManagementPage from "@/pages/DepositsManagementPage";
 import WithdrawalsManagementPage from "@/pages/WithdrawalsManagementPage";
 import NotFound from "@/pages/not-found";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/password-recovery" component={PasswordRecoveryPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/" component={GamePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/deposits" component={DepositsManagementPage} />
