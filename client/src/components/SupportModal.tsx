@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function SupportModal({
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,20 +92,20 @@ export default function SupportModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl">
             <HelpCircle className="h-6 w-6" />
-            Contact Support
+            {language === 'ar' ? 'تواصل مع الدعم' : 'Contact Support'}
           </DialogTitle>
           <DialogDescription>
-            Need help? Send us a message and we'll get back to you.
+            {language === 'ar' ? 'تحتاج مساعدة؟ أرسل لنا رسالة وسنرد عليك.' : "Need help? Send us a message and we'll get back to you."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
+            <Label htmlFor="subject">{language === 'ar' ? 'الموضوع' : 'Subject'}</Label>
             <Input
               id="subject"
               type="text"
-              placeholder="What do you need help with?"
+              placeholder={language === 'ar' ? 'ما هي المساعدة التي تحتاجها؟' : 'What do you need help with?'}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
@@ -112,10 +114,10 @@ export default function SupportModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
+            <Label htmlFor="message">{language === 'ar' ? 'الرسالة' : 'Message'}</Label>
             <Textarea
               id="message"
-              placeholder="Describe your issue or question in detail..."
+              placeholder={language === 'ar' ? 'اشرح مشكلتك أو سؤالك بالتفصيل...' : 'Describe your issue or question in detail...'}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
@@ -131,11 +133,11 @@ export default function SupportModal({
             data-testid="button-submit-support"
           >
             {isLoading ? (
-              "Submitting..."
+              language === 'ar' ? 'جاري الإرسال...' : 'Submitting...'
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Submit Support Ticket
+                {language === 'ar' ? 'إرسال تذكرة الدعم' : 'Submit Support Ticket'}
               </>
             )}
           </Button>

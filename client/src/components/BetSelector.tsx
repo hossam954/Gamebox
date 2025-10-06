@@ -86,14 +86,13 @@ export default function BetSelector({ selectedBet, onSelectBet, disabled = false
               onClick={() => !disabled && onSelectBet(amount)}
               disabled={disabled}
               data-testid={`bet-chip-${amount}`}
-              className={`group relative flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center rounded-md border-2 font-display transition-all ${
+              className={`group relative flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-md border-2 font-display transition-all ${
                 selectedBet === amount
                   ? "scale-110 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/50"
                   : "border-card-border bg-card hover-elevate active-elevate-2"
               } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
-              <span className="text-xs font-medium">BET</span>
-              <span className="text-lg font-bold">£{formatBetAmount(amount)}</span>
+              <span className="text-2xl font-bold">£{formatBetAmount(amount)}</span>
             </button>
           ))}
         </div>

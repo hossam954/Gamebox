@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { t } from "@/translations";
 
 interface Transaction {
   id: string;
@@ -71,6 +73,7 @@ export default function WalletModal({
   const [selectedDepositMethod, setSelectedDepositMethod] = useState<string | null>(null);
   const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<string | null>(null);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   useEffect(() => {
     if (isOpen) {
@@ -269,14 +272,14 @@ export default function WalletModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl">
             <Wallet className="h-6 w-6" />
-            My Wallet
+            {language === 'ar' ? 'محفظتي' : 'My Wallet'}
           </DialogTitle>
-          <DialogDescription>Manage your balance and transactions</DialogDescription>
+          <DialogDescription>{language === 'ar' ? 'إدارة رصيدك والمعاملات' : 'Manage your balance and transactions'}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="rounded-lg border border-card-border bg-card p-6">
-            <div className="mb-2 text-sm text-muted-foreground">Current Balance</div>
+            <div className="mb-2 text-sm text-muted-foreground">{t('balance', language)}</div>
             <div className="font-mono text-4xl font-bold" data-testid="wallet-balance">
               £{balance.toLocaleString()}
             </div>
@@ -284,17 +287,17 @@ export default function WalletModal({
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="transactions" data-testid="tab-transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="deposit" data-testid="tab-deposit">Deposit</TabsTrigger>
-              <TabsTrigger value="withdraw" data-testid="tab-withdraw">Withdraw</TabsTrigger>
+              <TabsTrigger value="transactions" data-testid="tab-transactions">{language === 'ar' ? 'المعاملات' : 'Transactions'}</TabsTrigger>
+              <TabsTrigger value="deposit" data-testid="tab-deposit">{t('deposit', language)}</TabsTrigger>
+              <TabsTrigger value="withdraw" data-testid="tab-withdraw">{t('withdraw', language)}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="transactions" className="space-y-3">
-              <h3 className="font-display text-lg font-semibold">Recent Transactions</h3>
+              <h3 className="font-display text-lg font-semibold">{language === 'ar' ? 'المعاملات الأخيرة' : 'Recent Transactions'}</h3>
               <div className="max-h-64 space-y-2 overflow-y-auto">
                 {transactions.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">
-                    No transactions yet
+                    {t('noData', language)}
                   </p>
                 ) : (
                   transactions.map((transaction) => (
@@ -345,12 +348,12 @@ export default function WalletModal({
             <TabsContent value="deposit" className="space-y-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Upload className="h-4 w-4" />
-                Add funds to your account
+                {language === 'ar' ? 'إضافة أموال إلى حسابك' : 'Add funds to your account'}
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="payment-method">Payment Method</Label>
+                  <Label htmlFor="payment-method">{t('paymentMethod', language)}</Label>
                   <select
                     id="payment-method"
                     className="w-full p-2 border rounded-md bg-background text-foreground"
@@ -358,7 +361,7 @@ export default function WalletModal({
                     onChange={(e) => setSelectedDepositMethod(e.target.value || null)}
                     disabled={isLoading}
                   >
-                    <option value="">Select payment method</option>
+                    <option value="">{t('selectPaymentMethod', language)}</option>
                     {paymentMethods
                       .filter(method => method.isActive && (method.type === "deposit" || method.type === "both"))
                       .map(method => (
@@ -378,11 +381,11 @@ export default function WalletModal({
                 )}
 
                 <div>
-                  <Label htmlFor="deposit-amount">Amount (£)</Label>
+                  <Label htmlFor="deposit-amount">{t('amount', language)} (£)</Label>
                   <Input
                     id="deposit-amount"
                     type="number"
-                    placeholder="Enter amount"
+                    placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     disabled={isLoading || !selectedDepositMethod}
@@ -391,18 +394,18 @@ export default function WalletModal({
                   />
                   {selectedDepositMethod && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Min: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount.toLocaleString()} |
-                      Max: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount.toLocaleString()}
+                      {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount.toLocaleString()} |
+                      {t('maxAmount', language)}: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount.toLocaleString()}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="transaction-number">Transaction Number</Label>
+                  <Label htmlFor="transaction-number">{t('transactionNumber', language)}</Label>
                   <Input
                     id="transaction-number"
                     type="text"
-                    placeholder="Enter transaction number"
+                    placeholder={language === 'ar' ? 'أدخل رقم العملية' : 'Enter transaction number'}
                     value={transactionNumber}
                     onChange={(e) => setTransactionNumber(e.target.value)}
                     disabled={isLoading}
@@ -414,7 +417,7 @@ export default function WalletModal({
                   disabled={isLoading || !depositAmount || !selectedDepositMethod || !transactionNumber}
                   className="w-full"
                 >
-                  {isLoading ? "Processing..." : "Submit Deposit Request"}
+                  {isLoading ? t('submitting', language) : (language === 'ar' ? 'إرسال طلب الإيداع' : 'Submit Deposit Request')}
                 </Button>
               </div>
             </TabsContent>
@@ -422,12 +425,12 @@ export default function WalletModal({
             <TabsContent value="withdraw" className="space-y-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Download className="h-4 w-4" />
-                Withdraw funds from your account
+                {language === 'ar' ? 'سحب الأموال من حسابك' : 'Withdraw funds from your account'}
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="withdraw-method">Withdrawal Method</Label>
+                  <Label htmlFor="withdraw-method">{language === 'ar' ? 'طريقة السحب' : 'Withdrawal Method'}</Label>
                   <select
                     id="withdraw-method"
                     className="w-full p-2 border rounded-md bg-background text-foreground"
@@ -435,7 +438,7 @@ export default function WalletModal({
                     onChange={(e) => setSelectedWithdrawMethod(e.target.value || null)}
                     disabled={isLoading}
                   >
-                    <option value="">Select withdrawal method</option>
+                    <option value="">{language === 'ar' ? 'اختر طريقة السحب' : 'Select withdrawal method'}</option>
                     {paymentMethods
                       .filter(method => method.isActive && (method.type === "withdraw" || method.type === "both"))
                       .map(method => (
@@ -457,11 +460,11 @@ export default function WalletModal({
                 })()}
 
                 <div>
-                  <Label htmlFor="withdraw-amount">Amount (£)</Label>
+                  <Label htmlFor="withdraw-amount">{t('amount', language)} (£)</Label>
                   <Input
                     id="withdraw-amount"
                     type="number"
-                    placeholder="Enter amount"
+                    placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     disabled={isLoading || !selectedWithdrawMethod}
@@ -503,11 +506,11 @@ export default function WalletModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="withdraw-address">Receiving Address</Label>
+                  <Label htmlFor="withdraw-address">{t('address', language)}</Label>
                   <Input
                     id="withdraw-address"
                     type="text"
-                    placeholder="Enter your receiving address"
+                    placeholder={language === 'ar' ? 'أدخل عنوان الاستلام' : 'Enter your receiving address'}
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
                     disabled={isLoading}
@@ -519,7 +522,7 @@ export default function WalletModal({
                   disabled={isLoading || !withdrawAmount || !withdrawAddress || !selectedWithdrawMethod}
                   className="w-full"
                 >
-                  {isLoading ? "Processing..." : "Submit Withdrawal Request"}
+                  {isLoading ? t('submitting', language) : (language === 'ar' ? 'إرسال طلب السحب' : 'Submit Withdrawal Request')}
                 </Button>
               </div>
             </TabsContent>
