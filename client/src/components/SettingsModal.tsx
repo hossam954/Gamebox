@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Settings, Key, Gift, Shield, Languages as LanguagesIcon } from "lucide-react";
+import { Settings, Key, Gift, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,11 +182,10 @@ export default function SettingsModal({
         </DialogHeader>
 
         <Tabs defaultValue="account" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="account" data-testid="tab-account">{t('accountSettings', language)}</TabsTrigger>
             <TabsTrigger value="referral" data-testid="tab-referral">{t('referralProgram', language)}</TabsTrigger>
             <TabsTrigger value="promo" data-testid="tab-promo">{t('promoCode', language)}</TabsTrigger>
-            <TabsTrigger value="general" data-testid="tab-general">{t('language', language)}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="account" className="space-y-4">
@@ -246,6 +245,55 @@ export default function SettingsModal({
                   data-testid="button-change-password"
                 >
                   {isLoading ? t('changing', language) : t('changePasswordBtn', language)}
+                </Button>
+              </div>
+
+              <div className="border-t pt-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="language-select">{t('language', language)}</Label>
+                  <Select 
+                    value={language} 
+                    onValueChange={async (value: any) => {
+                      setLanguage(value);
+                      try {
+                        await fetch("/api/users/language", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId, language: value }),
+                        });
+                      } catch (error) {
+                        console.error("Error saving language:", error);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="language-select" data-testid="select-language-settings">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {isAdmin && onAdminClick && (
+                  <Button 
+                    onClick={onAdminClick}
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                    data-testid="button-admin-panel"
+                  >
+                    <Shield className={language === 'ar' ? 'ml-2 h-4 w-4' : 'mr-2 h-4 w-4'} />
+                    {language === 'ar' ? 'لوحة التحكم' : 'Admin Panel'}
+                  </Button>
+                )}
+
+                <Button 
+                  variant="destructive" 
+                  onClick={onLogout}
+                  className="w-full"
+                  data-testid="button-logout"
+                >
+                  {t('logout', language)}
                 </Button>
               </div>
             </div>
@@ -329,65 +377,7 @@ export default function SettingsModal({
             </div>
           </TabsContent>
 
-          <TabsContent value="general" className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <LanguagesIcon className="h-4 w-4" />
-                  {t('language', language)}
-                </h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="language-select">{t('selectLanguage', language)}</Label>
-                  <Select 
-                    value={language} 
-                    onValueChange={async (value: any) => {
-                      setLanguage(value);
-                      try {
-                        await fetch("/api/users/language", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ userId, language: value }),
-                        });
-                      } catch (error) {
-                        console.error("Error saving language:", error);
-                      }
-                    }}
-                  >
-                    <SelectTrigger id="language-select" data-testid="select-language-settings">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">العربية</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="border-t pt-4 space-y-2">
-                {isAdmin && onAdminClick && (
-                  <Button 
-                    onClick={onAdminClick}
-                    className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
-                    data-testid="button-admin-panel"
-                  >
-                    <Shield className={language === 'ar' ? 'ml-2 h-4 w-4' : 'mr-2 h-4 w-4'} />
-                    {language === 'ar' ? 'لوحة التحكم' : 'Admin Panel'}
-                  </Button>
-                )}
-                
-                <Button 
-                  variant="destructive" 
-                  onClick={onLogout}
-                  className="w-full"
-                  data-testid="button-logout"
-                >
-                  {t('logout', language)}
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
+          
         </Tabs>
       </DialogContent>
     </Dialog>
