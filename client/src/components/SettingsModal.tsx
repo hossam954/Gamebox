@@ -252,12 +252,12 @@ export default function SettingsModal({
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Gift className="h-4 w-4" />
-                رمز الدعوة
+                Referral Code
               </h3>
               
               <div className="rounded-lg border bg-card p-4 space-y-3">
                 <div className="space-y-2">
-                  <Label htmlFor="referral-code">رمز الدعوة الخاص بك</Label>
+                  <Label htmlFor="referral-code">Your Referral Code</Label>
                   <div className="flex gap-2">
                     <Input
                       id="referral-code"
@@ -272,24 +272,24 @@ export default function SettingsModal({
                         if (referralCode) {
                           navigator.clipboard.writeText(referralCode);
                           toast({
-                            title: "تم النسخ",
-                            description: "تم نسخ رمز الدعوة بنجاح",
+                            title: "Copied",
+                            description: "Referral code copied successfully",
                           });
                         }
                       }}
                       data-testid="button-copy-referral-code"
                     >
-                      نسخ
+                      Copy
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="text-referral-count">
-                    عدد الدعوات: {referralCount}
+                    Total Referrals: {referralCount}
                   </p>
                 </div>
                 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                   <p className="text-sm text-blue-900 dark:text-blue-100">
-                    💜 احصل على 5% من كل عملية شحن يقوم بها المستخدمون الذين يسجلون باستخدام رمز الدعوة الخاص بك!
+                    💜 Get 5% from every deposit made by users who sign up using your referral code!
                   </p>
                 </div>
               </div>
