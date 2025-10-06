@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, Wallet, Settings, TrendingUp, TrendingDown, AlertCircle, Eye, ArrowUpDown, Edit, Lock, Trash2, Check, X, MessageSquare, Gift, CreditCard, Bell, Send, Link2, Shield, ShieldOff, EyeOff, HelpCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -1633,12 +1634,14 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="paymentNote">ملاحظة</Label>
-                        <Input
+                        <Textarea
                           id="paymentNote"
                           placeholder="رسوم شبكة قد تنطبق"
                           value={newPaymentMethod.note}
                           onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, note: e.target.value })}
                           data-testid="input-payment-method-note"
+                          className="min-h-[120px]"
+                          rows={5}
                         />
                       </div>
                       <Button onClick={handleCreatePaymentMethod} data-testid="button-create-payment-method">

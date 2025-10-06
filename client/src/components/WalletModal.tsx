@@ -446,13 +446,15 @@ export default function WalletModal({
                   </select>
                 </div>
 
-                {selectedWithdrawMethod && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    {paymentMethods.find(m => m.id === selectedWithdrawMethod)?.note && (
-                      <p className="text-sm">{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.note}</p>
-                    )}
-                  </div>
-                )}
+                {selectedWithdrawMethod && (() => {
+                  const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
+                  const note = method?.note?.trim();
+                  return note ? (
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-base whitespace-pre-line leading-relaxed">{note}</p>
+                    </div>
+                  ) : null;
+                })()}
 
                 <div>
                   <Label htmlFor="withdraw-amount">Amount (£)</Label>
