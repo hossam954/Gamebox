@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LogIn, Gift, Bell, Wallet, LifeBuoy } from "lucide-react";
+import { LogIn, Gift, Bell, Wallet, LifeBuoy, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { t } from "@/translations";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -13,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
 
   const generateReferralCode = () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -79,32 +83,33 @@ export default function LoginPage() {
           <span className="font-display text-3xl font-bold">Mystery Box</span>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Support">
-            <LifeBuoy className="h-6 w-6" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Wallet">
-            <Wallet className="h-6 w-6" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Notifications">
-            <Bell className="h-6 w-6" />
-          </Button>
+          <Select value={language} onValueChange={(value: any) => setLanguage(value)}>
+            <SelectTrigger className="w-[140px]" data-testid="select-language">
+              <Languages className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="ar">العربية</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center">
         <Card className="w-full max-w-md" data-testid="login-card">
           <CardHeader>
-            <CardTitle className="font-display text-2xl">Welcome Back</CardTitle>
+            <CardTitle className="font-display text-2xl">{t('login', language)}</CardTitle>
             <CardDescription>Login to continue playing and winning</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="usernameOrEmail">Username or Email</Label>
+                <Label htmlFor="usernameOrEmail">{t('username', language)} / {t('email', language)}</Label>
                 <Input
                   id="usernameOrEmail"
                   type="text"
-                  placeholder="Enter your username or email"
+                  placeholder={`${t('username', language)} / ${t('email', language)}`}
                   value={usernameOrEmail}
                   onChange={(e) => setUsernameOrEmail(e.target.value)}
                   required
@@ -114,11 +119,11 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('password', language)}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={t('password', language)}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -134,11 +139,11 @@ export default function LoginPage() {
                 data-testid="button-login"
               >
                 {isLoading ? (
-                  "Logging in..."
+                  `${t('loading', language)}...`
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
+                    <LogIn className={language === 'ar' ? 'ml-2 h-4 w-4' : 'mr-2 h-4 w-4'} />
+                    {t('login', language)}
                   </>
                 )}
               </Button>
@@ -147,16 +152,16 @@ export default function LoginPage() {
             <div className="mt-4 space-y-2 text-center text-sm">
               <div>
                 <Link href="/password-recovery" className="text-muted-foreground hover:text-primary hover:underline" data-testid="link-password-recovery">
-                  Forgot your password?
+                  {t('forgotPassword', language)}
                 </Link>
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t pt-4">
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t('dontHaveAccount', language)}{" "}
               <Link href="/register" className="text-primary hover:underline" data-testid="link-register">
-                Sign up
+                {t('signUp', language)}
               </Link>
             </p>
           </CardFooter>
