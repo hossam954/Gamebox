@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Settings, Key, Gift, Shield } from "lucide-react";
+import { Settings, Key, Gift, Shield, Languages as LanguagesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { t } from "@/translations";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -42,6 +45,7 @@ export default function SettingsModal({
   const [isLoading, setIsLoading] = useState(false);
   const [referralCount, setReferralCount] = useState<number>(0);
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
 
   useEffect(() => {
     if (isOpen && referralCode) {
@@ -63,8 +67,8 @@ export default function SettingsModal({
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "New passwords do not match",
+        title: t('error', language),
+        description: t('passwordsDoNotMatch', language),
         variant: "destructive",
       });
       return;
@@ -72,8 +76,8 @@ export default function SettingsModal({
 
     if (newPassword.length < 6) {
       toast({
-        title: "Weak password",
-        description: "Password must be at least 6 characters long",
+        title: t('error', language),
+        description: language === 'ar' ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters long",
         variant: "destructive",
       });
       return;
@@ -93,8 +97,8 @@ export default function SettingsModal({
 
       if (response.ok) {
         toast({
-          title: "Password changed",
-          description: "Your password has been updated successfully",
+          title: t('success', language),
+          description: t('passwordChanged', language),
         });
         setCurrentPassword("");
         setNewPassword("");
@@ -102,8 +106,8 @@ export default function SettingsModal({
       } else {
         const data = await response.json();
         toast({
-          title: "Password change failed",
-          description: data.message || "Could not change password",
+          title: t('error', language),
+          description: data.message || t('invalidCurrentPassword', language),
           variant: "destructive",
         });
       }
@@ -143,16 +147,15 @@ export default function SettingsModal({
 
       if (response.ok) {
         toast({
-          title: "Promo code redeemed!",
-          description: `You received ${data.reward}`,
+          title: t('success', language),
+          description: t('promoRedeemed', language),
         });
         setPromoCode("");
-        // Refresh page to update balance
         window.location.reload();
       } else {
         toast({
-          title: "Invalid promo code",
-          description: data.message || "Could not redeem promo code",
+          title: t('error', language),
+          description: t('invalidPromo', language),
           variant: "destructive",
         });
       }
@@ -173,40 +176,40 @@ export default function SettingsModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl">
             <Settings className="h-6 w-6" />
-            Settings
+            {t('settings', language)}
           </DialogTitle>
           <DialogDescription>Manage your account settings and preferences</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="account" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="account" data-testid="tab-account">Account</TabsTrigger>
-            <TabsTrigger value="referral" data-testid="tab-referral">Referral's</TabsTrigger>
-            <TabsTrigger value="promo" data-testid="tab-promo">Promo Codes</TabsTrigger>
-            <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
+            <TabsTrigger value="account" data-testid="tab-account">{t('accountSettings', language)}</TabsTrigger>
+            <TabsTrigger value="referral" data-testid="tab-referral">{t('referralProgram', language)}</TabsTrigger>
+            <TabsTrigger value="promo" data-testid="tab-promo">{t('promoCode', language)}</TabsTrigger>
+            <TabsTrigger value="general" data-testid="tab-general">{t('language', language)}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="account" className="space-y-4">
             <div className="space-y-4">
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="font-semibold mb-2">Account Information</h3>
+                <h3 className="font-semibold mb-2">{t('accountSettings', language)}</h3>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-muted-foreground">Username:</span> {username}</div>
+                  <div><span className="text-muted-foreground">{t('username', language)}:</span> {username}</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Key className="h-4 w-4" />
-                  Change Password
+                  {t('changePassword', language)}
                 </h3>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
+                  <Label htmlFor="current-password">{t('currentPassword', language)}</Label>
                   <Input
                     id="current-password"
                     type="password"
-                    placeholder="Enter current password"
+                    placeholder={t('currentPassword', language)}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     data-testid="input-current-password"
@@ -214,11 +217,11 @@ export default function SettingsModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+                  <Label htmlFor="new-password">{t('newPassword', language)}</Label>
                   <Input
                     id="new-password"
                     type="password"
-                    placeholder="Enter new password"
+                    placeholder={t('newPassword', language)}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     data-testid="input-new-password"
@@ -226,11 +229,11 @@ export default function SettingsModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Label htmlFor="confirm-password">{t('confirmNewPassword', language)}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
-                    placeholder="Confirm new password"
+                    placeholder={t('confirmNewPassword', language)}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     data-testid="input-confirm-password"
@@ -242,7 +245,7 @@ export default function SettingsModal({
                   disabled={isLoading}
                   data-testid="button-change-password"
                 >
-                  {isLoading ? "Changing..." : "Change Password"}
+                  {isLoading ? t('changing', language) : t('changePasswordBtn', language)}
                 </Button>
               </div>
             </div>
@@ -252,12 +255,12 @@ export default function SettingsModal({
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Gift className="h-4 w-4" />
-                رمز الدعوة
+                {t('referralProgram', language)}
               </h3>
               
               <div className="rounded-lg border bg-card p-4 space-y-3">
                 <div className="space-y-2">
-                  <Label htmlFor="referral-code">رمز الدعوة الخاص بك</Label>
+                  <Label htmlFor="referral-code">{t('yourReferralCode', language)}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="referral-code"
@@ -272,24 +275,24 @@ export default function SettingsModal({
                         if (referralCode) {
                           navigator.clipboard.writeText(referralCode);
                           toast({
-                            title: "تم النسخ",
-                            description: "تم نسخ رمز الدعوة بنجاح",
+                            title: t('copied', language),
+                            description: t('referralCodeCopied', language),
                           });
                         }
                       }}
                       data-testid="button-copy-referral-code"
                     >
-                      نسخ
+                      {t('copy', language)}
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="text-referral-count">
-                    عدد الدعوات: {referralCount}
+                    {t('referralsCount', language)}: {referralCount}
                   </p>
                 </div>
                 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                   <p className="text-sm text-blue-900 dark:text-blue-100">
-                    💜 احصل على 5% من كل عملية شحن يقوم بها المستخدمون الذين يسجلون باستخدام رمز الدعوة الخاص بك!
+                    {t('referralMessage', language)}
                   </p>
                 </div>
               </div>
@@ -300,15 +303,15 @@ export default function SettingsModal({
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Gift className="h-4 w-4" />
-                Redeem Promo Code
+                {t('redeemPromoCode', language)}
               </h3>
               
               <div className="space-y-2">
-                <Label htmlFor="promo-code">Promo Code</Label>
+                <Label htmlFor="promo-code">{t('promoCode', language)}</Label>
                 <Input
                   id="promo-code"
                   type="text"
-                  placeholder="Enter promo code"
+                  placeholder={t('promoCodePlaceholder', language)}
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   data-testid="input-promo-code"
@@ -321,34 +324,68 @@ export default function SettingsModal({
                 className="w-full"
                 data-testid="button-redeem-promo"
               >
-                {isLoading ? "Redeeming..." : "Redeem Promo Code"}
+                {isLoading ? t('redeeming', language) : t('redeemBtn', language)}
               </Button>
             </div>
           </TabsContent>
 
           <TabsContent value="general" className="space-y-4">
             <div className="space-y-4">
-              <h3 className="font-semibold">Account Actions</h3>
-              
-              {isAdmin && onAdminClick && (
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <LanguagesIcon className="h-4 w-4" />
+                  {t('language', language)}
+                </h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="language-select">{t('selectLanguage', language)}</Label>
+                  <Select 
+                    value={language} 
+                    onValueChange={async (value: any) => {
+                      setLanguage(value);
+                      try {
+                        await fetch("/api/users/language", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId, language: value }),
+                        });
+                      } catch (error) {
+                        console.error("Error saving language:", error);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="language-select" data-testid="select-language-settings">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-2">
+                {isAdmin && onAdminClick && (
+                  <Button 
+                    onClick={onAdminClick}
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                    data-testid="button-admin-panel"
+                  >
+                    <Shield className={language === 'ar' ? 'ml-2 h-4 w-4' : 'mr-2 h-4 w-4'} />
+                    {language === 'ar' ? 'لوحة التحكم' : 'Admin Panel'}
+                  </Button>
+                )}
+                
                 <Button 
-                  onClick={onAdminClick}
-                  className="w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
-                  data-testid="button-admin-panel"
+                  variant="destructive" 
+                  onClick={onLogout}
+                  className="w-full"
+                  data-testid="button-logout"
                 >
-                  <Shield className="mr-2 h-4 w-4" />
-                  لوحة التحكم
+                  {t('logout', language)}
                 </Button>
-              )}
-              
-              <Button 
-                variant="destructive" 
-                onClick={onLogout}
-                className="w-full"
-                data-testid="button-logout"
-              >
-                Logout
-              </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
