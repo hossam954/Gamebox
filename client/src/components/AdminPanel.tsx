@@ -852,7 +852,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {[...depositRequests, ...withdrawRequests].slice(0, 5).map((request) => (
+                        {[...depositRequests, ...withdrawRequests]
+                          .filter(request => request.amount !== null && request.amount !== undefined)
+                          .slice(0, 5)
+                          .map((request) => (
                           <div key={request.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div>
                               <p className="font-medium">{request.username}</p>
@@ -861,7 +864,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-mono font-bold">£{(request.amount ?? 0).toLocaleString()}</p>
+                              <p className="font-mono font-bold">£{request.amount.toLocaleString()}</p>
                               <Badge variant={request.status === "pending" ? "default" : request.status === "approved" ? "default" : "destructive"} className="text-xs">
                                 {request.status === "pending" ? "معلق" : request.status === "approved" ? "موافق عليه" : "مرفوض"}
                               </Badge>
