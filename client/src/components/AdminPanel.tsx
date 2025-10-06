@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Wallet, Settings, TrendingUp, TrendingDown, AlertCircle, Eye, ArrowUpDown, Edit, Lock, Trash2, Check, X, MessageSquare, Gift, CreditCard, Bell, Send, Link2, Shield, ShieldOff, EyeOff, HelpCircle } from "lucide-react";
+import { Users, Wallet, Settings, TrendingUp, TrendingDown, AlertCircle, Eye, ArrowUpDown, Edit, Lock, Trash2, Check, X, MessageSquare, Gift, CreditCard, Bell, Send, Link2, Shield, ShieldOff, EyeOff, HelpCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
