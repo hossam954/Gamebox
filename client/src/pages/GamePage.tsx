@@ -167,18 +167,6 @@ export default function GamePage() {
 
   // Function to send notification
   const sendNotification = (message: string, type: "success" | "error" | "info" = "info") => {
-    const newNotification = {
-      id: Date.now().toString(),
-      title: type.charAt(0).toUpperCase() + type.slice(1),
-      message,
-      read: false,
-      createdAt: new Date().toISOString(),
-    };
-    setNotifications((prev) => {
-      const updatedNotifications = [newNotification, ...prev];
-      localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
-      return updatedNotifications;
-    });
     toast({
       title: type.charAt(0).toUpperCase() + type.slice(1),
       description: message,
@@ -322,17 +310,37 @@ export default function GamePage() {
     setLocation("/admin");
   };
 
-  const handleMarkAsRead = (id: string) => {
-    const updatedNotifications = notifications.map((n) =>
-      n.id === id ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${id}/read`, {
+        method: 'PATCH',
+      });
+      
+      if (response.ok) {
+        const updatedNotifications = notifications.map((n) =>
+          n.id === id ? { ...n, read: true } : n
+        );
+        setNotifications(updatedNotifications);
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
-  const handleClearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.setItem("notifications", JSON.stringify([]));
+  const handleClearAllNotifications = async () => {
+    if (!userId) return;
+    
+    try {
+      const response = await fetch(`/api/notifications/${userId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
