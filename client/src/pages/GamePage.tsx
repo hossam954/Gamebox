@@ -214,68 +214,177 @@ export default function GamePage() {
     setIsOpen(false);
     setPrize(undefined);
 
-    // الحصول على نسبة الربح من الإعدادات
-    let winRate = 50; // القيمة الافتراضية
+    // الحصول على إعدادات اللعبة المتقدمة من السيرفر
+    let gameSettings: any = {
+      baseWinRate: 50,
+      targetLossRate: 70,
+      maxMultiplier: 50,
+      strategy: "balanced",
+      phase1Rounds: 10,
+      phase2Rounds: 20,
+      multiplier2to5Chance: 40,
+      multiplier5to10Chance: 30,
+      multiplier10to25Chance: 20,
+      multiplier25to50Chance: 8,
+      multiplier50PlusChance: 2,
+      highBetThreshold: 5000,
+      highBetMaxMultiplier: 20,
+    };
+
+    // الحصول على إحصائيات اللاعب الحالية
+    let playerStats: any = {
+      sessionBetsCount: 0,
+      lifetimeProfit: 0,
+      currentStreak: 0,
+      sessionStartBalance: balance,
+    };
+
     try {
-      const response = await fetch('/api/win-rate');
-      if (response.ok) {
-        const data = await response.json();
-        winRate = data.winRate;
+      const [settingsRes, userRes] = await Promise.all([
+        fetch('/api/game-settings'),
+        userId ? fetch(`/api/users`).then(r => r.json()).then(users => users.find((u: any) => u.id === userId)) : null
+      ]);
+
+      if (settingsRes.ok) {
+        gameSettings = await settingsRes.json();
+      }
+
+      if (userRes) {
+        playerStats = {
+          sessionBetsCount: userRes.sessionBetsCount || 0,
+          lifetimeProfit: userRes.lifetimeProfit || 0,
+          currentStreak: userRes.currentStreak || 0,
+          sessionStartBalance: userRes.sessionStartBalance || balance,
+          totalBetsCount: userRes.totalBetsCount || 0,
+        };
       }
     } catch (error) {
-      console.error('Error fetching win rate:', error);
+      console.error('Error fetching game settings:', error);
     }
 
     setTimeout(() => {
       const random = Math.random() * 100;
       let prizeMultiplier: number | null = null;
 
-      // خوارزمية ذكية: إذا ربح اللاعب ثم زاد الرهان، نخفض فرص الفوز بشكل كبير
-      let adjustedWinRate = winRate;
-      let maxMultiplier = 100;
+      // ============================================
+      // خوارزمية ذكية متطورة - نظام المراحل الثلاث
+      // ============================================
+
+      const betsCount = playerStats.sessionBetsCount;
+      const sessionProfit = balance - playerStats.sessionStartBalance;
       
-      if (lastResult === 'win' && lastBet && selectedBet! > lastBet) {
-        // إذا ربح وزاد الرهان، نخفض فرص الفوز بنسبة كبيرة
-        const betIncrease = selectedBet! / lastBet;
-        if (betIncrease >= 2) {
-          // إذا ضاعف الرهان أو أكثر، نخفض فرص الفوز بنسبة 70%
-          adjustedWinRate = winRate * 0.3;
-          maxMultiplier = 10; // حد أقصى للربح 10x فقط
-        } else if (betIncrease >= 1.5) {
-          // إذا زاد الرهان بنسبة 50% أو أكثر، نخفض فرص الفوز بنسبة 50%
-          adjustedWinRate = winRate * 0.5;
-          maxMultiplier = 20;
+      // تحديد المرحلة الحالية
+      let currentPhase: 'hook' | 'oscillate' | 'drain';
+      if (betsCount < gameSettings.phase1Rounds) {
+        currentPhase = 'hook'; // المرحلة 1: التعليق
+      } else if (betsCount < (gameSettings.phase1Rounds + gameSettings.phase2Rounds)) {
+        currentPhase = 'oscillate'; // المرحلة 2: التذبذب
+      } else {
+        currentPhase = 'drain'; // المرحلة 3: الخسارة التدريجية
+      }
+
+      // حساب نسبة الربح الديناميكية بناءً على المرحلة
+      let adjustedWinRate = gameSettings.baseWinRate;
+      let dynamicMaxMultiplier = gameSettings.maxMultiplier;
+
+      // تحديد الحد الأقصى الديناميكي بناءً على قيمة الرهان
+      if (selectedBet! >= gameSettings.highBetThreshold) {
+        dynamicMaxMultiplier = Math.min(dynamicMaxMultiplier, gameSettings.highBetMaxMultiplier);
+      }
+
+      // تطبيق منطق المراحل
+      if (currentPhase === 'hook') {
+        // المرحلة 1: إعطاء أرباح جيدة لتعليق اللاعب
+        adjustedWinRate = gameSettings.baseWinRate + 15; // زيادة 15% فرصة الربح
+        // تفضيل المضاعفات المتوسطة (x3-x10)
+      } else if (currentPhase === 'oscillate') {
+        // المرحلة 2: تذبذب - إذا ربح كثيراً، خفض الفرصة
+        const profitRatio = sessionProfit / (playerStats.sessionStartBalance || 1000);
+        
+        if (profitRatio > 0.5) {
+          // إذا ربح أكثر من 50% من رصيده الأولي، خفض الفرصة
+          adjustedWinRate = gameSettings.baseWinRate * 0.6;
+        } else if (profitRatio < -0.3) {
+          // إذا خسر أكثر من 30%، أعطه فرصة أفضل ليستمر
+          adjustedWinRate = gameSettings.baseWinRate + 10;
         } else {
-          // زيادة بسيطة، نخفض فرص الفوز بنسبة 30%
-          adjustedWinRate = winRate * 0.7;
-          maxMultiplier = 50;
+          // تذبذب عادي
+          adjustedWinRate = gameSettings.baseWinRate;
+        }
+
+        // إذا في سلسلة انتصارات، قلل الفرص
+        if (playerStats.currentStreak >= 3) {
+          adjustedWinRate *= 0.7;
+        }
+      } else {
+        // المرحلة 3: الخسارة التدريجية
+        const drainProgress = (betsCount - (gameSettings.phase1Rounds + gameSettings.phase2Rounds)) / 20;
+        adjustedWinRate = gameSettings.baseWinRate * (1 - (drainProgress * 0.4)); // تقليل تدريجي
+        
+        // إذا ربح كثيراً، خسره بقوة
+        if (sessionProfit > playerStats.sessionStartBalance * 0.3) {
+          adjustedWinRate *= 0.5;
         }
       }
 
+      // إذا ربح وزاد الرهان، قلل الفرص
+      if (lastResult === 'win' && lastBet && selectedBet! > lastBet) {
+        const betIncrease = selectedBet! / lastBet;
+        adjustedWinRate *= (1 - (betIncrease - 1) * 0.4);
+        dynamicMaxMultiplier = Math.min(dynamicMaxMultiplier, 15);
+      }
+
+      // التأكد من أن نسبة الربح في حدود منطقية
+      adjustedWinRate = Math.max(5, Math.min(95, adjustedWinRate));
+      
       const lossThreshold = 100 - adjustedWinRate;
       
       if (random < lossThreshold) {
         // خسارة
         prizeMultiplier = null;
       } else {
-        // فوز - توزيع الأرباح بناءً على الحد الأقصى المسموح
+        // فوز - توزيع المضاعفات الذكي
         const winRandom = Math.random() * 100;
+        const totalChance = gameSettings.multiplier2to5Chance + gameSettings.multiplier5to10Chance + 
+                           gameSettings.multiplier10to25Chance + gameSettings.multiplier25to50Chance + 
+                           gameSettings.multiplier50PlusChance;
         
-        if (winRandom < 75) {
-          // ربح صغير جداً (1x - 2x)
-          prizeMultiplier = Math.floor(Math.random() * 2) + 1;
-        } else if (winRandom < 92) {
-          // ربح صغير (2x - 5x)
-          prizeMultiplier = Math.floor(Math.random() * 4) + 2;
-        } else if (winRandom < 98) {
-          // ربح متوسط (5x - 15x أو أقل حسب الحد الأقصى)
-          const max = Math.min(15, maxMultiplier);
-          prizeMultiplier = Math.floor(Math.random() * (max - 5)) + 5;
-        } else {
-          // ربح كبير (15x - maxMultiplier)
-          const max = Math.min(100, maxMultiplier);
-          prizeMultiplier = Math.floor(Math.random() * (max - 15)) + 15;
+        // توزيع المضاعفات بناءً على الإعدادات والمرحلة
+        let chance1 = gameSettings.multiplier2to5Chance;
+        let chance2 = chance1 + gameSettings.multiplier5to10Chance;
+        let chance3 = chance2 + gameSettings.multiplier10to25Chance;
+        let chance4 = chance3 + gameSettings.multiplier25to50Chance;
+
+        // في مرحلة التعليق، زيادة فرص المضاعفات المتوسطة
+        if (currentPhase === 'hook') {
+          chance1 = 20; // تقليل x2-x5
+          chance2 = 60; // زيادة x5-x10
+          chance3 = 85;
+          chance4 = 97;
         }
+
+        if (winRandom < chance1) {
+          // x2 - x5
+          prizeMultiplier = Math.floor(Math.random() * 3.5) + 2;
+        } else if (winRandom < chance2) {
+          // x5 - x10
+          prizeMultiplier = Math.floor(Math.random() * 5) + 5;
+        } else if (winRandom < chance3) {
+          // x10 - x25
+          const max = Math.min(25, dynamicMaxMultiplier);
+          prizeMultiplier = Math.floor(Math.random() * (max - 10)) + 10;
+        } else if (winRandom < chance4) {
+          // x25 - x50
+          const max = Math.min(50, dynamicMaxMultiplier);
+          prizeMultiplier = Math.floor(Math.random() * (max - 25)) + 25;
+        } else {
+          // x50+
+          const max = Math.min(100, dynamicMaxMultiplier);
+          prizeMultiplier = Math.floor(Math.random() * (max - 50)) + 50;
+        }
+
+        // التأكد من أن المضاعف في الحد المسموح
+        prizeMultiplier = Math.min(prizeMultiplier, dynamicMaxMultiplier);
       }
 
       setPrize(prizeMultiplier);
@@ -289,12 +398,17 @@ export default function GamePage() {
         setLastBet(selectedBet);
         setLastResult('win');
         
-        // حفظ النتيجة في السيرفر
+        // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
           fetch(`/api/users/${userId}/game-result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ balance: newBalance, won: true })
+            body: JSON.stringify({
+              betAmount: selectedBet,
+              won: true,
+              multiplier: prizeMultiplier,
+              newBalance: newBalance
+            })
           }).catch(err => console.error('Failed to save game result:', err));
         }
         
@@ -331,12 +445,17 @@ export default function GamePage() {
         setLastBet(selectedBet);
         setLastResult('loss');
         
-        // حفظ النتيجة في السيرفر
+        // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
           fetch(`/api/users/${userId}/game-result`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ balance: newBalance, won: false })
+            body: JSON.stringify({
+              betAmount: selectedBet,
+              won: false,
+              multiplier: null,
+              newBalance: newBalance
+            })
           }).catch(err => console.error('Failed to save game result:', err));
         }
         

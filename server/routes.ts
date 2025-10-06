@@ -354,6 +354,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // إعدادات اللعبة المتقدمة
+  app.get("/api/game-settings", async (req, res) => {
+    try {
+      const settings = await storage.getGameSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.put("/api/game-settings", async (req, res) => {
+    try {
+      const settings = await storage.updateGameSettings(req.body);
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.get("/api/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
@@ -410,8 +429,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/:id/game-result", async (req, res) => {
     try {
       const { id } = req.params;
-      const { balance, won } = req.body;
-      await storage.updateUserStats(id, balance, won);
+      const { betAmount, won, multiplier, newBalance } = req.body;
+      
+      // استخدام الدالة الجديدة إذا تم إرسال البيانات الكاملة
+      if (betAmount !== undefined && multiplier !== undefined && newBalance !== undefined) {
+        await storage.updateUserGameStats(id, {
+          betAmount,
+          won,
+          multiplier,
+          newBalance
+        });
+      } else {
+        // استخدام الدالة القديمة للتوافق مع الكود القديم
+        const { balance } = req.body;
+        await storage.updateUserStats(id, balance, won);
+      }
+      
       res.json({ message: "Stats updated" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });

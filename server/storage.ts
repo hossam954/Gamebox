@@ -14,7 +14,9 @@ import {
   type PromoCode,
   type InsertPromoCode,
   type SupportTicket,
-  type InsertSupportTicket
+  type InsertSupportTicket,
+  type GameSettings,
+  type InsertGameSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -67,6 +69,18 @@ export interface IStorage {
   getNotificationsByUserId(userId: string): Promise<any[]>;
   markNotificationAsRead(id: string): Promise<void>;
   clearAllNotifications(userId: string): Promise<void>;
+  
+  // إدارة إعدادات اللعبة
+  getGameSettings(): Promise<GameSettings>;
+  updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings>;
+  
+  // تحديث إحصائيات اللاعب المتقدمة
+  updateUserGameStats(userId: string, stats: {
+    betAmount: number;
+    won: boolean;
+    multiplier: number | null;
+    newBalance: number;
+  }): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -75,6 +89,7 @@ export class MemStorage implements IStorage {
   private depositRequests: Map<string, DepositRequest>;
   private withdrawRequests: Map<string, WithdrawRequest>;
   private paymentSettings: PaymentSettings;
+  private gameSettings: GameSettings;
   private paymentMethods: Map<string, PaymentMethod>;
   private promoCodes: Map<string, PromoCode>;
   private supportTickets: Map<string, SupportTicket>;
@@ -103,6 +118,15 @@ export class MemStorage implements IStorage {
       referralCode: this.generateReferralCode("abodiab"),
       referredBy: null,
       language: "en",
+      currentStreak: 0,
+      longestStreak: 0,
+      totalBetsCount: 0,
+      totalWagered: 0,
+      lifetimeProfit: 0,
+      sessionStartBalance: 50000,
+      sessionBetsCount: 0,
+      lastBetAmount: 0,
+      lastGameResult: "",
       createdAt: new Date(),
     };
     this.users.set(adminId, adminUser);
@@ -117,6 +141,24 @@ export class MemStorage implements IStorage {
       depositAddress: "SYP-WALLET-ADDRESS-12345",
       paymentMethod: "Bank Transfer / Mobile Wallet",
       winRate: 50, // نسبة الربح الافتراضية 50%
+    };
+
+    this.gameSettings = {
+      id: randomUUID(),
+      baseWinRate: 50,
+      targetLossRate: 70,
+      maxMultiplier: 50,
+      strategy: "balanced",
+      phase1Rounds: 10,
+      phase2Rounds: 20,
+      multiplier2to5Chance: 40,
+      multiplier5to10Chance: 30,
+      multiplier10to25Chance: 20,
+      multiplier25to50Chance: 8,
+      multiplier50PlusChance: 2,
+      highBetThreshold: 5000,
+      highBetMaxMultiplier: 20,
+      updatedAt: new Date(),
     };
 
     const defaultPaymentMethod1: PaymentMethod = {
@@ -183,6 +225,15 @@ export class MemStorage implements IStorage {
       referralCode,
       referredBy: insertUser.referredBy || null,
       language: insertUser.language || "en",
+      currentStreak: 0,
+      longestStreak: 0,
+      totalBetsCount: 0,
+      totalWagered: 0,
+      lifetimeProfit: 0,
+      sessionStartBalance: 0,
+      sessionBetsCount: 0,
+      lastBetAmount: 0,
+      lastGameResult: "",
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -536,6 +587,55 @@ export class MemStorage implements IStorage {
         this.notifications.delete(key);
       }
     });
+  }
+
+  async getGameSettings(): Promise<GameSettings> {
+    return this.gameSettings;
+  }
+
+  async updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings> {
+    this.gameSettings = {
+      ...this.gameSettings,
+      ...settings,
+      updatedAt: new Date(),
+    };
+    return this.gameSettings;
+  }
+
+  async updateUserGameStats(userId: string, stats: {
+    betAmount: number;
+    won: boolean;
+    multiplier: number | null;
+    newBalance: number;
+  }): Promise<void> {
+    const user = this.users.get(userId);
+    if (!user) return;
+
+    const profit = stats.won 
+      ? (stats.betAmount * (stats.multiplier || 0)) - stats.betAmount
+      : -stats.betAmount;
+
+    // تحديث الإحصائيات
+    user.balance = stats.newBalance;
+    user.totalBetsCount += 1;
+    user.totalWagered += stats.betAmount;
+    user.lifetimeProfit += profit;
+    user.sessionBetsCount += 1;
+    user.lastBetAmount = stats.betAmount;
+    user.lastGameResult = stats.won ? "win" : "loss";
+
+    if (stats.won) {
+      user.totalWins += 1;
+      user.currentStreak += 1;
+      if (user.currentStreak > user.longestStreak) {
+        user.longestStreak = user.currentStreak;
+      }
+    } else {
+      user.totalLosses += 1;
+      user.currentStreak = 0;
+    }
+
+    this.users.set(userId, user);
   }
 }
 

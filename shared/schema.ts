@@ -15,6 +15,18 @@ export const users = pgTable("users", {
   referralCode: text("referral_code").unique(),
   referredBy: text("referred_by"),
   language: text("language").notNull().default("en"),
+  
+  // إحصائيات اللعبة المتقدمة
+  currentStreak: integer("current_streak").notNull().default(0), // عدد الانتصارات المتتالية
+  longestStreak: integer("longest_streak").notNull().default(0), // أطول سلسلة انتصارات
+  totalBetsCount: integer("total_bets_count").notNull().default(0), // إجمالي عدد المراهنات
+  totalWagered: integer("total_wagered").notNull().default(0), // إجمالي المبالغ المراهن بها
+  lifetimeProfit: integer("lifetime_profit").notNull().default(0), // الربح/الخسارة الإجمالية
+  sessionStartBalance: integer("session_start_balance").notNull().default(0), // الرصيد عند بداية الجلسة
+  sessionBetsCount: integer("session_bets_count").notNull().default(0), // عدد المراهنات في الجلسة الحالية
+  lastBetAmount: integer("last_bet_amount").notNull().default(0), // آخر مبلغ مراهنة
+  lastGameResult: text("last_game_result").default(""), // "win" أو "loss"
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -111,6 +123,43 @@ export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).o
 
 export type InsertPaymentSettings = z.infer<typeof insertPaymentSettingsSchema>;
 export type PaymentSettings = typeof paymentSettings.$inferSelect;
+
+export const gameSettings = pgTable("game_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // الإعدادات الأساسية
+  baseWinRate: integer("base_win_rate").notNull().default(50), // نسبة الربح الأساسية 0-100
+  targetLossRate: integer("target_loss_rate").notNull().default(70), // نسبة الخسارة المستهدفة 0-100
+  maxMultiplier: integer("max_multiplier").notNull().default(50), // أقصى مضاعف
+  
+  // استراتيجية اللعب
+  strategy: text("strategy").notNull().default("balanced"), // "aggressive", "balanced", "soft"
+  
+  // إعدادات المراحل
+  phase1Rounds: integer("phase1_rounds").notNull().default(10), // عدد الجولات في المرحلة 1 (التعليق)
+  phase2Rounds: integer("phase2_rounds").notNull().default(20), // عدد الجولات في المرحلة 2 (التذبذب)
+  
+  // توزيع المضاعفات (نسب مئوية)
+  multiplier2to5Chance: integer("multiplier_2to5_chance").notNull().default(40), // x2-x5
+  multiplier5to10Chance: integer("multiplier_5to10_chance").notNull().default(30), // x5-x10
+  multiplier10to25Chance: integer("multiplier_10to25_chance").notNull().default(20), // x10-x25
+  multiplier25to50Chance: integer("multiplier_25to50_chance").notNull().default(8), // x25-x50
+  multiplier50PlusChance: integer("multiplier_50plus_chance").notNull().default(2), // x50+
+  
+  // حدود ديناميكية بناءً على قيمة الرهان
+  highBetThreshold: integer("high_bet_threshold").notNull().default(5000), // إذا كان الرهان أكبر من هذا
+  highBetMaxMultiplier: integer("high_bet_max_multiplier").notNull().default(20), // أقصى مضاعف للرهانات الكبيرة
+  
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertGameSettingsSchema = createInsertSchema(gameSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertGameSettings = z.infer<typeof insertGameSettingsSchema>;
+export type GameSettings = typeof gameSettings.$inferSelect;
 
 export const paymentMethods = pgTable("payment_methods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
