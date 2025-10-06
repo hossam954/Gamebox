@@ -225,34 +225,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid input", errors: result.error });
       }
 
-      const withdraw = await storage.createWithdrawRequest(result.data);
-      res.json({ message: "Withdrawal request submitted", id: withdraw.id });
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.get("/api/withdraw", async (req, res) => {
-    try {
-      const requests = await storage.getWithdrawRequests();
-      res.json(requests);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.post("/api/withdraw", async (req, res) => {
-    try {
-      const result = insertWithdrawRequestSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid input", errors: result.error });
-      }
-
       // خصم الرصيد فوريًا عند تقديم الطلب
       const user = await storage.getUserByUsername(result.data.username);
-      if (user && user.balance >= result.data.amount) {
-        await storage.updateUserBalance(user.id, user.balance - result.data.amount);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
+
+      if (user.balance < result.data.amount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      await storage.updateUserBalance(user.id, user.balance - result.data.amount);
 
       const withdraw = await storage.createWithdrawRequest(result.data);
       res.json({ message: "Withdrawal request submitted", id: withdraw.id });

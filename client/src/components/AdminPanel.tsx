@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Wallet, Settings, Search, Edit, Trash2, Check, X, Link2, Shield, ShieldOff, Eye, EyeOff, Gift, HelpCircle } from "lucide-react";
+import { Users, Wallet, Settings, TrendingUp, TrendingDown, AlertCircle, Eye, ArrowUpDown, Edit, Lock, Trash2, Check, X, MessageSquare, Gift, CreditCard, Bell, Send, Link2, Shield, ShieldOff, EyeOff, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -488,8 +488,17 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   );
 
   const totalBalance = displayUsers.reduce((sum, user) => sum + (user.balance || 0), 0);
+  const totalUsers = displayUsers.length;
   const activeUsers = allUsers.filter((u) => u.status === "active").length;
   const suspendedUsers = allUsers.filter((u) => u.status === "suspended").length;
+
+  const totalDeposits = depositRequests
+    .filter(req => req.status === "approved")
+    .reduce((sum, req) => sum + (req.amount || 0), 0);
+
+  const totalWithdrawals = withdrawRequests
+    .filter(req => req.status === "approved")
+    .reduce((sum, req) => sum + (req.amount || 0), 0);
   const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +
     withdrawRequests.filter((r) => r.status === "pending").length +
     passwordRecoveryRequests.filter((r) => r.status === "pending").length +
@@ -548,27 +557,27 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">الطلبات المعلقة</CardTitle>
-              <Settings className="h-5 w-5 text-orange-600" />
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">إجمالي الإيداعات</CardTitle>
+              <TrendingUp className="h-5 w-5 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold text-orange-900 dark:text-orange-100">
-                {pendingRequests}
+              <div className="text-2xl md:text-3xl font-bold text-orange-900 dark:text-orange-100" data-testid="stat-total-deposits">
+                £{totalDeposits.toLocaleString()}
               </div>
-              <p className="text-xs md:text-sm text-orange-600 dark:text-orange-400">تتطلب انتباه</p>
+              <p className="text-xs md:text-sm text-orange-600 dark:text-orange-400">إجمالي الإيداعات الموافق عليها</p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">النشاط اليومي</CardTitle>
-              <Eye className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">إجمالي السحوبات</CardTitle>
+              <TrendingDown className="h-5 w-5 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold text-purple-900 dark:text-purple-100">
-                {depositRequests.length + withdrawRequests.length}
+              <div className="text-2xl md:text-3xl font-bold text-purple-900 dark:text-purple-100" data-testid="stat-total-withdrawals">
+                £{totalWithdrawals.toLocaleString()}
               </div>
-              <p className="text-xs md:text-sm text-purple-600 dark:text-purple-400">إجمالي المعاملات</p>
+              <p className="text-xs md:text-sm text-purple-600 dark:text-purple-400">إجمالي السحوبات الموافق عليها</p>
             </CardContent>
           </Card>
         </div>
@@ -1067,7 +1076,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg inline-block mb-4">
                             <Link2 className="h-12 w-12 text-gray-400 mx-auto" />
                           </div>
-                          <p className="text-lg text-muted-foreground">لا توجد طلبات استرداد كلمة مرور</p>
+                          <p className="text-lg text-muted-foreground">لا توجد طلبات استرداد كلمة المرور</p>
                           <p className="text-sm text-muted-foreground mt-2">ستظهر طلبات الاسترداد هنا عندما يقدمها المستخدمون</p>
                         </div>
                       ) : (
@@ -1365,7 +1374,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           onClick={async () => {
                             const title = (document.getElementById("broadcast-title") as HTMLInputElement).value;
                             const message = (document.getElementById("broadcast-message") as HTMLTextAreaElement).value;
-                            
+
                             if (!title || !message) {
                               toast({
                                 title: "خطأ",
@@ -1437,7 +1446,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             const usernameOrEmail = (document.getElementById("private-user") as HTMLInputElement).value;
                             const title = (document.getElementById("private-title") as HTMLInputElement).value;
                             const message = (document.getElementById("private-message") as HTMLTextAreaElement).value;
-                            
+
                             if (!usernameOrEmail || !title || !message) {
                               toast({
                                 title: "خطأ",
