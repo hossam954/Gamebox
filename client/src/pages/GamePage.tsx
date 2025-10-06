@@ -47,6 +47,8 @@ export default function GamePage() {
   const [isOpen, setIsOpen] = useState(false);
   const [prize, setPrize] = useState<number | null | undefined>(undefined);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [lastBet, setLastBet] = useState<number | null>(null);
+  const [lastResult, setLastResult] = useState<'win' | 'loss' | null>(null);
   const { toast } = useToast();
 
   const loadUserBalance = async (userId: string) => {
@@ -228,28 +230,51 @@ export default function GamePage() {
       const random = Math.random() * 100;
       let prizeMultiplier: number | null = null;
 
-      // خوارزمية الربح بناءً على نسبة الربح (0-100)
-      const lossThreshold = 100 - winRate; // نسبة الخسارة
+      // خوارزمية ذكية: إذا ربح اللاعب ثم زاد الرهان، نخفض فرص الفوز بشكل كبير
+      let adjustedWinRate = winRate;
+      let maxMultiplier = 100;
+      
+      if (lastResult === 'win' && lastBet && selectedBet! > lastBet) {
+        // إذا ربح وزاد الرهان، نخفض فرص الفوز بنسبة كبيرة
+        const betIncrease = selectedBet! / lastBet;
+        if (betIncrease >= 2) {
+          // إذا ضاعف الرهان أو أكثر، نخفض فرص الفوز بنسبة 70%
+          adjustedWinRate = winRate * 0.3;
+          maxMultiplier = 10; // حد أقصى للربح 10x فقط
+        } else if (betIncrease >= 1.5) {
+          // إذا زاد الرهان بنسبة 50% أو أكثر، نخفض فرص الفوز بنسبة 50%
+          adjustedWinRate = winRate * 0.5;
+          maxMultiplier = 20;
+        } else {
+          // زيادة بسيطة، نخفض فرص الفوز بنسبة 30%
+          adjustedWinRate = winRate * 0.7;
+          maxMultiplier = 50;
+        }
+      }
+
+      const lossThreshold = 100 - adjustedWinRate;
       
       if (random < lossThreshold) {
         // خسارة
         prizeMultiplier = null;
       } else {
-        // فوز - توزيع الأرباح بشكل واقعي
+        // فوز - توزيع الأرباح بناءً على الحد الأقصى المسموح
         const winRandom = Math.random() * 100;
         
-        if (winRandom < 70) {
-          // ربح صغير (1x - 3x) - 70% من الفوزات
-          prizeMultiplier = Math.floor(Math.random() * 3) + 1;
-        } else if (winRandom < 90) {
-          // ربح متوسط (3x - 10x) - 20% من الفوزات
-          prizeMultiplier = Math.floor(Math.random() * 8) + 3;
+        if (winRandom < 75) {
+          // ربح صغير جداً (1x - 2x)
+          prizeMultiplier = Math.floor(Math.random() * 2) + 1;
+        } else if (winRandom < 92) {
+          // ربح صغير (2x - 5x)
+          prizeMultiplier = Math.floor(Math.random() * 4) + 2;
         } else if (winRandom < 98) {
-          // ربح كبير (10x - 50x) - 8% من الفوزات
-          prizeMultiplier = Math.floor(Math.random() * 41) + 10;
+          // ربح متوسط (5x - 15x أو أقل حسب الحد الأقصى)
+          const max = Math.min(15, maxMultiplier);
+          prizeMultiplier = Math.floor(Math.random() * (max - 5)) + 5;
         } else {
-          // ربح ضخم (50x - 100x) - 2% من الفوزات
-          prizeMultiplier = Math.floor(Math.random() * 51) + 50;
+          // ربح كبير (15x - maxMultiplier)
+          const max = Math.min(100, maxMultiplier);
+          prizeMultiplier = Math.floor(Math.random() * (max - 15)) + 15;
         }
       }
 
@@ -261,6 +286,8 @@ export default function GamePage() {
         const winnings = selectedBet! * prizeMultiplier;
         const newBalance = balance - selectedBet! + winnings;
         setBalance(newBalance);
+        setLastBet(selectedBet);
+        setLastResult('win');
         
         // حفظ النتيجة في السيرفر
         if (userId) {
@@ -301,6 +328,8 @@ export default function GamePage() {
       } else {
         const newBalance = balance - selectedBet!;
         setBalance(newBalance);
+        setLastBet(selectedBet);
+        setLastResult('loss');
         
         // حفظ النتيجة في السيرفر
         if (userId) {
