@@ -354,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       await storage.deleteUser(id);
-      res.json({ message: "User deleted successfully" });
+      res.json({ message: "User deleted successfully", userId: id });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

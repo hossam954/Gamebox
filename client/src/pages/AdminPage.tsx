@@ -101,46 +101,51 @@ export default function AdminPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (confirm("Are you sure you want to delete this user? All related data will be permanently removed.")) {
-      try {
-        const currentUserId = localStorage.getItem("userId");
-        
-        const response = await fetch(`/api/users/${userId}`, {
-          method: "DELETE",
-        });
+    if (!confirm("هل أنت متأكد من حذف هذا المستخدم؟ هذا الإجراء لا يمكن التراجع عنه.")) {
+      return;
+    }
 
-        if (response.ok) {
-          setUsers((prev) => prev.filter((user) => user.id !== userId));
-          
-          if (currentUserId === userId) {
-            localStorage.clear();
-            toast({
-              title: "Account deleted",
-              description: "Your account has been deleted. You will be logged out.",
-            });
-            setTimeout(() => {
-              setLocation("/login");
-            }, 1500);
-          } else {
-            toast({
-              title: "User deleted",
-              description: "User and all related data have been removed from the system",
-            });
-          }
-        } else {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers((prev) => prev.filter((user) => user.id !== userId));
+
+        // التحقق إذا كان المستخدم المحذوف هو المستخدم الحالي
+        const currentUserId = localStorage.getItem("userId");
+        if (currentUserId === data.userId) {
+          // تسجيل خروج فوري
+          localStorage.clear();
           toast({
-            title: "Error",
-            description: "Failed to delete user",
+            title: "تم حذف حسابك",
+            description: "تم حذف حسابك من قبل المسؤول. سيتم تسجيل خروجك الآن.",
             variant: "destructive",
           });
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 2000);
+        } else {
+          toast({
+            title: "تم حذف المستخدم",
+            description: "تم حذف المستخدم بنجاح",
+          });
         }
-      } catch (error) {
+      } else {
         toast({
-          title: "Error",
-          description: "Something went wrong",
+          title: "خطأ",
+          description: "فشل حذف المستخدم",
           variant: "destructive",
         });
       }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حذف المستخدم",
+        variant: "destructive",
+      });
     }
   };
 

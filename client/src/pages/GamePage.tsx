@@ -55,7 +55,22 @@ export default function GamePage() {
       if (response.ok) {
         const users = await response.json();
         const currentUser = users.find((u: any) => u.id === userId);
-        if (currentUser && currentUser.balance !== balance) {
+        
+        // إذا لم يتم العثور على المستخدم، فهذا يعني أنه تم حذف حسابه
+        if (!currentUser) {
+          localStorage.clear();
+          toast({
+            title: "تم حذف حسابك",
+            description: "تم حذف حسابك من قبل المسؤول. سيتم تسجيل خروجك الآن.",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            setLocation("/login");
+          }, 2000);
+          return;
+        }
+        
+        if (currentUser.balance !== balance) {
           setBalance(currentUser.balance);
         }
       }
