@@ -1,3 +1,4 @@
+
 import { X } from "lucide-react";
 import {
   Dialog,
@@ -8,7 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { t } from "@/translations";
 
 interface Notification {
   id: string;
@@ -33,17 +36,21 @@ export default function NotificationsModal({
   onMarkAsRead,
   onClearAll,
 }: NotificationsModalProps) {
+  const { language } = useLanguage();
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg" data-testid="notifications-modal">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">الإشعارات</DialogTitle>
+          <DialogTitle className="font-display text-2xl">
+            {t('notifications', language)}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              لا توجد إشعارات حالياً
+              {t('noData', language)}
             </div>
           ) : (
             <>
@@ -54,7 +61,7 @@ export default function NotificationsModal({
                   onClick={onClearAll}
                   data-testid="button-clear-notifications"
                 >
-                  مسح الكل
+                  {language === 'ar' ? 'مسح الكل' : 'Clear All'}
                 </Button>
               </div>
               <ScrollArea className="h-[400px] pr-4">
@@ -82,14 +89,14 @@ export default function NotificationsModal({
                               try {
                                 const date = new Date(notification.createdAt);
                                 if (isNaN(date.getTime())) {
-                                  return 'الآن';
+                                  return language === 'ar' ? 'الآن' : 'now';
                                 }
                                 return formatDistanceToNow(date, {
                                   addSuffix: true,
-                                  locale: ar,
+                                  locale: language === 'ar' ? ar : enUS,
                                 });
                               } catch {
-                                return 'الآن';
+                                return language === 'ar' ? 'الآن' : 'now';
                               }
                             })()}
                           </p>

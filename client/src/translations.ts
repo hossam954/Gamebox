@@ -117,6 +117,8 @@ export const translations = {
     cancel: "Cancel",
     confirm: "Confirm",
     close: "Close",
+    clearAll: "Clear All",
+    now: "now",
   },
   ar: {
     // Auth Pages
@@ -236,6 +238,8 @@ export const translations = {
     cancel: "إلغاء",
     confirm: "تأكيد",
     close: "إغلاق",
+    clearAll: "مسح الكل",
+    now: "الآن",
   }
 };
 
