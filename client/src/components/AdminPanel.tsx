@@ -550,6 +550,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const totalWithdrawals = withdrawRequests
     .filter(req => req.status === "approved")
     .reduce((sum, req) => sum + (req.amount || 0), 0);
+  
+  const pendingDeposits = depositRequests.filter((r) => r.status === "pending").length;
+  const pendingWithdrawals = withdrawRequests.filter((r) => r.status === "pending").length;
+  
   const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +
     withdrawRequests.filter((r) => r.status === "pending").length +
     passwordRecoveryRequests.filter((r) => r.status === "pending").length +
@@ -577,7 +581,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">إجمالي المستخدمين</CardTitle>
@@ -629,6 +633,32 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 £{totalWithdrawals.toLocaleString()}
               </div>
               <p className="text-xs md:text-sm text-purple-600 dark:text-purple-400">إجمالي السحوبات الموافق عليها</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-800/20 border-yellow-300 border-2 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-300">إيداعات قيد الانتظار</CardTitle>
+              <AlertCircle className="h-6 w-6 text-yellow-600 animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl md:text-4xl font-bold text-yellow-900 dark:text-yellow-100" data-testid="stat-pending-deposits">
+                {pendingDeposits}
+              </div>
+              <p className="text-xs md:text-sm text-yellow-600 dark:text-yellow-400 font-semibold">تحتاج إلى مراجعة</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-800/20 border-red-300 border-2 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-red-700 dark:text-red-300">سحوبات قيد الانتظار</CardTitle>
+              <AlertCircle className="h-6 w-6 text-red-600 animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl md:text-4xl font-bold text-red-900 dark:text-red-100" data-testid="stat-pending-withdrawals">
+                {pendingWithdrawals}
+              </div>
+              <p className="text-xs md:text-sm text-red-600 dark:text-red-400 font-semibold">تحتاج إلى مراجعة</p>
             </CardContent>
           </Card>
         </div>
