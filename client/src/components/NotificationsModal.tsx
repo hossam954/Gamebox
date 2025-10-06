@@ -14,7 +14,7 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  timestamp: string;
+  createdAt: string;
   read: boolean;
 }
 
@@ -78,10 +78,20 @@ export default function NotificationsModal({
                             {notification.message}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(notification.timestamp), {
-                              addSuffix: true,
-                              locale: ar,
-                            })}
+                            {(() => {
+                              try {
+                                const date = new Date(notification.createdAt);
+                                if (isNaN(date.getTime())) {
+                                  return 'الآن';
+                                }
+                                return formatDistanceToNow(date, {
+                                  addSuffix: true,
+                                  locale: ar,
+                                });
+                              } catch {
+                                return 'الآن';
+                              }
+                            })()}
                           </p>
                         </div>
                         {!notification.read && (

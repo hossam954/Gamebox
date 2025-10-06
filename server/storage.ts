@@ -75,6 +75,7 @@ export class MemStorage implements IStorage {
   private paymentMethods: Map<string, PaymentMethod>;
   private promoCodes: Map<string, PromoCode>;
   private supportTickets: Map<string, SupportTicket>;
+  private notifications: Map<string, any>;
 
   constructor() {
     this.users = new Map();
@@ -84,6 +85,7 @@ export class MemStorage implements IStorage {
     this.paymentMethods = new Map();
     this.promoCodes = new Map();
     this.supportTickets = new Map();
+    this.notifications = new Map();
 
     const adminId = randomUUID();
     const adminUser: User = {
@@ -456,27 +458,15 @@ export class MemStorage implements IStorage {
       read: false,
       createdAt: new Date(),
     };
-    // In-memory storage for notifications
-    if (!this.notifications) {
-      this.notifications = new Map();
-    }
     this.notifications.set(id, newNotification);
     return newNotification;
   }
 
   async getNotificationsByUserId(userId: string) {
-    // In-memory storage for notifications
-    if (!this.notifications) {
-      this.notifications = new Map();
-    }
-    return Array.from(this.notifications.values()).filter(n => n.userId === userId);
+    return Array.from(this.notifications.values()).filter((n: any) => n.userId === userId);
   }
 
   async markNotificationAsRead(id: string) {
-    // In-memory storage for notifications
-    if (!this.notifications) {
-      this.notifications = new Map();
-    }
     const notification = this.notifications.get(id);
     if (notification) {
       notification.read = true;
@@ -485,11 +475,7 @@ export class MemStorage implements IStorage {
   }
 
   async clearAllNotifications(userId: string) {
-    // In-memory storage for notifications
-    if (!this.notifications) {
-      this.notifications = new Map();
-    }
-    this.notifications.forEach((notification, key) => {
+    this.notifications.forEach((notification: any, key: string) => {
       if (notification.userId === userId) {
         this.notifications.delete(key);
       }

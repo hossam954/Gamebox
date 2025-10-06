@@ -69,9 +69,14 @@ export default function GamePage() {
       const response = await fetch(`/api/notifications/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        // فقط تحديث إذا كان هناك تغيير
-        if (JSON.stringify(data) !== JSON.stringify(notifications)) {
-          setNotifications(data);
+        const normalizedData = data.map((n: any) => ({
+          ...n,
+          createdAt: n.createdAt || n.timestamp || new Date().toISOString(),
+          title: n.title || 'Notification',
+          read: n.read !== undefined ? n.read : false,
+        }));
+        if (JSON.stringify(normalizedData) !== JSON.stringify(notifications)) {
+          setNotifications(normalizedData);
         }
       }
     } catch (error) {
@@ -165,10 +170,10 @@ export default function GamePage() {
   const sendNotification = (message: string, type: "success" | "error" | "info" = "info") => {
     const newNotification = {
       id: Date.now().toString(),
+      title: type.charAt(0).toUpperCase() + type.slice(1),
       message,
       read: false,
-      timestamp: new Date().toISOString(),
-      type,
+      createdAt: new Date().toISOString(),
     };
     setNotifications((prev) => {
       const updatedNotifications = [newNotification, ...prev];

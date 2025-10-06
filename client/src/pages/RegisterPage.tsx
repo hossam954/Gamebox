@@ -56,7 +56,7 @@ export default function RegisterPage() {
           id: Date.now().toString(),
           title: `أهلاً بك ${username}`,
           message: `بريدك الإلكتروني: ${email}\nتاريخ ووقت الانضمام: ${new Date().toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}\n\nحظاً موفقاً 🍀 Good Luck`,
-          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           read: false,
         };
         notifications.unshift(newNotification);
