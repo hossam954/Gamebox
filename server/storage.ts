@@ -28,6 +28,7 @@ export interface IStorage {
   updateUserBalance(userId: string, amount: number): Promise<void>;
   updateUserStats(userId: string, balance: number, won: boolean): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  deleteUser(userId: string): Promise<void>;
 
   createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest>;
   getPasswordRecoveryRequests(): Promise<PasswordRecoveryRequest[]>;
@@ -219,6 +220,40 @@ export class MemStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    this.users.delete(userId);
+    
+    this.passwordRecoveryRequests.forEach((req, key) => {
+      if (req.userId === userId) {
+        this.passwordRecoveryRequests.delete(key);
+      }
+    });
+    
+    this.depositRequests.forEach((req, key) => {
+      if (req.userId === userId) {
+        this.depositRequests.delete(key);
+      }
+    });
+    
+    this.withdrawRequests.forEach((req, key) => {
+      if (req.userId === userId) {
+        this.withdrawRequests.delete(key);
+      }
+    });
+    
+    this.supportTickets.forEach((ticket, key) => {
+      if (ticket.userId === userId) {
+        this.supportTickets.delete(key);
+      }
+    });
+    
+    this.notifications.forEach((notification: any, key: string) => {
+      if (notification.userId === userId) {
+        this.notifications.delete(key);
+      }
+    });
   }
 
   async createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest> {
