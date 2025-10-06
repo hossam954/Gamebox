@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").notNull().default(false),
   referralCode: text("referral_code").unique(),
   referredBy: text("referred_by"),
+  language: text("language").notNull().default("en"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -117,7 +118,8 @@ export const paymentMethods = pgTable("payment_methods", {
   minAmount: integer("min_amount").notNull().default(0),
   maxAmount: integer("max_amount").notNull().default(100000),
   fee: integer("fee").notNull().default(0),
-  note: text("note").notNull().default(""),
+  noteEn: text("note_en").notNull().default(""),
+  noteAr: text("note_ar").notNull().default(""),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -128,7 +130,8 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick
   minAmount: true,
   maxAmount: true,
   fee: true,
-  note: true,
+  noteEn: true,
+  noteAr: true,
 });
 
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;

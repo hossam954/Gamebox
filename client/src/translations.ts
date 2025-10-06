@@ -1,0 +1,255 @@
+export const translations = {
+  en: {
+    // Auth Pages
+    login: "Login",
+    register: "Register",
+    username: "Username",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    referralCode: "Referral Code (optional)",
+    referralCodePlaceholder: "Enter referral code if you have one",
+    dontHaveAccount: "Don't have an account?",
+    alreadyHaveAccount: "Already have an account?",
+    signUp: "Sign up",
+    signIn: "Sign in",
+    forgotPassword: "Forgot your password?",
+    selectLanguage: "Select Language",
+    
+    // Navigation
+    home: "Home",
+    games: "Games",
+    deposit: "Deposit",
+    withdraw: "Withdraw",
+    support: "Support",
+    settings: "Settings",
+    notifications: "Notifications",
+    logout: "Logout",
+    
+    // Settings Modal
+    accountSettings: "Account Settings",
+    changePassword: "Change Password",
+    referralProgram: "Referral Program",
+    promoCode: "Promo Code",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmNewPassword: "Confirm New Password",
+    changing: "Changing...",
+    changePasswordBtn: "Change Password",
+    yourReferralCode: "Your Referral Code",
+    copy: "Copy",
+    referralsCount: "Referrals Count",
+    referralMessage: "💜 Get 5% from every deposit made by users who register using your referral code!",
+    redeemPromoCode: "Redeem Promo Code",
+    promoCodePlaceholder: "Enter promo code",
+    redeeming: "Redeeming...",
+    redeemBtn: "Redeem Promo Code",
+    language: "Language",
+    
+    // Toast Messages
+    copied: "Copied",
+    referralCodeCopied: "Referral code copied successfully",
+    passwordChanged: "Password changed successfully",
+    invalidCurrentPassword: "Invalid current password",
+    passwordsDoNotMatch: "Passwords do not match",
+    promoRedeemed: "Promo code redeemed successfully",
+    invalidPromo: "Invalid or expired promo code",
+    promoAlreadyUsed: "Promo code already used",
+    
+    // Notifications
+    newReferralTitle: "New Referral 💜",
+    newReferralMessage: "User {username} joined through your referral link. You will now get 5% from any deposit they make 💜",
+    referredByTitle: "Registered via Referral 💜",
+    referredByMessage: "You registered through your friend: {username}\nWelcome 💜",
+    referralBonusTitle: "Referral Reward 💜",
+    referralBonusMessage: "You received £{amount} from the referral system\n💜 Good luck",
+    depositBonusTitle: "Extra Bonus 💜",
+    depositBonusMessage: "You received an extra bonus of £{amount} from your last deposit. Welcome 💜✅",
+    depositApprovedTitle: "Deposit Approved ✅",
+    depositApprovedMessage: "Your deposit via {method} with transaction number {txNumber} has been approved and £{amount} has been added to your balance ✅",
+    depositRejectedTitle: "Deposit Rejected 🚫",
+    depositRejectedMessage: "🚫 Your deposit via {method} has been rejected\nTransaction Number: {txNumber}\nAmount: £{amount}\nIf this was a mistake, contact support through the website or bot.",
+    withdrawApprovedTitle: "Withdrawal Approved ✅",
+    withdrawApprovedMessage: "Your withdrawal via {method} has been approved and £{amount} has been deducted from your balance ✅",
+    withdrawRejectedTitle: "Withdrawal Rejected 🚫",
+    withdrawRejectedMessage: "🚫 Your withdrawal request via {method} has been rejected\nAmount: £{amount}\nIf this was a mistake, contact support through the website or bot.",
+    
+    // Payment Methods
+    paymentMethod: "Payment Method",
+    selectPaymentMethod: "Select payment method",
+    amount: "Amount",
+    transactionNumber: "Transaction Number",
+    address: "Address/Account Details",
+    submit: "Submit",
+    submitting: "Submitting...",
+    minAmount: "Min Amount",
+    maxAmount: "Max Amount",
+    bonus: "Bonus",
+    note: "Note",
+    notSpecified: "Not specified",
+    
+    // Admin
+    pendingDeposits: "Pending Deposits",
+    pendingWithdrawals: "Pending Withdrawals",
+    approve: "Approve",
+    reject: "Reject",
+    managePaymentMethods: "Manage Payment Methods",
+    addPaymentMethod: "Add Payment Method",
+    name: "Name",
+    type: "Type",
+    both: "Both",
+    depositOnly: "Deposit Only",
+    withdrawOnly: "Withdraw Only",
+    feePercentage: "Fee %",
+    noteEnglish: "Note (English)",
+    noteArabic: "Note (Arabic)",
+    active: "Active",
+    save: "Save",
+    edit: "Edit",
+    delete: "Delete",
+    
+    // Common
+    balance: "Balance",
+    loading: "Loading...",
+    noData: "No data available",
+    error: "Error",
+    success: "Success",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    close: "Close",
+  },
+  ar: {
+    // Auth Pages
+    login: "تسجيل الدخول",
+    register: "التسجيل",
+    username: "اسم المستخدم",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    referralCode: "رمز الإحالة (اختياري)",
+    referralCodePlaceholder: "أدخل رمز الإحالة إن وجد",
+    dontHaveAccount: "ليس لديك حساب؟",
+    alreadyHaveAccount: "لديك حساب بالفعل؟",
+    signUp: "سجل الآن",
+    signIn: "تسجيل الدخول",
+    forgotPassword: "هل نسيت كلمة المرور؟",
+    selectLanguage: "اختر اللغة",
+    
+    // Navigation
+    home: "الرئيسية",
+    games: "الألعاب",
+    deposit: "إيداع",
+    withdraw: "سحب",
+    support: "الدعم",
+    settings: "الإعدادات",
+    notifications: "الإشعارات",
+    logout: "تسجيل الخروج",
+    
+    // Settings Modal
+    accountSettings: "إعدادات الحساب",
+    changePassword: "تغيير كلمة المرور",
+    referralProgram: "برنامج الإحالة",
+    promoCode: "كود الترويج",
+    currentPassword: "كلمة المرور الحالية",
+    newPassword: "كلمة المرور الجديدة",
+    confirmNewPassword: "تأكيد كلمة المرور الجديدة",
+    changing: "جاري التغيير...",
+    changePasswordBtn: "تغيير كلمة المرور",
+    yourReferralCode: "رمز الدعوة الخاص بك",
+    copy: "نسخ",
+    referralsCount: "عدد الدعوات",
+    referralMessage: "💜 احصل على 5% من كل عملية شحن يقوم بها المستخدمون الذين يسجلون باستخدام رمز الدعوة الخاص بك!",
+    redeemPromoCode: "استخدام كود الترويج",
+    promoCodePlaceholder: "أدخل كود الترويج",
+    redeeming: "جاري الاستخدام...",
+    redeemBtn: "استخدام الكود",
+    language: "اللغة",
+    
+    // Toast Messages
+    copied: "تم النسخ",
+    referralCodeCopied: "تم نسخ رمز الدعوة بنجاح",
+    passwordChanged: "تم تغيير كلمة المرور بنجاح",
+    invalidCurrentPassword: "كلمة المرور الحالية غير صحيحة",
+    passwordsDoNotMatch: "كلمات المرور غير متطابقة",
+    promoRedeemed: "تم استخدام الكود بنجاح",
+    invalidPromo: "كود الترويج غير صالح أو منتهي",
+    promoAlreadyUsed: "تم استخدام هذا الكود من قبل",
+    
+    // Notifications
+    newReferralTitle: "مستخدم جديد من إحالتك 💜",
+    newReferralMessage: "انضم المستخدم {username} من خلال رابط إحالتك ستحصل الآن على 5% من أي عملية شحن يقوم بها 💜",
+    referredByTitle: "تم التسجيل من خلال إحالة 💜",
+    referredByMessage: "لقد قمت بالتسجيل من خلال إحالة صديقك: {username}\nأهلاً وسهلاً 💜",
+    referralBonusTitle: "مكافأة من نظام الإحالة 💜",
+    referralBonusMessage: "لقد حصلت على £{amount} من نظام الإحالة\n💜 بالتوفيق",
+    depositBonusTitle: "بونص إضافي 💜",
+    depositBonusMessage: "لقد حصلت على بونص إضافي بقيمة £{amount} من آخر عملية إيداع أهلاً وسهلاً 💜✅",
+    depositApprovedTitle: "تم قبول عملية الإيداع ✅",
+    depositApprovedMessage: "تم قبول عملية إيداع بواسطة {method} برقم عملية {txNumber} وتم إضافة مبلغ £{amount} إلى رصيدك بنجاح ✅",
+    depositRejectedTitle: "تم رفض عملية الإيداع 🚫",
+    depositRejectedMessage: "🚫 تم رفض عملية إيداع بواسطة {method}\nرقم العملية: {txNumber}\nالمبلغ: £{amount}\nإذا كان هذا عن طريق الخطأ تواصل مع الدعم من خلال الموقع أو البوت.",
+    withdrawApprovedTitle: "تم قبول عملية السحب ✅",
+    withdrawApprovedMessage: "تم قبول عملية السحب بواسطة {method} وتم خصم مبلغ £{amount} من رصيدك بنجاح ✅",
+    withdrawRejectedTitle: "تم رفض عملية السحب 🚫",
+    withdrawRejectedMessage: "🚫 تم رفض عملية السحب بواسطة {method}\nالمبلغ: £{amount}\nإذا كان هذا عن طريق الخطأ تواصل مع الدعم من خلال الموقع أو البوت.",
+    
+    // Payment Methods
+    paymentMethod: "طريقة الدفع",
+    selectPaymentMethod: "اختر طريقة الدفع",
+    amount: "المبلغ",
+    transactionNumber: "رقم العملية",
+    address: "العنوان/تفاصيل الحساب",
+    submit: "إرسال",
+    submitting: "جاري الإرسال...",
+    minAmount: "الحد الأدنى",
+    maxAmount: "الحد الأقصى",
+    bonus: "البونص",
+    note: "ملاحظة",
+    notSpecified: "غير محدد",
+    
+    // Admin
+    pendingDeposits: "طلبات الإيداع المعلقة",
+    pendingWithdrawals: "طلبات السحب المعلقة",
+    approve: "قبول",
+    reject: "رفض",
+    managePaymentMethods: "إدارة طرق الدفع",
+    addPaymentMethod: "إضافة طريقة دفع",
+    name: "الاسم",
+    type: "النوع",
+    both: "كلاهما",
+    depositOnly: "إيداع فقط",
+    withdrawOnly: "سحب فقط",
+    feePercentage: "نسبة البونص %",
+    noteEnglish: "ملاحظة (إنجليزي)",
+    noteArabic: "ملاحظة (عربي)",
+    active: "نشط",
+    save: "حفظ",
+    edit: "تعديل",
+    delete: "حذف",
+    
+    // Common
+    balance: "الرصيد",
+    loading: "جاري التحميل...",
+    noData: "لا توجد بيانات",
+    error: "خطأ",
+    success: "نجح",
+    cancel: "إلغاء",
+    confirm: "تأكيد",
+    close: "إغلاق",
+  }
+};
+
+export type Language = keyof typeof translations;
+export type TranslationKey = keyof typeof translations.en;
+
+export function t(key: TranslationKey, lang: Language = 'en', params?: Record<string, string | number>): string {
+  let text = translations[lang][key] || translations.en[key];
+  
+  if (params) {
+    Object.entries(params).forEach(([paramKey, value]) => {
+      text = text.replace(`{${paramKey}}`, String(value));
+    });
+  }
+  
+  return text;
+}
