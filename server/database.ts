@@ -37,9 +37,18 @@ db.exec(`
     totalWins INTEGER DEFAULT 0,
     totalLosses INTEGER DEFAULT 0,
     isAdmin INTEGER DEFAULT 0,
-    status TEXT DEFAULT 'active',
     referralCode TEXT UNIQUE,
     referredBy TEXT,
+    language TEXT DEFAULT 'en',
+    currentStreak INTEGER DEFAULT 0,
+    longestStreak INTEGER DEFAULT 0,
+    totalBetsCount INTEGER DEFAULT 0,
+    totalWagered INTEGER DEFAULT 0,
+    lifetimeProfit INTEGER DEFAULT 0,
+    sessionStartBalance INTEGER DEFAULT 0,
+    sessionBetsCount INTEGER DEFAULT 0,
+    lastBetAmount INTEGER DEFAULT 0,
+    lastGameResult TEXT DEFAULT '',
     createdAt TEXT NOT NULL
   );
 
@@ -93,7 +102,8 @@ db.exec(`
     minAmount INTEGER DEFAULT 0,
     maxAmount INTEGER DEFAULT 100000,
     fee INTEGER DEFAULT 0,
-    note TEXT DEFAULT '',
+    noteEn TEXT DEFAULT '',
+    noteAr TEXT DEFAULT '',
     isActive INTEGER DEFAULT 1,
     createdAt TEXT NOT NULL
   );
@@ -144,9 +154,17 @@ const adminExists = db.prepare("SELECT * FROM users WHERE username = ?").get("ab
 if (!adminExists) {
   const adminId = randomUUID();
   db.prepare(`
-    INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 0, 0, 0, 1, new Date().toISOString());
+    INSERT INTO users (
+      id, username, email, password, balance, totalWins, totalLosses, isAdmin, 
+      referralCode, language, currentStreak, longestStreak, totalBetsCount, 
+      totalWagered, lifetimeProfit, sessionStartBalance, sessionBetsCount, 
+      lastBetAmount, lastGameResult, createdAt
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    adminId, "abodiab", "abojafar1327@gmail.com", "aaa123ddd", 50000, 0, 0, 1,
+    "ADMIN123", "en", 0, 0, 0, 0, 0, 50000, 0, 0, "", new Date().toISOString()
+  );
 }
 
 // Initialize payment settings if not exists
@@ -213,21 +231,42 @@ export class SQLiteStorage {
     const createdAt = new Date().toISOString();
     const referralCode = this.generateReferralCode();
     const referredBy = insertUser.referredBy && insertUser.referredBy.trim() !== "" ? insertUser.referredBy : null;
+    const language = insertUser.language || "en";
     
     db.prepare(`
-      INSERT INTO users (id, username, email, password, balance, totalWins, totalLosses, isAdmin, referralCode, referredBy, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0, referralCode, referredBy, createdAt);
+      INSERT INTO users (
+        id, username, email, password, balance, totalWins, totalLosses, isAdmin, 
+        referralCode, referredBy, language, currentStreak, longestStreak, totalBetsCount, 
+        totalWagered, lifetimeProfit, sessionStartBalance, sessionBetsCount, 
+        lastBetAmount, lastGameResult, createdAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id, insertUser.username, insertUser.email, insertUser.password, 0, 0, 0, 0,
+      referralCode, referredBy, language, 0, 0, 0, 0, 0, 0, 0, 0, "", createdAt
+    );
 
     return {
       id,
-      ...insertUser,
+      username: insertUser.username,
+      email: insertUser.email,
+      password: insertUser.password,
       balance: 0,
       totalWins: 0,
       totalLosses: 0,
       isAdmin: false,
       referralCode,
       referredBy: referredBy,
+      language,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalBetsCount: 0,
+      totalWagered: 0,
+      lifetimeProfit: 0,
+      sessionStartBalance: 0,
+      sessionBetsCount: 0,
+      lastBetAmount: 0,
+      lastGameResult: "",
       createdAt: new Date(createdAt)
     };
   }
@@ -414,9 +453,9 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
-      INSERT INTO payment_methods (id, name, type, minAmount, maxAmount, fee, note, isActive, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, data.name, data.type || "both", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.note || "", 1, createdAt);
+      INSERT INTO payment_methods (id, name, type, minAmount, maxAmount, fee, noteEn, noteAr, isActive, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, data.name, data.type || "both", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.noteEn || "", data.noteAr || "", 1, createdAt);
 
     return {
       id,
@@ -425,7 +464,8 @@ export class SQLiteStorage {
       minAmount: data.minAmount || 0,
       maxAmount: data.maxAmount || 100000,
       fee: data.fee || 0,
-      note: data.note || "",
+      noteEn: data.noteEn || "",
+      noteAr: data.noteAr || "",
       isActive: true,
       createdAt: new Date(createdAt)
     };
