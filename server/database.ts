@@ -57,7 +57,7 @@ db.exec(`
     userId TEXT NOT NULL,
     username TEXT NOT NULL,
     email TEXT NOT NULL,
-    message TEXT NOT NULL,
+    message TEXT DEFAULT '',
     status TEXT DEFAULT 'pending',
     createdAt TEXT NOT NULL
   );
@@ -335,14 +335,18 @@ export class SQLiteStorage {
   async createPasswordRecovery(request: InsertPasswordRecovery): Promise<PasswordRecoveryRequest> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
+    const message = request.message || '';
     db.prepare(`
       INSERT INTO password_recovery (id, userId, username, email, message, status, createdAt)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, request.userId, request.username, request.email, request.message, 'pending', createdAt);
+    `).run(id, request.userId, request.username, request.email, message, 'pending', createdAt);
 
     return {
       id,
-      ...request,
+      userId: request.userId,
+      username: request.username,
+      email: request.email,
+      message,
       status: 'pending',
       createdAt: new Date(createdAt)
     };
