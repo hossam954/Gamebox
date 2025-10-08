@@ -97,10 +97,12 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [newPaymentMethod, setNewPaymentMethod] = useState({
     name: "",
     type: "both",
+    currency: "SYP",
     minAmount: 0,
     maxAmount: 100000,
     fee: 0,
-    note: ""
+    noteEn: "",
+    noteAr: ""
   });
   const [newPromoCode, setNewPromoCode] = useState("");
   const [newPromoValue, setNewPromoValue] = useState("");
@@ -112,20 +114,22 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [newBalanceUserId, setNewBalanceUserId] = useState("");
   const [newBalance, setNewBalance] = useState("");
   const [winRate, setWinRate] = useState(50);
+  const [paymentSettings, setPaymentSettings] = useState<any>(null);
 
   useEffect(() => {
-    const fetchWinRate = async () => {
+    const fetchSettings = async () => {
       try {
         const response = await fetch('/api/payment-settings');
         if (response.ok) {
           const data = await response.json();
           setWinRate(data.winRate || 50);
+          setPaymentSettings(data);
         }
       } catch (error) {
-        console.error('Error fetching win rate:', error);
+        console.error('Error fetching settings:', error);
       }
     };
-    fetchWinRate();
+    fetchSettings();
   }, []);
 
   const handleSaveSettings = async () => {
@@ -133,18 +137,22 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       const response = await fetch('/api/payment-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ winRate }),
+        body: JSON.stringify({ 
+          winRate,
+          usdDepositRate: paymentSettings?.usdDepositRate || 1500000,
+          usdWithdrawRate: paymentSettings?.usdWithdrawRate || 1500000
+        }),
       });
 
       if (response.ok) {
         toast({
           title: "تم حفظ الإعدادات بنجاح",
-          description: "تم حفظ إعدادات نسبة الربح بنجاح.",
+          description: "تم حفظ جميع الإعدادات بنجاح.",
         });
       } else {
         toast({
           title: "فشل حفظ الإعدادات",
-          description: "حدث خطأ أثناء حفظ إعدادات نسبة الربح.",
+          description: "حدث خطأ أثناء حفظ الإعدادات.",
           variant: "destructive",
         });
       }
@@ -474,7 +482,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           title: "Payment method created",
           description: "New payment method has been added",
         });
-        setNewPaymentMethod({ name: "", type: "both", minAmount: 0, maxAmount: 100000, fee: 0, note: "" });
+        setNewPaymentMethod({ name: "", type: "both", currency: "SYP", minAmount: 0, maxAmount: 100000, fee: 0, noteEn: "", noteAr: "" });
         fetchPaymentMethods();
       }
     } catch (error) {
@@ -1634,6 +1642,19 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           </select>
                         </div>
                         <div className="space-y-2">
+                          <Label htmlFor="paymentMethodCurrency">العملة المدعومة</Label>
+                          <select
+                            id="paymentMethodCurrency"
+                            value={newPaymentMethod.currency || "SYP"}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, currency: e.target.value })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="SYP">ليرة سورية فقط</option>
+                            <option value="USD">دولار أمريكي فقط</option>
+                            <option value="both">كلاهما (USD & SYP)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
                           <Label htmlFor="minAmount">الحد الأدنى</Label>
                           <Input
                             id="minAmount"
@@ -1668,15 +1689,27 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="paymentNote">ملاحظة</Label>
+                        <Label htmlFor="paymentNoteAr">ملاحظة (عربي)</Label>
                         <Textarea
-                          id="paymentNote"
+                          id="paymentNoteAr"
                           placeholder="رسوم شبكة قد تنطبق"
-                          value={newPaymentMethod.note}
-                          onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, note: e.target.value })}
-                          data-testid="input-payment-method-note"
-                          className="min-h-[120px]"
-                          rows={5}
+                          value={newPaymentMethod.noteAr}
+                          onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, noteAr: e.target.value })}
+                          data-testid="input-payment-method-note-ar"
+                          className="min-h-[80px]"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentNoteEn">ملاحظة (English)</Label>
+                        <Textarea
+                          id="paymentNoteEn"
+                          placeholder="Network fees may apply"
+                          value={newPaymentMethod.noteEn}
+                          onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, noteEn: e.target.value })}
+                          data-testid="input-payment-method-note-en"
+                          className="min-h-[80px]"
+                          rows={3}
                         />
                       </div>
                       <Button onClick={handleCreatePaymentMethod} data-testid="button-create-payment-method">
@@ -1793,6 +1826,54 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                     </div>
                     <Button onClick={handleSaveSettings} className="w-full">
                       حفظ الإعدادات
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>إعدادات أسعار صرف الدولار</CardTitle>
+                    <CardDescription>
+                      تحديد أسعار تحويل الدولار للإيداع والسحب
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="usdDepositRate">سعر الدولار للإيداع (1 USD = ؟ SYP)</Label>
+                        <Input
+                          id="usdDepositRate"
+                          type="number"
+                          placeholder="15000"
+                          defaultValue={(paymentSettings?.usdDepositRate || 15000) / 100}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value) * 100;
+                            setPaymentSettings(prev => prev ? {...prev, usdDepositRate: value} : null);
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          عند إيداع $1 سيحصل المستخدم على {((paymentSettings?.usdDepositRate || 15000) / 100).toLocaleString()} ليرة سورية
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="usdWithdrawRate">سعر الدولار للسحب (1 USD = ؟ SYP)</Label>
+                        <Input
+                          id="usdWithdrawRate"
+                          type="number"
+                          placeholder="15000"
+                          defaultValue={(paymentSettings?.usdWithdrawRate || 15000) / 100}
+                          onBlur={(e) => {
+                            const value = parseFloat(e.target.value) * 100;
+                            setPaymentSettings(prev => prev ? {...prev, usdWithdrawRate: value} : null);
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          عند سحب {((paymentSettings?.usdWithdrawRate || 15000) / 100).toLocaleString()} ليرة سورية سيحصل المستخدم على $1
+                        </p>
+                      </div>
+                    </div>
+                    <Button onClick={handleSaveSettings} className="w-full">
+                      حفظ أسعار الصرف
                     </Button>
                   </CardContent>
                 </Card>

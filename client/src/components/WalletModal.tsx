@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Wallet, TrendingUp, TrendingDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,16 +31,20 @@ interface PaymentSettings {
   maxWithdraw: number;
   depositAddress: string;
   paymentMethod: string;
+  usdDepositRate: number;
+  usdWithdrawRate: number;
 }
 
 interface PaymentMethod {
   id: string;
   name: string;
   type: "deposit" | "withdraw" | "both";
+  currency: "SYP" | "USD" | "both";
   fee: number;
   minAmount: number;
   maxAmount: number;
-  note: string | null;
+  noteEn: string;
+  noteAr: string;
   isActive: boolean;
 }
 
@@ -72,6 +77,8 @@ export default function WalletModal({
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedDepositMethod, setSelectedDepositMethod] = useState<string | null>(null);
   const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<string | null>(null);
+  const [selectedDepositCurrency, setSelectedDepositCurrency] = useState<"SYP" | "USD">("SYP");
+  const [selectedWithdrawCurrency, setSelectedWithdrawCurrency] = useState<"SYP" | "USD">("SYP");
   const { toast } = useToast();
   const { language } = useLanguage();
 
@@ -117,8 +124,8 @@ export default function WalletModal({
   const handleDeposit = async () => {
     if (!userId || !username || !selectedDepositMethod || !transactionNumber) {
       toast({
-        title: "Missing information",
-        description: "Please select a payment method, enter an amount, and provide a transaction number.",
+        title: language === 'ar' ? "معلومات ناقصة" : "Missing information",
+        description: language === 'ar' ? "يرجى اختيار طريقة دفع وإدخال المبلغ ورقم العملية" : "Please select a payment method, enter an amount, and provide a transaction number.",
         variant: "destructive",
       });
       return;
@@ -129,9 +136,12 @@ export default function WalletModal({
 
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
+      const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
       toast({
-        title: "Invalid amount",
-        description: `Deposit must be between £${method.minAmount} and £${method.maxAmount}`,
+        title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
+        description: language === 'ar' 
+          ? `يجب أن يكون الإيداع بين ${currencySymbol}${method.minAmount} و ${currencySymbol}${method.maxAmount}`
+          : `Deposit must be between ${currencySymbol}${method.minAmount} and ${currencySymbol}${method.maxAmount}`,
         variant: "destructive",
       });
       return;
@@ -142,15 +152,25 @@ export default function WalletModal({
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username, amount, paymentMethodId: selectedDepositMethod, transactionNumber }),
+        body: JSON.stringify({ 
+          userId, 
+          username, 
+          amount, 
+          paymentMethodId: selectedDepositMethod, 
+          transactionNumber,
+          currency: selectedDepositCurrency
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
         toast({
-          title: "Deposit request submitted",
-          description: `Your deposit of £${amount} is pending admin approval`,
+          title: language === 'ar' ? "تم إرسال طلب الإيداع" : "Deposit request submitted",
+          description: language === 'ar' 
+            ? `طلب الإيداع بمبلغ ${currencySymbol}${amount} قيد انتظار موافقة الإدارة`
+            : `Your deposit of ${currencySymbol}${amount} is pending admin approval`,
         });
         setDepositAmount("");
         setTransactionNumber("");
@@ -158,15 +178,15 @@ export default function WalletModal({
         setActiveTab("transactions");
       } else {
         toast({
-          title: "Deposit failed",
-          description: data.message || "Could not submit deposit request",
+          title: language === 'ar' ? "فشل الإيداع" : "Deposit failed",
+          description: data.message || (language === 'ar' ? "لم يتم إرسال طلب الإيداع" : "Could not submit deposit request"),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Something went wrong",
+        title: language === 'ar' ? "خطأ" : "Error",
+        description: language === 'ar' ? "حدث خطأ ما" : "Something went wrong",
         variant: "destructive",
       });
     } finally {
@@ -177,8 +197,8 @@ export default function WalletModal({
   const handleWithdraw = async () => {
     if (!userId || !username || !selectedWithdrawMethod) {
       toast({
-        title: "Missing information",
-        description: "Please select a payment method",
+        title: language === 'ar' ? "معلومات ناقصة" : "Missing information",
+        description: language === 'ar' ? "يرجى اختيار طريقة دفع" : "Please select a payment method",
         variant: "destructive",
       });
       return;
@@ -190,8 +210,10 @@ export default function WalletModal({
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
       toast({
-        title: "Invalid amount",
-        description: `Withdrawal must be between £${method.minAmount} and £${method.maxAmount}`,
+        title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
+        description: language === 'ar'
+          ? `يجب أن يكون السحب بين £${method.minAmount} و £${method.maxAmount}`
+          : `Withdrawal must be between £${method.minAmount} and £${method.maxAmount}`,
         variant: "destructive",
       });
       return;
@@ -199,8 +221,8 @@ export default function WalletModal({
 
     if (amount > balance) {
       toast({
-        title: "Insufficient balance",
-        description: "You don't have enough balance for this withdrawal",
+        title: language === 'ar' ? "رصيد غير كافٍ" : "Insufficient balance",
+        description: language === 'ar' ? "ليس لديك رصيد كافٍ لهذا السحب" : "You don't have enough balance for this withdrawal",
         variant: "destructive",
       });
       return;
@@ -208,8 +230,8 @@ export default function WalletModal({
 
     if (!withdrawAddress.trim()) {
       toast({
-        title: "Missing address",
-        description: "Please enter your withdrawal address",
+        title: language === 'ar' ? "عنوان مفقود" : "Missing address",
+        description: language === 'ar' ? "يرجى إدخال عنوان السحب" : "Please enter your withdrawal address",
         variant: "destructive",
       });
       return;
@@ -225,7 +247,8 @@ export default function WalletModal({
           username,
           amount,
           paymentMethodId: selectedWithdrawMethod,
-          address: withdrawAddress
+          address: withdrawAddress,
+          currency: selectedWithdrawCurrency
         }),
       });
 
@@ -236,34 +259,67 @@ export default function WalletModal({
         const netAmount = amount - fee;
         
         toast({
-          title: "Withdrawal request submitted",
-          description: `Your withdrawal of £${amount} (net: £${netAmount} after ${method.fee}% fee) is pending admin approval`,
+          title: language === 'ar' ? "تم إرسال طلب السحب" : "Withdrawal request submitted",
+          description: language === 'ar'
+            ? `طلب السحب بمبلغ £${amount} (صافي: £${netAmount} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
+            : `Your withdrawal of £${amount} (net: £${netAmount} after ${method.fee}% fee) is pending admin approval`,
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
         setSelectedWithdrawMethod(null);
         setActiveTab("transactions");
         
-        // إعادة تحميل الصفحة بعد ثانية واحدة لتطبيق التغيير
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       } else {
         toast({
-          title: "Withdrawal failed",
-          description: data.message || "Could not submit withdrawal request",
+          title: language === 'ar' ? "فشل السحب" : "Withdrawal failed",
+          description: data.message || (language === 'ar' ? "لم يتم إرسال طلب السحب" : "Could not submit withdrawal request"),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Something went wrong",
+        title: language === 'ar' ? "خطأ" : "Error",
+        description: language === 'ar' ? "حدث خطأ ما" : "Something went wrong",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const selectedDepositMethodData = paymentMethods.find(m => m.id === selectedDepositMethod);
+  const selectedWithdrawMethodData = paymentMethods.find(m => m.id === selectedWithdrawMethod);
+
+  const getConversionInfo = (type: "deposit" | "withdraw") => {
+    if (!paymentSettings) return null;
+    
+    const amount = parseFloat(type === "deposit" ? depositAmount : withdrawAmount);
+    if (isNaN(amount)) return null;
+
+    if (type === "deposit" && selectedDepositCurrency === "USD") {
+      const rate = paymentSettings.usdDepositRate / 100;
+      const sypAmount = Math.floor(amount * rate);
+      return {
+        original: `$${amount}`,
+        converted: `£${sypAmount.toLocaleString()}`,
+        rate: rate.toFixed(2)
+      };
+    }
+
+    if (type === "withdraw" && selectedWithdrawCurrency === "USD") {
+      const rate = paymentSettings.usdWithdrawRate / 100;
+      const usdAmount = (amount / rate).toFixed(2);
+      return {
+        original: `£${amount.toLocaleString()}`,
+        converted: `$${usdAmount}`,
+        rate: rate.toFixed(2)
+      };
+    }
+
+    return null;
   };
 
   return (
@@ -358,7 +414,12 @@ export default function WalletModal({
                     id="payment-method"
                     className="w-full p-2 border rounded-md bg-background text-foreground"
                     value={selectedDepositMethod || ""}
-                    onChange={(e) => setSelectedDepositMethod(e.target.value || null)}
+                    onChange={(e) => {
+                      setSelectedDepositMethod(e.target.value || null);
+                      const method = paymentMethods.find(m => m.id === e.target.value);
+                      if (method?.currency === "USD") setSelectedDepositCurrency("USD");
+                      else if (method?.currency === "SYP") setSelectedDepositCurrency("SYP");
+                    }}
                     disabled={isLoading}
                   >
                     <option value="">{t('selectPaymentMethod', language)}</option>
@@ -366,23 +427,45 @@ export default function WalletModal({
                       .filter(method => method.isActive && (method.type === "deposit" || method.type === "both"))
                       .map(method => (
                         <option key={method.id} value={method.id}>
-                          {method.name} ({method.currency === "USD" ? "$" : "£"}) - {language === 'ar' ? 'بونص' : 'Bonus'}: {method.fee}%
+                          {method.name} - {language === 'ar' ? 'بونص' : 'Bonus'}: {method.fee}%
                         </option>
                       ))}
                   </select>
                 </div>
 
+                {selectedDepositMethodData?.currency === "both" && (
+                  <div>
+                    <Label>{language === 'ar' ? 'اختر العملة' : 'Select Currency'}</Label>
+                    <select
+                      className="w-full p-2 border rounded-md bg-background text-foreground"
+                      value={selectedDepositCurrency}
+                      onChange={(e) => setSelectedDepositCurrency(e.target.value as "SYP" | "USD")}
+                    >
+                      <option value="SYP">£ {language === 'ar' ? 'ليرة سورية' : 'SYP'}</option>
+                      <option value="USD">$ {language === 'ar' ? 'دولار أمريكي' : 'USD'}</option>
+                    </select>
+                  </div>
+                )}
+
+                {selectedDepositMethod && paymentSettings && selectedDepositCurrency === "USD" && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate / 100).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
                 {selectedDepositMethod && (
                   <div className="p-3 bg-muted rounded-lg">
-                    {paymentMethods.find(m => m.id === selectedDepositMethod)?.note && (
-                      <p className="text-sm">{paymentMethods.find(m => m.id === selectedDepositMethod)?.note}</p>
+                    {selectedDepositMethodData && (language === 'ar' ? selectedDepositMethodData.noteAr : selectedDepositMethodData.noteEn) && (
+                      <p className="text-sm whitespace-pre-line">{language === 'ar' ? selectedDepositMethodData.noteAr : selectedDepositMethodData.noteEn}</p>
                     )}
                   </div>
                 )}
 
                 <div>
                   <Label htmlFor="deposit-amount">
-                    {t('amount', language)} ({selectedDepositMethod && paymentMethods.find(m => m.id === selectedDepositMethod)?.currency === "USD" ? "$" : "£"})
+                    {t('amount', language)} ({selectedDepositCurrency === "USD" ? "$" : "£"})
                   </Label>
                   <Input
                     id="deposit-amount"
@@ -391,19 +474,25 @@ export default function WalletModal({
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     disabled={isLoading || !selectedDepositMethod}
-                    min={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount : 0}
-                    max={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount : 0}
+                    min={selectedDepositMethodData?.minAmount || 0}
+                    max={selectedDepositMethodData?.maxAmount || 0}
                   />
-                  {selectedDepositMethod && (() => {
-                    const method = paymentMethods.find(m => m.id === selectedDepositMethod);
-                    const currency = method?.currency === "USD" ? "$" : "£";
+                  {selectedDepositMethodData && (() => {
+                    const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
                     return (
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: {currency}{method?.minAmount.toLocaleString()} |
-                        {t('maxAmount', language)}: {currency}{method?.maxAmount.toLocaleString()}
+                        {t('minAmount', language)}: {currencySymbol}{selectedDepositMethodData.minAmount.toLocaleString()} |
+                        {t('maxAmount', language)}: {currencySymbol}{selectedDepositMethodData.maxAmount.toLocaleString()}
                       </p>
                     );
                   })()}
+                  {getConversionInfo("deposit") && (
+                    <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200">
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        💰 {getConversionInfo("deposit")?.original} = {getConversionInfo("deposit")?.converted}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -441,7 +530,12 @@ export default function WalletModal({
                     id="withdraw-method"
                     className="w-full p-2 border rounded-md bg-background text-foreground"
                     value={selectedWithdrawMethod || ""}
-                    onChange={(e) => setSelectedWithdrawMethod(e.target.value || null)}
+                    onChange={(e) => {
+                      setSelectedWithdrawMethod(e.target.value || null);
+                      const method = paymentMethods.find(m => m.id === e.target.value);
+                      if (method?.currency === "USD") setSelectedWithdrawCurrency("USD");
+                      else if (method?.currency === "SYP") setSelectedWithdrawCurrency("SYP");
+                    }}
                     disabled={isLoading}
                   >
                     <option value="">{language === 'ar' ? 'اختر طريقة السحب' : 'Select withdrawal method'}</option>
@@ -449,21 +543,41 @@ export default function WalletModal({
                       .filter(method => method.isActive && (method.type === "withdraw" || method.type === "both"))
                       .map(method => (
                         <option key={method.id} value={method.id}>
-                          {method.name} ({method.currency === "USD" ? "$" : "£"}) - {language === 'ar' ? 'رسوم' : 'Fee'}: {method.fee}%
+                          {method.name} - {language === 'ar' ? 'رسوم' : 'Fee'}: {method.fee}%
                         </option>
                       ))}
                   </select>
                 </div>
 
-                {selectedWithdrawMethod && (() => {
-                  const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
-                  const note = method?.note?.trim();
-                  return note ? (
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-base whitespace-pre-line leading-relaxed">{note}</p>
-                    </div>
-                  ) : null;
-                })()}
+                {selectedWithdrawMethodData?.currency === "both" && (
+                  <div>
+                    <Label>{language === 'ar' ? 'اختر العملة' : 'Select Currency'}</Label>
+                    <select
+                      className="w-full p-2 border rounded-md bg-background text-foreground"
+                      value={selectedWithdrawCurrency}
+                      onChange={(e) => setSelectedWithdrawCurrency(e.target.value as "SYP" | "USD")}
+                    >
+                      <option value="SYP">£ {language === 'ar' ? 'ليرة سورية' : 'SYP'}</option>
+                      <option value="USD">$ {language === 'ar' ? 'دولار أمريكي' : 'USD'}</option>
+                    </select>
+                  </div>
+                )}
+
+                {selectedWithdrawMethod && paymentSettings && selectedWithdrawCurrency === "USD" && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate / 100).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {selectedWithdrawMethod && selectedWithdrawMethodData && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-base whitespace-pre-line leading-relaxed">
+                      {language === 'ar' ? selectedWithdrawMethodData.noteAr : selectedWithdrawMethodData.noteEn}
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="withdraw-amount">
@@ -476,42 +590,57 @@ export default function WalletModal({
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     disabled={isLoading || !selectedWithdrawMethod}
-                    min={selectedWithdrawMethod ? paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount : 0}
-                    max={selectedWithdrawMethod ? Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance) : balance}
+                    min={selectedWithdrawMethodData?.minAmount || 0}
+                    max={selectedWithdrawMethodData ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance}
                   />
-                  {selectedWithdrawMethod && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
+                  {selectedWithdrawMethodData && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
-                        {t('maxAmount', language)}: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                        {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
+                        {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount).toLocaleString()}
                       </p>
                       {(() => {
-                        const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
                         const amount = parseFloat(withdrawAmount);
-                        const fee = Math.floor((amount * (method?.fee || 0)) / 100);
+                        const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
                         const netAmount = amount - fee;
-                        const currency = method?.currency === "USD" ? "$" : "£";
-                        const currencyName = method?.currency === "USD" ? "دولار" : "ليرة سورية";
                         
-                        return (
-                          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                              {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: {currency}{method?.currency === "USD" ? (netAmount / 100).toFixed(2) : netAmount.toLocaleString()}
-                            </p>
-                            {fee > 0 && (
-                              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                ({language === 'ar' ? 'المبلغ المطلوب' : 'Requested amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'الرسوم' : 'Fee'} {method?.fee}%: £{fee.toLocaleString()})
+                        if (selectedWithdrawCurrency === "USD" && paymentSettings) {
+                          const rate = paymentSettings.usdWithdrawRate / 100;
+                          const usdAmount = (netAmount / rate).toFixed(2);
+                          
+                          return (
+                            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: ${usdAmount}
                               </p>
-                            )}
-                          </div>
-                        );
+                              {fee > 0 && (
+                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                  ({language === 'ar' ? 'المبلغ المطلوب' : 'Requested amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'الرسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} = £{netAmount.toLocaleString()} ÷ {rate.toFixed(2)})
+                                </p>
+                              )}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: £{netAmount.toLocaleString()}
+                              </p>
+                              {fee > 0 && (
+                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                  ({language === 'ar' ? 'المبلغ المطلوب' : 'Requested amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'الرسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()})
+                                </p>
+                              )}
+                            </div>
+                          );
+                        }
                       })()}
                     </>
                   )}
-                  {selectedWithdrawMethod && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
+                  {selectedWithdrawMethodData && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
-                      {t('maxAmount', language)}: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                      {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
+                      {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount).toLocaleString()}
                     </p>
                   )}
                 </div>

@@ -167,7 +167,7 @@ export const paymentMethods = pgTable("payment_methods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: text("type").notNull().default("both"), // "deposit", "withdraw", "both"
-  currency: text("currency").notNull().default("SYP"), // "SYP" or "USD"
+  currency: text("currency").notNull().default("SYP"), // "SYP", "USD", or "both"
   minAmount: integer("min_amount").notNull().default(0),
   maxAmount: integer("max_amount").notNull().default(100000),
   fee: integer("fee").notNull().default(0),
