@@ -120,6 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ message: "Recovery request submitted", id: recovery.id });
     } catch (error) {
+      console.error("Password recovery error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
