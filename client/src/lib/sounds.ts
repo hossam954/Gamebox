@@ -8,8 +8,8 @@ class SoundManager {
   private clickSound: HTMLAudioElement | null = null;
 
   constructor() {
-    // Initialize background music (looping) - mystery/suspense music
-    this.backgroundMusic = new Audio('https://assets.mixkit.co/active_storage/sfx/2527/2527-preview.mp3');
+    // Initialize background music (looping) - موسيقى خلفية لعبة حقيقية
+    this.backgroundMusic = new Audio('https://assets.mixkit.co/active_storage/sfx/2745/2745.mp3');
     this.backgroundMusic.loop = true;
     this.backgroundMusic.volume = 0.2;
 
