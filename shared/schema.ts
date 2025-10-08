@@ -185,11 +185,12 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick
   currency: true,
   minAmount: true,
   maxAmount: true,
-  minAmountUSD: true,
-  maxAmountUSD: true,
   fee: true,
   noteEn: true,
   noteAr: true,
+}).extend({
+  minAmountUSD: z.number().optional(),
+  maxAmountUSD: z.number().optional(),
 });
 
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;

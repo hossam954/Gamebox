@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Wallet, TrendingUp, TrendingDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +42,8 @@ interface PaymentMethod {
   fee: number;
   minAmount: number;
   maxAmount: number;
+  minAmountUSD?: number; // Added for USD amounts
+  maxAmountUSD?: number; // Added for USD amounts
   noteEn: string;
   noteAr: string;
   isActive: boolean;
@@ -137,12 +138,12 @@ export default function WalletModal({
     const amount = parseFloat(depositAmount);
     const minLimit = selectedDepositCurrency === "USD" ? method.minAmountUSD : method.minAmount;
     const maxLimit = selectedDepositCurrency === "USD" ? method.maxAmountUSD : method.maxAmount;
-    
+
     if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
       const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
       toast({
         title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
-        description: language === 'ar' 
+        description: language === 'ar'
           ? `يجب أن يكون الإيداع بين ${currencySymbol}${minLimit} و ${currencySymbol}${maxLimit}`
           : `Deposit must be between ${currencySymbol}${minLimit} and ${currencySymbol}${maxLimit}`,
         variant: "destructive",
@@ -155,11 +156,11 @@ export default function WalletModal({
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          userId, 
-          username, 
-          amount, 
-          paymentMethodId: selectedDepositMethod, 
+        body: JSON.stringify({
+          userId,
+          username,
+          amount,
+          paymentMethodId: selectedDepositMethod,
           transactionNumber,
           currency: selectedDepositCurrency
         }),
@@ -171,7 +172,7 @@ export default function WalletModal({
         const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
         toast({
           title: language === 'ar' ? "تم إرسال طلب الإيداع" : "Deposit request submitted",
-          description: language === 'ar' 
+          description: language === 'ar'
             ? `طلب الإيداع بمبلغ ${currencySymbol}${amount} قيد انتظار موافقة الإدارة`
             : `Your deposit of ${currencySymbol}${amount} is pending admin approval`,
         });
@@ -260,7 +261,7 @@ export default function WalletModal({
       if (response.ok) {
         const fee = Math.floor((amount * method.fee) / 100);
         const netAmount = amount - fee;
-        
+
         toast({
           title: language === 'ar' ? "تم إرسال طلب السحب" : "Withdrawal request submitted",
           description: language === 'ar'
@@ -271,7 +272,7 @@ export default function WalletModal({
         setWithdrawAddress("");
         setSelectedWithdrawMethod(null);
         setActiveTab("transactions");
-        
+
         setTimeout(() => {
           window.location.reload();
         }, 1000);
@@ -298,7 +299,7 @@ export default function WalletModal({
 
   const getConversionInfo = (type: "deposit" | "withdraw") => {
     if (!paymentSettings) return null;
-    
+
     const amount = parseFloat(type === "deposit" ? depositAmount : withdrawAmount);
     if (isNaN(amount)) return null;
 
@@ -422,6 +423,10 @@ export default function WalletModal({
                       const method = paymentMethods.find(m => m.id === e.target.value);
                       if (method?.currency === "USD") setSelectedDepositCurrency("USD");
                       else if (method?.currency === "SYP") setSelectedDepositCurrency("SYP");
+                      else if (method?.currency === "both") {
+                        // Default to SYP if both are available, or set based on user preference if stored
+                        setSelectedDepositCurrency("SYP");
+                      }
                     }}
                     disabled={isLoading}
                   >
@@ -453,7 +458,7 @@ export default function WalletModal({
                 {selectedDepositMethod && paymentSettings && selectedDepositCurrency === "USD" && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate / 100).toLocaleString()}
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate || 15000 / 100).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -540,6 +545,10 @@ export default function WalletModal({
                       const method = paymentMethods.find(m => m.id === e.target.value);
                       if (method?.currency === "USD") setSelectedWithdrawCurrency("USD");
                       else if (method?.currency === "SYP") setSelectedWithdrawCurrency("SYP");
+                      else if (method?.currency === "both") {
+                        // Default to SYP if both are available, or set based on user preference if stored
+                        setSelectedWithdrawCurrency("SYP");
+                      }
                     }}
                     disabled={isLoading}
                   >
@@ -571,7 +580,7 @@ export default function WalletModal({
                 {selectedWithdrawMethod && paymentSettings && selectedWithdrawCurrency === "USD" && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate / 100).toLocaleString()}
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate || 15000 / 100).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -586,7 +595,7 @@ export default function WalletModal({
 
                 <div>
                   <Label htmlFor="withdraw-amount">
-                    {t('amount', language)} (£ {language === 'ar' ? 'ليرة سورية' : 'SYP'})
+                    {t('amount', language)} ({selectedWithdrawCurrency === "USD" ? "$" : "£"})
                   </Label>
                   <Input
                     id="withdraw-amount"
@@ -608,11 +617,11 @@ export default function WalletModal({
                         const amount = parseFloat(withdrawAmount);
                         const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
                         const netAmount = amount - fee;
-                        
+
                         if (selectedWithdrawCurrency === "USD" && paymentSettings) {
-                          const rate = paymentSettings.usdWithdrawRate / 100;
+                          const rate = (paymentSettings.usdWithdrawRate || 15000) / 100;
                           const usdAmount = (netAmount / rate).toFixed(2);
-                          
+
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">

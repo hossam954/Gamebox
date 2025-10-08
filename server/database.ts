@@ -452,7 +452,7 @@ export class SQLiteStorage {
     const current = await this.getPaymentSettings();
     db.prepare(`
       UPDATE payment_settings 
-      SET withdrawFee = ?, minDeposit = ?, maxDeposit = ?, minWithdraw = ?, maxWithdraw = ?, depositAddress = ?, paymentMethod = ?
+      SET withdrawFee = ?, minDeposit = ?, maxDeposit = ?, minWithdraw = ?, maxWithdraw = ?, depositAddress = ?, paymentMethod = ?, winRate = ?, usdDepositRate = ?, usdWithdrawRate = ?
       WHERE id = ?
     `).run(
       settings.withdrawFee,
@@ -462,6 +462,9 @@ export class SQLiteStorage {
       settings.maxWithdraw,
       settings.depositAddress,
       settings.paymentMethod,
+      settings.winRate ?? current.winRate,
+      settings.usdDepositRate ?? current.usdDepositRate,
+      settings.usdWithdrawRate ?? current.usdWithdrawRate,
       current.id
     );
 
@@ -472,9 +475,23 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
-      INSERT INTO payment_methods (id, name, type, currency, minAmount, maxAmount, fee, noteEn, noteAr, isActive, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, data.name, data.type || "both", data.currency || "SYP", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.noteEn || "", data.noteAr || "", 1, createdAt);
+      INSERT INTO payment_methods (id, name, type, currency, minAmount, maxAmount, min_amount_usd, max_amount_usd, fee, noteEn, noteAr, isActive, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id, 
+      data.name, 
+      data.type || "both", 
+      data.currency || "SYP", 
+      data.minAmount || 0, 
+      data.maxAmount || 100000,
+      data.minAmountUSD || 0,
+      data.maxAmountUSD || 1000,
+      data.fee || 0, 
+      data.noteEn || "", 
+      data.noteAr || "", 
+      1, 
+      createdAt
+    );
 
     return {
       id,
@@ -483,6 +500,8 @@ export class SQLiteStorage {
       currency: data.currency || "SYP",
       minAmount: data.minAmount || 0,
       maxAmount: data.maxAmount || 100000,
+      minAmountUSD: data.minAmountUSD || 0,
+      maxAmountUSD: data.maxAmountUSD || 1000,
       fee: data.fee || 0,
       noteEn: data.noteEn || "",
       noteAr: data.noteAr || "",
