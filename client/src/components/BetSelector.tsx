@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { soundManager } from "@/lib/sounds";
 
 interface BetSelectorProps {
   selectedBet: number | null;
@@ -83,7 +84,10 @@ export default function BetSelector({ selectedBet, onSelectBet, disabled = false
           {BET_AMOUNTS.map((amount) => (
             <button
               key={amount}
-              onClick={() => !disabled && onSelectBet(amount)}
+              onClick={() => {
+                soundManager.playClick();
+                onSelectBet(amount);
+              }}
               disabled={disabled}
               data-testid={`bet-chip-${amount}`}
               className={`group relative flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-md border-2 font-display transition-all ${

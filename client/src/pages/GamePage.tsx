@@ -10,6 +10,7 @@ import SupportModal from "@/components/SupportModal";
 import NotificationsModal from "@/components/NotificationsModal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { soundManager } from "@/lib/sounds";
 
 interface User {
   id: string;
@@ -144,12 +145,18 @@ export default function GamePage() {
     fetchUserData();
     loadNotifications(storedUserId);
 
+    // Start background music
+    soundManager.playBackgroundMusic();
+
     // Auto-refresh notifications only every 10 seconds
     const refreshInterval = setInterval(() => {
       loadNotifications(storedUserId);
     }, 10000);
 
-    return () => clearInterval(refreshInterval);
+    return () => {
+      clearInterval(refreshInterval);
+      soundManager.stopBackgroundMusic();
+    };
   }, [setLocation]);
 
   // Refresh user data when settings modal opens
@@ -210,6 +217,9 @@ export default function GamePage() {
       return;
     }
 
+    // Play opening sound
+    soundManager.playOpening();
+    
     setIsOpening(true);
     setIsOpen(false);
     setPrize(undefined);
@@ -398,6 +408,9 @@ export default function GamePage() {
         setLastBet(selectedBet);
         setLastResult('win');
         
+        // Play win sound
+        soundManager.playWin();
+        
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
           fetch(`/api/users/${userId}/game-result`, {
@@ -444,6 +457,9 @@ export default function GamePage() {
         setBalance(newBalance);
         setLastBet(selectedBet);
         setLastResult('loss');
+        
+        // Play lose sound
+        soundManager.playLose();
         
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
