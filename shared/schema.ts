@@ -170,6 +170,8 @@ export const paymentMethods = pgTable("payment_methods", {
   currency: text("currency").notNull().default("SYP"), // "SYP", "USD", or "both"
   minAmount: integer("min_amount").notNull().default(0),
   maxAmount: integer("max_amount").notNull().default(100000),
+  minAmountUSD: integer("min_amount_usd").notNull().default(0),
+  maxAmountUSD: integer("max_amount_usd").notNull().default(1000),
   fee: integer("fee").notNull().default(0),
   noteEn: text("note_en").notNull().default(""),
   noteAr: text("note_ar").notNull().default(""),
@@ -183,6 +185,8 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick
   currency: true,
   minAmount: true,
   maxAmount: true,
+  minAmountUSD: true,
+  maxAmountUSD: true,
   fee: true,
   noteEn: true,
   noteAr: true,

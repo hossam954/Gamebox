@@ -135,13 +135,16 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
+    const minLimit = selectedDepositCurrency === "USD" ? method.minAmountUSD : method.minAmount;
+    const maxLimit = selectedDepositCurrency === "USD" ? method.maxAmountUSD : method.maxAmount;
+    
+    if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
       const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
       toast({
         title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
         description: language === 'ar' 
-          ? `يجب أن يكون الإيداع بين ${currencySymbol}${method.minAmount} و ${currencySymbol}${method.maxAmount}`
-          : `Deposit must be between ${currencySymbol}${method.minAmount} and ${currencySymbol}${method.maxAmount}`,
+          ? `يجب أن يكون الإيداع بين ${currencySymbol}${minLimit} و ${currencySymbol}${maxLimit}`
+          : `Deposit must be between ${currencySymbol}${minLimit} and ${currencySymbol}${maxLimit}`,
         variant: "destructive",
       });
       return;
@@ -474,15 +477,17 @@ export default function WalletModal({
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     disabled={isLoading || !selectedDepositMethod}
-                    min={selectedDepositMethodData?.minAmount || 0}
-                    max={selectedDepositMethodData?.maxAmount || 0}
+                    min={selectedDepositCurrency === "USD" ? selectedDepositMethodData?.minAmountUSD || 0 : selectedDepositMethodData?.minAmount || 0}
+                    max={selectedDepositCurrency === "USD" ? selectedDepositMethodData?.maxAmountUSD || 0 : selectedDepositMethodData?.maxAmount || 0}
                   />
                   {selectedDepositMethodData && (() => {
                     const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
+                    const minLimit = selectedDepositCurrency === "USD" ? selectedDepositMethodData.minAmountUSD : selectedDepositMethodData.minAmount;
+                    const maxLimit = selectedDepositCurrency === "USD" ? selectedDepositMethodData.maxAmountUSD : selectedDepositMethodData.maxAmount;
                     return (
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: {currencySymbol}{selectedDepositMethodData.minAmount.toLocaleString()} |
-                        {t('maxAmount', language)}: {currencySymbol}{selectedDepositMethodData.maxAmount.toLocaleString()}
+                        {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
+                        {t('maxAmount', language)}: {currencySymbol}{maxLimit.toLocaleString()}
                       </p>
                     );
                   })()}

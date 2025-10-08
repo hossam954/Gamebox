@@ -170,6 +170,18 @@ if (!adminExists) {
   );
 }
 
+// Add USD columns to payment_methods if they don't exist
+try {
+  db.prepare("ALTER TABLE payment_methods ADD COLUMN min_amount_usd INTEGER DEFAULT 0").run();
+} catch (e) {
+  // Column already exists
+}
+try {
+  db.prepare("ALTER TABLE payment_methods ADD COLUMN max_amount_usd INTEGER DEFAULT 1000").run();
+} catch (e) {
+  // Column already exists
+}
+
 // Initialize payment settings if not exists
 const settingsExists = db.prepare("SELECT * FROM payment_settings").get();
 if (!settingsExists) {

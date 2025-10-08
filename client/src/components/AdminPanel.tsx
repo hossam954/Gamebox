@@ -100,6 +100,8 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     currency: "SYP",
     minAmount: 0,
     maxAmount: 100000,
+    minAmountUSD: 0,
+    maxAmountUSD: 1000,
     fee: 0,
     noteEn: "",
     noteAr: ""
@@ -134,13 +136,19 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
   const handleSaveSettings = async () => {
     try {
+      const usdDepositInput = document.getElementById('usdDepositRate') as HTMLInputElement;
+      const usdWithdrawInput = document.getElementById('usdWithdrawRate') as HTMLInputElement;
+      
+      const usdDepositRate = parseFloat(usdDepositInput?.value || '150') * 100;
+      const usdWithdrawRate = parseFloat(usdWithdrawInput?.value || '150') * 100;
+      
       const response = await fetch('/api/payment-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           winRate,
-          usdDepositRate: paymentSettings?.usdDepositRate || 1500000,
-          usdWithdrawRate: paymentSettings?.usdWithdrawRate || 1500000
+          usdDepositRate,
+          usdWithdrawRate
         }),
       });
 
@@ -149,6 +157,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           title: "تم حفظ الإعدادات بنجاح",
           description: "تم حفظ جميع الإعدادات بنجاح.",
         });
+        await fetchPaymentSettings();
       } else {
         toast({
           title: "فشل حفظ الإعدادات",
@@ -482,7 +491,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           title: "Payment method created",
           description: "New payment method has been added",
         });
-        setNewPaymentMethod({ name: "", type: "both", currency: "SYP", minAmount: 0, maxAmount: 100000, fee: 0, noteEn: "", noteAr: "" });
+        setNewPaymentMethod({ name: "", type: "both", currency: "SYP", minAmount: 0, maxAmount: 100000, minAmountUSD: 0, maxAmountUSD: 1000, fee: 0, noteEn: "", noteAr: "" });
         fetchPaymentMethods();
       }
     } catch (error) {
@@ -1617,7 +1626,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="space-y-6">
-                      <div className="grid gap-4 md:grid-cols-4">
+                      <div className="grid gap-4 md:grid-cols-3">
                         <div className="space-y-2">
                           <Label htmlFor="paymentMethodName">اسم الطريقة</Label>
                           <Input
@@ -1654,30 +1663,71 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             <option value="both">كلاهما (USD & SYP)</option>
                           </select>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="minAmount">الحد الأدنى</Label>
-                          <Input
-                            id="minAmount"
-                            type="number"
-                            placeholder="10"
-                            value={newPaymentMethod.minAmount}
-                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmount: parseFloat(e.target.value) })}
-                            data-testid="input-payment-method-min-amount"
-                          />
+                      </div>
+
+                      {(newPaymentMethod.currency === "SYP" || newPaymentMethod.currency === "both") && (
+                        <div className="grid gap-4 md:grid-cols-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                          <div className="md:col-span-3">
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-100">حدود الليرة السورية (SYP)</h4>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="minAmount">الحد الأدنى (£)</Label>
+                            <Input
+                              id="minAmount"
+                              type="number"
+                              placeholder="10"
+                              value={newPaymentMethod.minAmount}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmount: parseFloat(e.target.value) })}
+                              data-testid="input-payment-method-min-amount"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="maxAmount">الحد الأقصى (£)</Label>
+                            <Input
+                              id="maxAmount"
+                              type="number"
+                              placeholder="100000"
+                              value={newPaymentMethod.maxAmount}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmount: parseFloat(e.target.value) })}
+                              data-testid="input-payment-method-max-amount"
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="maxAmount">الحد الأقصى</Label>
-                          <Input
-                            id="maxAmount"
-                            type="number"
-                            placeholder="100000"
-                            value={newPaymentMethod.maxAmount}
-                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmount: parseFloat(e.target.value) })}
-                            data-testid="input-payment-method-max-amount"
-                          />
+                      )}
+
+                      {(newPaymentMethod.currency === "USD" || newPaymentMethod.currency === "both") && (
+                        <div className="grid gap-4 md:grid-cols-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
+                          <div className="md:col-span-3">
+                            <h4 className="font-semibold text-green-900 dark:text-green-100">حدود الدولار الأمريكي (USD)</h4>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="minAmountUSD">الحد الأدنى ($)</Label>
+                            <Input
+                              id="minAmountUSD"
+                              type="number"
+                              placeholder="1"
+                              value={newPaymentMethod.minAmountUSD}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmountUSD: parseFloat(e.target.value) })}
+                              data-testid="input-payment-method-min-amount-usd"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="maxAmountUSD">الحد الأقصى ($)</Label>
+                            <Input
+                              id="maxAmountUSD"
+                              type="number"
+                              placeholder="1000"
+                              value={newPaymentMethod.maxAmountUSD}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmountUSD: parseFloat(e.target.value) })}
+                              data-testid="input-payment-method-max-amount-usd"
+                            />
+                          </div>
                         </div>
+                      )}
+
+                      <div className="grid gap-4 md:grid-cols-1">
                         <div className="space-y-2">
-                          <Label htmlFor="paymentFee">الرسوم (%)</Label>
+                          <Label htmlFor="paymentFee">الرسوم/البونص (%)</Label>
                           <Input
                             id="paymentFee"
                             type="number"
