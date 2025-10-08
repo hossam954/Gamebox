@@ -92,13 +92,16 @@ db.exec(`
     minWithdraw INTEGER DEFAULT 100,
     maxWithdraw INTEGER DEFAULT 50000,
     depositAddress TEXT DEFAULT '',
-    paymentMethod TEXT DEFAULT 'Bank Transfer'
+    paymentMethod TEXT DEFAULT 'Bank Transfer',
+    usdDepositRate INTEGER DEFAULT 15000,
+    usdWithdrawRate INTEGER DEFAULT 15000
   );
 
   CREATE TABLE IF NOT EXISTS payment_methods (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     type TEXT NOT NULL,
+    currency TEXT DEFAULT 'SYP',
     minAmount INTEGER DEFAULT 0,
     maxAmount INTEGER DEFAULT 100000,
     fee INTEGER DEFAULT 0,
@@ -172,9 +175,9 @@ const settingsExists = db.prepare("SELECT * FROM payment_settings").get();
 if (!settingsExists) {
   const settingsId = randomUUID();
   db.prepare(`
-    INSERT INTO payment_settings (id, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(settingsId, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet");
+    INSERT INTO payment_settings (id, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod, usdDepositRate, usdWithdrawRate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(settingsId, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet", 15000, 15000);
 }
 
 export class SQLiteStorage {
@@ -457,14 +460,15 @@ export class SQLiteStorage {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
-      INSERT INTO payment_methods (id, name, type, minAmount, maxAmount, fee, noteEn, noteAr, isActive, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, data.name, data.type || "both", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.noteEn || "", data.noteAr || "", 1, createdAt);
+      INSERT INTO payment_methods (id, name, type, currency, minAmount, maxAmount, fee, noteEn, noteAr, isActive, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, data.name, data.type || "both", data.currency || "SYP", data.minAmount || 0, data.maxAmount || 100000, data.fee || 0, data.noteEn || "", data.noteAr || "", 1, createdAt);
 
     return {
       id,
       name: data.name,
       type: data.type || "both",
+      currency: data.currency || "SYP",
       minAmount: data.minAmount || 0,
       maxAmount: data.maxAmount || 100000,
       fee: data.fee || 0,

@@ -149,6 +149,8 @@ export class MemStorage implements IStorage {
       depositAddress: "SYP-WALLET-ADDRESS-12345",
       paymentMethod: "Bank Transfer / Mobile Wallet",
       winRate: 50, // نسبة الربح الافتراضية 50%
+      usdDepositRate: 15000, // سعر صرف الدولار للإيداع (150.00 ل.س)
+      usdWithdrawRate: 15000, // سعر صرف الدولار للسحب (150.00 ل.س)
     };
 
     this.gameSettings = {
@@ -171,8 +173,9 @@ export class MemStorage implements IStorage {
 
     const defaultPaymentMethod1: PaymentMethod = {
       id: randomUUID(),
-      name: "Bank Transfer",
-      type: "bank",
+      name: "Bank Transfer (SYP)",
+      type: "both",
+      currency: "SYP",
       minAmount: 50,
       maxAmount: 50000,
       fee: 0,
@@ -185,8 +188,9 @@ export class MemStorage implements IStorage {
 
     const defaultPaymentMethod2: PaymentMethod = {
       id: randomUUID(),
-      name: "Mobile Wallet",
-      type: "mobile",
+      name: "Mobile Wallet (SYP)",
+      type: "both",
+      currency: "SYP",
       minAmount: 50,
       maxAmount: 10000,
       fee: 0,
@@ -196,6 +200,21 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.paymentMethods.set(defaultPaymentMethod2.id, defaultPaymentMethod2);
+
+    const defaultPaymentMethod3: PaymentMethod = {
+      id: randomUUID(),
+      name: "USDT (TRC20)",
+      type: "both",
+      currency: "USD",
+      minAmount: 5,
+      maxAmount: 1000,
+      fee: 0,
+      noteEn: "Send USDT (TRC20) to the provided address.",
+      noteAr: "أرسل USDT (TRC20) إلى العنوان المقدم.",
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.paymentMethods.set(defaultPaymentMethod3.id, defaultPaymentMethod3);
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -451,6 +470,7 @@ export class MemStorage implements IStorage {
       id,
       name: data.name,
       type: data.type || "both",
+      currency: data.currency || "SYP",
       minAmount: data.minAmount || 0,
       maxAmount: data.maxAmount || 100000,
       fee: data.fee || 0,

@@ -115,6 +115,8 @@ export const paymentSettings = pgTable("payment_settings", {
   depositAddress: text("deposit_address").notNull().default(""),
   paymentMethod: text("payment_method").notNull().default("Bank Transfer"),
   winRate: integer("win_rate").notNull().default(50), // 0-100: نسبة الربح
+  usdDepositRate: integer("usd_deposit_rate").notNull().default(15000), // سعر صرف الدولار للإيداع (مضروب في 100 لتجنب الكسور العشرية)
+  usdWithdrawRate: integer("usd_withdraw_rate").notNull().default(15000), // سعر صرف الدولار للسحب (مضروب في 100)
 });
 
 export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).omit({
@@ -165,6 +167,7 @@ export const paymentMethods = pgTable("payment_methods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: text("type").notNull().default("both"), // "deposit", "withdraw", "both"
+  currency: text("currency").notNull().default("SYP"), // "SYP" or "USD"
   minAmount: integer("min_amount").notNull().default(0),
   maxAmount: integer("max_amount").notNull().default(100000),
   fee: integer("fee").notNull().default(0),
@@ -177,6 +180,7 @@ export const paymentMethods = pgTable("payment_methods", {
 export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick({
   name: true,
   type: true,
+  currency: true,
   minAmount: true,
   maxAmount: true,
   fee: true,

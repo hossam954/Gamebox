@@ -234,10 +234,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const methodName = paymentMethod?.name || "غير محدد";
 
           if (status === "approved") {
-            let totalAmount = request.amount;
+            // التحقق من العملة والتحويل التلقائي
+            let amountInSYP = request.amount;
+            let conversionMessage = "";
+            
+            if (paymentMethod && paymentMethod.currency === "USD") {
+              const settings = await storage.getPaymentSettings();
+              const rate = settings.usdDepositRate / 100; // تحويل من المخزن إلى قيمة حقيقية
+              amountInSYP = Math.floor(request.amount * rate);
+              const userLang = user.language || 'en';
+              conversionMessage = userLang === 'ar' 
+                ? `\n💵 تم التحويل: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`
+                : `\n💵 Converted: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`;
+            }
+            
+            let totalAmount = amountInSYP;
             
             if (paymentMethod && paymentMethod.fee > 0) {
-              const bonusAmount = Math.floor((request.amount * paymentMethod.fee) / 100);
+              const bonusAmount = Math.floor((amountInSYP * paymentMethod.fee) / 100);
               totalAmount += bonusAmount;
               
               const userLang = user.language || 'en';
@@ -270,12 +284,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             const userLang = user.language || 'en';
+            const depositAmount = paymentMethod && paymentMethod.currency === "USD" ? `$${request.amount}` : `£${request.amount.toLocaleString()}`;
             await storage.createNotification({
               userId: user.id,
               title: userLang === 'ar' ? "تم قبول عملية الإيداع ✅" : "Deposit Approved ✅",
               message: userLang === 'ar'
-                ? `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"} وتم إضافة مبلغ £${request.amount.toLocaleString()} إلى رصيدك بنجاح ✅`
-                : `Your deposit via ${methodName} with transaction number ${request.transactionNumber || "Not available"} has been approved and £${request.amount.toLocaleString()} has been added to your balance ✅`
+                ? `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"}\nالمبلغ: ${depositAmount}${conversionMessage}\nتم إضافة £${totalAmount.toLocaleString()} إلى رصيدك بنجاح ✅`
+                : `Your deposit via ${methodName} with transaction number ${request.transactionNumber || "Not available"} has been approved\nAmount: ${depositAmount}${conversionMessage}\n£${totalAmount.toLocaleString()} has been added to your balance ✅`
             });
           } else if (status === "rejected") {
             const userLang = user.language || 'en';
@@ -348,10 +363,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const methodName = paymentMethod?.name || "غير محدد";
 
           if (status === "approved") {
+            // التحقق من العملة والتحويل التلقائي
+            let withdrawMessage = "";
+            let displayAmount = `£${request.amount.toLocaleString()}`;
+            
+            if (paymentMethod && paymentMethod.currency === "USD") {
+              const settings = await storage.getPaymentSettings();
+              const rate = settings.usdWithdrawRate / 100; // تحويل من المخزن إلى قيمة حقيقية
+              const amountInUSD = Math.floor(request.amount / rate);
+              const userLang = user.language || 'en';
+              displayAmount = `£${request.amount.toLocaleString()} → $${amountInUSD}`;
+              withdrawMessage = userLang === 'ar'
+                ? `\n💵 سيتم السحب: $${amountInUSD} (£${request.amount.toLocaleString()} ÷ ${rate.toFixed(2)})`
+                : `\n💵 Withdrawing: $${amountInUSD} (£${request.amount.toLocaleString()} ÷ ${rate.toFixed(2)})`;
+            }
+            
+            const userLang = user.language || 'en';
             await storage.createNotification({
               userId: user.id,
-              title: "تمت الموافقة على طلب السحب 💜",
-              message: `تمت الموافقة على طلب السحب الخاص بك:\nالمبلغ: £${request.amount.toLocaleString()}\nطريقة السحب: ${methodName}\nعنوان الاستلام: ${request.address}\n\nسيتم تحويل المبلغ إلى حسابك في غضون 24 ساعة.\nمبارك لك 💜`
+              title: userLang === 'ar' ? "تمت الموافقة على طلب السحب 💜" : "Withdrawal Approved 💜",
+              message: userLang === 'ar'
+                ? `تمت الموافقة على طلب السحب الخاص بك:\nالمبلغ: ${displayAmount}${withdrawMessage}\nطريقة السحب: ${methodName}\nعنوان الاستلام: ${request.address}\n\nسيتم تحويل المبلغ إلى حسابك في غضون 24 ساعة.\nمبارك لك 💜`
+                : `Your withdrawal request has been approved:\nAmount: ${displayAmount}${withdrawMessage}\nMethod: ${methodName}\nAddress: ${request.address}\n\nThe amount will be transferred to your account within 24 hours.\nCongratulations 💜`
             });
           } else if (status === "rejected") {
             // إعادة المبلغ للمستخدم
