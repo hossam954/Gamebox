@@ -366,7 +366,7 @@ export default function WalletModal({
                       .filter(method => method.isActive && (method.type === "deposit" || method.type === "both"))
                       .map(method => (
                         <option key={method.id} value={method.id}>
-                          {method.name} (Fee: {method.fee}%)
+                          {method.name} ({method.currency === "USD" ? "$" : "£"}) - {language === 'ar' ? 'بونص' : 'Bonus'}: {method.fee}%
                         </option>
                       ))}
                   </select>
@@ -381,7 +381,9 @@ export default function WalletModal({
                 )}
 
                 <div>
-                  <Label htmlFor="deposit-amount">{t('amount', language)} (£)</Label>
+                  <Label htmlFor="deposit-amount">
+                    {t('amount', language)} ({selectedDepositMethod && paymentMethods.find(m => m.id === selectedDepositMethod)?.currency === "USD" ? "$" : "£"})
+                  </Label>
                   <Input
                     id="deposit-amount"
                     type="number"
@@ -392,12 +394,16 @@ export default function WalletModal({
                     min={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount : 0}
                     max={selectedDepositMethod ? paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount : 0}
                   />
-                  {selectedDepositMethod && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.minAmount.toLocaleString()} |
-                      {t('maxAmount', language)}: £{paymentMethods.find(m => m.id === selectedDepositMethod)?.maxAmount.toLocaleString()}
-                    </p>
-                  )}
+                  {selectedDepositMethod && (() => {
+                    const method = paymentMethods.find(m => m.id === selectedDepositMethod);
+                    const currency = method?.currency === "USD" ? "$" : "£";
+                    return (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('minAmount', language)}: {currency}{method?.minAmount.toLocaleString()} |
+                        {t('maxAmount', language)}: {currency}{method?.maxAmount.toLocaleString()}
+                      </p>
+                    );
+                  })()}
                 </div>
 
                 <div>
@@ -443,7 +449,7 @@ export default function WalletModal({
                       .filter(method => method.isActive && (method.type === "withdraw" || method.type === "both"))
                       .map(method => (
                         <option key={method.id} value={method.id}>
-                          {method.name} (Fee: {method.fee}%)
+                          {method.name} ({method.currency === "USD" ? "$" : "£"}) - {language === 'ar' ? 'رسوم' : 'Fee'}: {method.fee}%
                         </option>
                       ))}
                   </select>
@@ -460,11 +466,13 @@ export default function WalletModal({
                 })()}
 
                 <div>
-                  <Label htmlFor="withdraw-amount">{t('amount', language)} (£)</Label>
+                  <Label htmlFor="withdraw-amount">
+                    {t('amount', language)} (£ {language === 'ar' ? 'ليرة سورية' : 'SYP'})
+                  </Label>
                   <Input
                     id="withdraw-amount"
                     type="number"
-                    placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
+                    placeholder={language === 'ar' ? 'أدخل المبلغ بالليرة السورية' : 'Enter amount in SYP'}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     disabled={isLoading || !selectedWithdrawMethod}
@@ -474,22 +482,25 @@ export default function WalletModal({
                   {selectedWithdrawMethod && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Min: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
-                        Max: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                        {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
+                        {t('maxAmount', language)}: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
                       </p>
                       {(() => {
                         const method = paymentMethods.find(m => m.id === selectedWithdrawMethod);
                         const amount = parseFloat(withdrawAmount);
                         const fee = Math.floor((amount * (method?.fee || 0)) / 100);
                         const netAmount = amount - fee;
+                        const currency = method?.currency === "USD" ? "$" : "£";
+                        const currencyName = method?.currency === "USD" ? "دولار" : "ليرة سورية";
+                        
                         return (
                           <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                             <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                              سيتم سحب: £{netAmount.toLocaleString()}
+                              {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: {currency}{method?.currency === "USD" ? (netAmount / 100).toFixed(2) : netAmount.toLocaleString()}
                             </p>
                             {fee > 0 && (
                               <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                (المبلغ المطلوب: £{amount.toLocaleString()} - الرسوم {method?.fee}%: £{fee.toLocaleString()})
+                                ({language === 'ar' ? 'المبلغ المطلوب' : 'Requested amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'الرسوم' : 'Fee'} {method?.fee}%: £{fee.toLocaleString()})
                               </p>
                             )}
                           </div>
@@ -499,8 +510,8 @@ export default function WalletModal({
                   )}
                   {selectedWithdrawMethod && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Min: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
-                      Max: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
+                      {t('minAmount', language)}: £{paymentMethods.find(m => m.id === selectedWithdrawMethod)?.minAmount.toLocaleString()} |
+                      {t('maxAmount', language)}: £{Math.min(balance, paymentMethods.find(m => m.id === selectedWithdrawMethod)?.maxAmount || balance).toLocaleString()}
                     </p>
                   )}
                 </div>
