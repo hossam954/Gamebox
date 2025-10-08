@@ -25,8 +25,8 @@ class SoundManager {
     this.openingSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     this.openingSound.volume = 0.5;
 
-    // Click/button sound
-    this.clickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    // Click/button sound - صوت نقرة بسيط
+    this.clickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2997/2997-preview.mp3');
     this.clickSound.volume = 0.3;
   }
 
@@ -68,8 +68,10 @@ class SoundManager {
 
   playClick() {
     if (this.clickSound) {
-      this.clickSound.currentTime = 0;
-      this.clickSound.play().catch(err => console.log('Click sound error:', err));
+      // إنشاء نسخة جديدة للسماح بتشغيل متعدد
+      const sound = this.clickSound.cloneNode(true) as HTMLAudioElement;
+      sound.volume = 0.3;
+      sound.play().catch(err => console.log('Click sound error:', err));
     }
   }
 
