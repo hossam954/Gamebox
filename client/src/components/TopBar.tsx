@@ -1,8 +1,6 @@
-import { Wallet, Settings, HelpCircle, Bell, Shield, Volume2, VolumeX } from "lucide-react";
+import { Wallet, Settings, HelpCircle, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
-import { soundManager } from "@/lib/sounds";
 
 interface TopBarProps {
   balance: number;
@@ -25,13 +23,6 @@ export default function TopBar({
   isAdmin = false,
   onAdminClick,
 }: TopBarProps) {
-  const [isMuted, setIsMuted] = useState(soundManager.getMuteState());
-
-  const handleToggleMute = () => {
-    const newMuteState = soundManager.toggleMute();
-    setIsMuted(newMuteState);
-  };
-
   return (
     <div className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
@@ -79,18 +70,6 @@ export default function TopBar({
             <Bell className="h-5 w-5" />
             {hasNotifications && (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
-            )}
-          </button>
-
-          <button
-            onClick={handleToggleMute}
-            data-testid="button-sound-toggle"
-            className="p-2 hover:opacity-70 transition-opacity"
-          >
-            {isMuted ? (
-              <VolumeX className="h-5 w-5" />
-            ) : (
-              <Volume2 className="h-5 w-5" />
             )}
           </button>
 

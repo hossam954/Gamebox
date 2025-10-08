@@ -6,13 +6,12 @@ class SoundManager {
   private loseSound: HTMLAudioElement | null = null;
   private openingSound: HTMLAudioElement | null = null;
   private clickSound: HTMLAudioElement | null = null;
-  private isMuted: boolean = false;
 
   constructor() {
-    // Initialize background music (looping)
-    this.backgroundMusic = new Audio('https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3');
+    // Initialize background music (looping) - gaming ambient music
+    this.backgroundMusic = new Audio('https://assets.mixkit.co/active_storage/sfx/2745/2745-preview.mp3');
     this.backgroundMusic.loop = true;
-    this.backgroundMusic.volume = 0.3;
+    this.backgroundMusic.volume = 0.2;
 
     // Win sound effect
     this.winSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
@@ -29,14 +28,10 @@ class SoundManager {
     // Click/button sound
     this.clickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
     this.clickSound.volume = 0.3;
-
-    // Load mute state from localStorage
-    const savedMuteState = localStorage.getItem('soundMuted');
-    this.isMuted = savedMuteState === 'true';
   }
 
   playBackgroundMusic() {
-    if (!this.isMuted && this.backgroundMusic) {
+    if (this.backgroundMusic) {
       this.backgroundMusic.play().catch(err => {
         console.log('Background music autoplay prevented:', err);
       });
@@ -51,48 +46,31 @@ class SoundManager {
   }
 
   playWin() {
-    if (!this.isMuted && this.winSound) {
+    if (this.winSound) {
       this.winSound.currentTime = 0;
       this.winSound.play().catch(err => console.log('Win sound error:', err));
     }
   }
 
   playLose() {
-    if (!this.isMuted && this.loseSound) {
+    if (this.loseSound) {
       this.loseSound.currentTime = 0;
       this.loseSound.play().catch(err => console.log('Lose sound error:', err));
     }
   }
 
   playOpening() {
-    if (!this.isMuted && this.openingSound) {
+    if (this.openingSound) {
       this.openingSound.currentTime = 0;
       this.openingSound.play().catch(err => console.log('Opening sound error:', err));
     }
   }
 
   playClick() {
-    if (!this.isMuted && this.clickSound) {
+    if (this.clickSound) {
       this.clickSound.currentTime = 0;
       this.clickSound.play().catch(err => console.log('Click sound error:', err));
     }
-  }
-
-  toggleMute() {
-    this.isMuted = !this.isMuted;
-    localStorage.setItem('soundMuted', this.isMuted.toString());
-    
-    if (this.isMuted) {
-      this.stopBackgroundMusic();
-    } else {
-      this.playBackgroundMusic();
-    }
-    
-    return this.isMuted;
-  }
-
-  getMuteState() {
-    return this.isMuted;
   }
 
   setVolume(type: 'background' | 'effects', volume: number) {

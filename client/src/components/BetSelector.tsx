@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { soundManager } from "@/lib/sounds";
 
 interface BetSelectorProps {
   selectedBet: number | null;
