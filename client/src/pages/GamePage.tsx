@@ -93,6 +93,16 @@ export default function GamePage() {
           title: n.title || 'Notification',
           read: n.read !== undefined ? n.read : false,
         }));
+        
+        // Check if there are new unread notifications
+        const previousUnreadCount = notifications.filter(n => !n.read).length;
+        const currentUnreadCount = normalizedData.filter((n: any) => !n.read).length;
+        
+        if (currentUnreadCount > previousUnreadCount) {
+          // Play notification sound for new notifications
+          soundManager.playNotification();
+        }
+        
         if (JSON.stringify(normalizedData) !== JSON.stringify(notifications)) {
           setNotifications(normalizedData);
         }

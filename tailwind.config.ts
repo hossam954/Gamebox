@@ -136,7 +136,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "spin-slow": "spin-slow 3s linear infinite",
+        "spin-slow": "spin-slow 1.5s linear infinite",
         float: "float 3s ease-in-out infinite",
         shake: "shake 0.5s ease-in-out",
         "scale-in": "scale-in 0.3s ease-out",

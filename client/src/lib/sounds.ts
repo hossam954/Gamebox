@@ -6,28 +6,33 @@ class SoundManager {
   private loseSound: HTMLAudioElement | null = null;
   private openingSound: HTMLAudioElement | null = null;
   private clickSound: HTMLAudioElement | null = null;
+  private notificationSound: HTMLAudioElement | null = null;
 
   constructor() {
-    // Initialize background music (looping) - موسيقى خلفية لعبة حقيقية
+    // Initialize background music (looping) - موسيقى خلفية لعبة مناسبة
     this.backgroundMusic = new Audio('https://assets.mixkit.co/active_storage/sfx/2745/2745.mp3');
     this.backgroundMusic.loop = true;
-    this.backgroundMusic.volume = 0.2;
+    this.backgroundMusic.volume = 0.15;
 
-    // Win sound effect
-    this.winSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
-    this.winSound.volume = 0.5;
+    // Win sound effect - صوت ربح مميز
+    this.winSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
+    this.winSound.volume = 0.6;
 
-    // Lose sound effect
-    this.loseSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
+    // Lose sound effect - صوت خسارة مناسب
+    this.loseSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3');
     this.loseSound.volume = 0.4;
 
-    // Box opening sound
+    // Box opening sound - صوت فتح الصندوق
     this.openingSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     this.openingSound.volume = 0.5;
 
     // Click/button sound - صوت نقرة بسيط
     this.clickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2997/2997-preview.mp3');
     this.clickSound.volume = 0.3;
+
+    // Notification sound - صوت إشعار
+    this.notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+    this.notificationSound.volume = 0.4;
   }
 
   playBackgroundMusic() {
@@ -75,6 +80,13 @@ class SoundManager {
     }
   }
 
+  playNotification() {
+    if (this.notificationSound) {
+      this.notificationSound.currentTime = 0;
+      this.notificationSound.play().catch(err => console.log('Notification sound error:', err));
+    }
+  }
+
   setVolume(type: 'background' | 'effects', volume: number) {
     const vol = Math.max(0, Math.min(1, volume));
     
@@ -85,6 +97,7 @@ class SoundManager {
       if (this.loseSound) this.loseSound.volume = vol;
       if (this.openingSound) this.openingSound.volume = vol;
       if (this.clickSound) this.clickSound.volume = vol;
+      if (this.notificationSound) this.notificationSound.volume = vol;
     }
   }
 }
