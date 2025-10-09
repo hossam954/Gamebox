@@ -58,7 +58,7 @@ export default function GamePage() {
       if (response.ok) {
         const users = await response.json();
         const currentUser = users.find((u: any) => u.id === userId);
-        
+
         // إذا لم يتم العثور على المستخدم، فهذا يعني أنه تم حذف حسابه
         if (!currentUser) {
           localStorage.clear();
@@ -72,7 +72,7 @@ export default function GamePage() {
           }, 2000);
           return;
         }
-        
+
         if (currentUser.balance !== balance) {
           setBalance(currentUser.balance);
         }
@@ -93,16 +93,16 @@ export default function GamePage() {
           title: n.title || 'Notification',
           read: n.read !== undefined ? n.read : false,
         }));
-        
+
         // Check if there are new unread notifications
         const previousUnreadCount = notifications.filter(n => !n.read).length;
         const currentUnreadCount = normalizedData.filter((n: any) => !n.read).length;
-        
+
         if (currentUnreadCount > previousUnreadCount) {
           // Play notification sound for new notifications
           soundManager.playNotification();
         }
-        
+
         if (JSON.stringify(normalizedData) !== JSON.stringify(notifications)) {
           setNotifications(normalizedData);
         }
@@ -229,7 +229,7 @@ export default function GamePage() {
 
     // Play opening sound
     soundManager.playOpening();
-    
+
     setIsOpening(true);
     setIsOpen(false);
     setPrize(undefined);
@@ -292,7 +292,7 @@ export default function GamePage() {
 
       const betsCount = playerStats.sessionBetsCount;
       const sessionProfit = balance - playerStats.sessionStartBalance;
-      
+
       // تحديد المرحلة الحالية
       let currentPhase: 'hook' | 'oscillate' | 'drain';
       if (betsCount < gameSettings.phase1Rounds) {
@@ -318,9 +318,9 @@ export default function GamePage() {
         adjustedWinRate = gameSettings.baseWinRate + 15; // زيادة 15% فرصة الربح
         // تفضيل المضاعفات المتوسطة (x3-x10)
       } else if (currentPhase === 'oscillate') {
-        // المرحلة 2: تذبذب - إذا ربح كثيراً، خفض الفرصة
+        // المرحلة 2: التذبذب - إذا ربح كثيراً، خفض الفرصة
         const profitRatio = sessionProfit / (playerStats.sessionStartBalance || 1000);
-        
+
         if (profitRatio > 0.5) {
           // إذا ربح أكثر من 50% من رصيده الأولي، خفض الفرصة
           adjustedWinRate = gameSettings.baseWinRate * 0.6;
@@ -340,7 +340,7 @@ export default function GamePage() {
         // المرحلة 3: الخسارة التدريجية
         const drainProgress = (betsCount - (gameSettings.phase1Rounds + gameSettings.phase2Rounds)) / 20;
         adjustedWinRate = gameSettings.baseWinRate * (1 - (drainProgress * 0.4)); // تقليل تدريجي
-        
+
         // إذا ربح كثيراً، خسره بقوة
         if (sessionProfit > playerStats.sessionStartBalance * 0.3) {
           adjustedWinRate *= 0.5;
@@ -355,7 +355,7 @@ export default function GamePage() {
         const betIncrease = selectedBet! / lastBet;
         const penaltyRate = (gameSettings.betIncreaseAfterWinPenalty || 15) / 100;
         adjustedWinRate *= (1 - (betIncrease - 1) * penaltyRate);
-        
+
         // تقليل المضاعف الأقصى عند زيادة الرهان بعد الربح
         const maxMultiplierReduction = Math.min(gameSettings.highBetMaxMultiplier || 20, 15);
         dynamicMaxMultiplier = Math.min(dynamicMaxMultiplier, maxMultiplierReduction);
@@ -369,19 +369,19 @@ export default function GamePage() {
 
       // التأكد من أن نسبة الربح في حدود منطقية
       adjustedWinRate = Math.max(5, Math.min(95, adjustedWinRate));
-      
+
       const lossThreshold = 100 - adjustedWinRate;
-      
+
       if (random < lossThreshold) {
         // خسارة
         prizeMultiplier = null;
       } else {
         // فوز - توزيع المضاعفات الذكي
         const winRandom = Math.random() * 100;
-        const totalChance = gameSettings.multiplier2to5Chance + gameSettings.multiplier5to10Chance + 
-                           gameSettings.multiplier10to25Chance + gameSettings.multiplier25to50Chance + 
+        const totalChance = gameSettings.multiplier2to5Chance + gameSettings.multiplier5to10Chance +
+                           gameSettings.multiplier10to25Chance + gameSettings.multiplier25to50Chance +
                            gameSettings.multiplier50PlusChance;
-        
+
         // توزيع المضاعفات بناءً على الإعدادات والمرحلة
         let chance1 = gameSettings.multiplier2to5Chance;
         let chance2 = chance1 + gameSettings.multiplier5to10Chance;
@@ -430,10 +430,10 @@ export default function GamePage() {
         setBalance(newBalance);
         setLastBet(selectedBet);
         setLastResult('win');
-        
+
         // Play win sound
         soundManager.playWin();
-        
+
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
           fetch(`/api/users/${userId}/game-result`, {
@@ -447,7 +447,7 @@ export default function GamePage() {
             })
           }).catch(err => console.error('Failed to save game result:', err));
         }
-        
+
         setTransactions((prev) => [
           {
             id: Date.now().toString(),
@@ -480,10 +480,10 @@ export default function GamePage() {
         setBalance(newBalance);
         setLastBet(selectedBet);
         setLastResult('loss');
-        
+
         // Play lose sound
         soundManager.playLose();
-        
+
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
           fetch(`/api/users/${userId}/game-result`, {
@@ -497,7 +497,7 @@ export default function GamePage() {
             })
           }).catch(err => console.error('Failed to save game result:', err));
         }
-        
+
         setTransactions((prev) => [
           {
             id: Date.now().toString(),
@@ -514,7 +514,7 @@ export default function GamePage() {
         });
         setTimeout(() => dismiss(), 1500);
       }
-    }, 3500);
+    }, 1500); // Reduced delay here
   };
 
   const handleReset = () => {
@@ -542,7 +542,7 @@ export default function GamePage() {
       const response = await fetch(`/api/notifications/${id}/read`, {
         method: 'PATCH',
       });
-      
+
       if (response.ok) {
         const updatedNotifications = notifications.map((n) =>
           n.id === id ? { ...n, read: true } : n
@@ -556,12 +556,12 @@ export default function GamePage() {
 
   const handleClearAllNotifications = async () => {
     if (!userId) return;
-    
+
     try {
       const response = await fetch(`/api/notifications/${userId}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         setNotifications([]);
       }
