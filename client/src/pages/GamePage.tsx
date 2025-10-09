@@ -347,11 +347,24 @@ export default function GamePage() {
         }
       }
 
-      // إذا ربح وزاد الرهان، قلل الفرص
-      if (lastResult === 'win' && lastBet && selectedBet! > lastBet) {
+      // تطبيق ميزة الموقع (House Edge Boost)
+      adjustedWinRate -= gameSettings.houseEdgeBoost || 0;
+
+      // تتبع سلوك اللاعب: إذا ربح وزاد الرهان، قلل الفرص
+      if (gameSettings.behaviorTrackingEnabled && lastResult === 'win' && lastBet && selectedBet! > lastBet) {
         const betIncrease = selectedBet! / lastBet;
-        adjustedWinRate *= (1 - (betIncrease - 1) * 0.4);
-        dynamicMaxMultiplier = Math.min(dynamicMaxMultiplier, 15);
+        const penaltyRate = (gameSettings.betIncreaseAfterWinPenalty || 15) / 100;
+        adjustedWinRate *= (1 - (betIncrease - 1) * penaltyRate);
+        
+        // تقليل المضاعف الأقصى عند زيادة الرهان بعد الربح
+        const maxMultiplierReduction = Math.min(gameSettings.highBetMaxMultiplier || 20, 15);
+        dynamicMaxMultiplier = Math.min(dynamicMaxMultiplier, maxMultiplierReduction);
+      }
+
+      // عقوبة إضافية للانتصارات المتتالية
+      if (gameSettings.behaviorTrackingEnabled && playerStats.currentStreak >= 2) {
+        const streakPenalty = (gameSettings.consecutiveWinsPenalty || 10) / 100;
+        adjustedWinRate -= playerStats.currentStreak * streakPenalty;
       }
 
       // التأكد من أن نسبة الربح في حدود منطقية

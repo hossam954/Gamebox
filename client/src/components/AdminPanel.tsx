@@ -117,6 +117,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const [newBalance, setNewBalance] = useState("");
   const [winRate, setWinRate] = useState(50);
   const [paymentSettings, setPaymentSettings] = useState<any>(null);
+  const [gameSettings, setGameSettings] = useState<any>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -131,8 +132,51 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         console.error('Error fetching settings:', error);
       }
     };
+    
+    const fetchGameSettings = async () => {
+      try {
+        const response = await fetch('/api/game-settings');
+        if (response.ok) {
+          const data = await response.json();
+          setGameSettings(data);
+        }
+      } catch (error) {
+        console.error('Error fetching game settings:', error);
+      }
+    };
+    
     fetchSettings();
+    fetchGameSettings();
   }, []);
+
+  const handleSaveGameSettings = async () => {
+    try {
+      const response = await fetch('/api/game-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameSettings),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "تم حفظ الإعدادات",
+          description: "تم حفظ إعدادات اللعبة بنجاح",
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل حفظ الإعدادات",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSaveSettings = async () => {
     try {
@@ -157,7 +201,6 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           title: "تم حفظ الإعدادات بنجاح",
           description: "تم حفظ جميع الإعدادات بنجاح.",
         });
-        await fetchPaymentSettings();
       } else {
         toast({
           title: "فشل حفظ الإعدادات",
@@ -817,7 +860,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-7 px-3">
+            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11 px-3">
               <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
               <TabsTrigger value="users">المستخدمين</TabsTrigger>
               <TabsTrigger value="deposits">الإيداعات</TabsTrigger>
@@ -827,6 +870,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
               <TabsTrigger value="support">الدعم</TabsTrigger>
               <TabsTrigger value="messaging">الرسائل</TabsTrigger>
               <TabsTrigger value="payment-methods">طرق الدفع</TabsTrigger>
+              <TabsTrigger value="game-settings">إعدادات اللعبة</TabsTrigger>
               <TabsTrigger value="settings">الإعدادات</TabsTrigger>
             </TabsList>
 
@@ -1830,6 +1874,152 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                 </Card>
               </TabsContent>
 
+              <TabsContent value="game-settings" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>إعدادات اللعبة والأرباح</CardTitle>
+                    <CardDescription>
+                      التحكم في نسب الربح وسلوك اللاعبين
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {gameSettings && (
+                      <>
+                        <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                          <h3 className="font-semibold text-lg">الإعدادات الأساسية</h3>
+                          
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label>نسبة الربح الأساسية</Label>
+                              <Badge variant="outline">{gameSettings.baseWinRate}%</Badge>
+                            </div>
+                            <Slider
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={[gameSettings.baseWinRate || 50]}
+                              onValueChange={(value) => setGameSettings({...gameSettings, baseWinRate: value[0]})}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              نسبة الربح الأساسية للاعبين (0-100%)
+                            </p>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label>ميزة الموقع (House Edge)</Label>
+                              <Badge variant="outline">{gameSettings.houseEdgeBoost}%</Badge>
+                            </div>
+                            <Slider
+                              min={0}
+                              max={20}
+                              step={1}
+                              value={[gameSettings.houseEdgeBoost || 5]}
+                              onValueChange={(value) => setGameSettings({...gameSettings, houseEdgeBoost: value[0]})}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              زيادة ميزة الموقع - يقلل فرص الربح لصالح الموقع (0-20%)
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <h3 className="font-semibold text-lg">تتبع سلوك اللاعب</h3>
+                          
+                          <div className="flex items-center justify-between">
+                            <Label>تفعيل تتبع السلوك</Label>
+                            <Button
+                              variant={gameSettings.behaviorTrackingEnabled ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setGameSettings({...gameSettings, behaviorTrackingEnabled: !gameSettings.behaviorTrackingEnabled})}
+                            >
+                              {gameSettings.behaviorTrackingEnabled ? "مفعّل" : "معطّل"}
+                            </Button>
+                          </div>
+
+                          {gameSettings.behaviorTrackingEnabled && (
+                            <>
+                              <div className="space-y-3 mt-4">
+                                <div className="flex justify-between items-center">
+                                  <Label>عقوبة زيادة الرهان بعد الربح</Label>
+                                  <Badge variant="outline">{gameSettings.betIncreaseAfterWinPenalty}%</Badge>
+                                </div>
+                                <Slider
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  value={[gameSettings.betIncreaseAfterWinPenalty || 15]}
+                                  onValueChange={(value) => setGameSettings({...gameSettings, betIncreaseAfterWinPenalty: value[0]})}
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                  عند ربح اللاعب وزيادة مبلغ الرهان، يتم تقليل فرصة الربح بهذه النسبة (0-50%)
+                                </p>
+                              </div>
+
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <Label>عقوبة الانتصارات المتتالية</Label>
+                                  <Badge variant="outline">{gameSettings.consecutiveWinsPenalty}%</Badge>
+                                </div>
+                                <Slider
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  value={[gameSettings.consecutiveWinsPenalty || 10]}
+                                  onValueChange={(value) => setGameSettings({...gameSettings, consecutiveWinsPenalty: value[0]})}
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                  تقليل إضافي لكل انتصار متتالي (0-30%)
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                          <h3 className="font-semibold text-lg">حدود المضاعفات</h3>
+                          
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label>المضاعف الأقصى</Label>
+                              <Input
+                                type="number"
+                                value={gameSettings.maxMultiplier || 50}
+                                onChange={(e) => setGameSettings({...gameSettings, maxMultiplier: parseInt(e.target.value)})}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>حد الرهان الكبير</Label>
+                              <Input
+                                type="number"
+                                value={gameSettings.highBetThreshold || 5000}
+                                onChange={(e) => setGameSettings({...gameSettings, highBetThreshold: parseInt(e.target.value)})}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>المضاعف الأقصى للرهانات الكبيرة</Label>
+                            <Input
+                              type="number"
+                              value={gameSettings.highBetMaxMultiplier || 20}
+                              onChange={(e) => setGameSettings({...gameSettings, highBetMaxMultiplier: parseInt(e.target.value)})}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              عند رهان أكبر من الحد أعلاه، يتم تقليل المضاعف الأقصى لهذه القيمة
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button onClick={handleSaveGameSettings} className="w-full" size="lg">
+                          حفظ إعدادات اللعبة
+                        </Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="settings" className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -1898,7 +2088,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           defaultValue={(paymentSettings?.usdDepositRate || 15000) / 100}
                           onBlur={(e) => {
                             const value = parseFloat(e.target.value) * 100;
-                            setPaymentSettings(prev => prev ? {...prev, usdDepositRate: value} : null);
+                            setPaymentSettings((prev: any) => prev ? {...prev, usdDepositRate: value} : null);
                           }}
                         />
                         <p className="text-xs text-muted-foreground">
@@ -1914,7 +2104,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           defaultValue={(paymentSettings?.usdWithdrawRate || 15000) / 100}
                           onBlur={(e) => {
                             const value = parseFloat(e.target.value) * 100;
-                            setPaymentSettings(prev => prev ? {...prev, usdWithdrawRate: value} : null);
+                            setPaymentSettings((prev: any) => prev ? {...prev, usdWithdrawRate: value} : null);
                           }}
                         />
                         <p className="text-xs text-muted-foreground">

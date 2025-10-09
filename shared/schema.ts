@@ -152,6 +152,12 @@ export const gameSettings = pgTable("game_settings", {
   highBetThreshold: integer("high_bet_threshold").notNull().default(5000), // إذا كان الرهان أكبر من هذا
   highBetMaxMultiplier: integer("high_bet_max_multiplier").notNull().default(20), // أقصى مضاعف للرهانات الكبيرة
   
+  // تتبع سلوك اللاعب
+  behaviorTrackingEnabled: boolean("behavior_tracking_enabled").notNull().default(true), // تفعيل تتبع السلوك
+  betIncreaseAfterWinPenalty: integer("bet_increase_after_win_penalty").notNull().default(15), // نسبة تقليل فرصة الربح عند زيادة الرهان بعد الربح (0-50)
+  consecutiveWinsPenalty: integer("consecutive_wins_penalty").notNull().default(10), // تقليل إضافي لكل انتصار متتالي (0-30)
+  houseEdgeBoost: integer("house_edge_boost").notNull().default(5), // زيادة ميزة الموقع (0-20)
+  
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
