@@ -136,8 +136,8 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(depositAmount);
-    const minLimit = selectedDepositCurrency === "USD" ? method.minAmountUSD : method.minAmount;
-    const maxLimit = selectedDepositCurrency === "USD" ? method.maxAmountUSD : method.maxAmount;
+    const minLimit = selectedDepositCurrency === "USD" ? (method.minAmountUSD || 0) : (method.minAmount || 0);
+    const maxLimit = selectedDepositCurrency === "USD" ? (method.maxAmountUSD || 0) : (method.maxAmount || 0);
 
     if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
       const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
@@ -212,12 +212,15 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < method.minAmount || amount > method.maxAmount) {
+    const minLimit = method.minAmount || 0;
+    const maxLimit = method.maxAmount || 0;
+    
+    if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
       toast({
         title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
         description: language === 'ar'
-          ? `يجب أن يكون السحب بين £${method.minAmount} و £${method.maxAmount}`
-          : `Withdrawal must be between £${method.minAmount} and £${method.maxAmount}`,
+          ? `يجب أن يكون السحب بين £${minLimit.toLocaleString()} و £${maxLimit.toLocaleString()}`
+          : `Withdrawal must be between £${minLimit.toLocaleString()} and £${maxLimit.toLocaleString()}`,
         variant: "destructive",
       });
       return;
@@ -491,8 +494,8 @@ export default function WalletModal({
                     const maxLimit = selectedDepositCurrency === "USD" ? selectedDepositMethodData.maxAmountUSD : selectedDepositMethodData.maxAmount;
                     return (
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
-                        {t('maxAmount', language)}: {currencySymbol}{maxLimit.toLocaleString()}
+                        {t('minAmount', language)}: {currencySymbol}{(minLimit || 0).toLocaleString()} |
+                        {t('maxAmount', language)}: {currencySymbol}{(maxLimit || 0).toLocaleString()}
                       </p>
                     );
                   })()}
@@ -610,8 +613,8 @@ export default function WalletModal({
                   {selectedWithdrawMethodData && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
-                        {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount).toLocaleString()}
+                        {t('minAmount', language)}: £{(selectedWithdrawMethodData.minAmount || 0).toLocaleString()} |
+                        {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount || 0).toLocaleString()}
                       </p>
                       {(() => {
                         const amount = parseFloat(withdrawAmount);
@@ -653,8 +656,8 @@ export default function WalletModal({
                   )}
                   {selectedWithdrawMethodData && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
-                      {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount).toLocaleString()}
+                      {t('minAmount', language)}: £{(selectedWithdrawMethodData.minAmount || 0).toLocaleString()} |
+                      {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount || 0).toLocaleString()}
                     </p>
                   )}
                 </div>
