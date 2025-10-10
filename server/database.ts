@@ -536,6 +536,8 @@ export class SQLiteStorage {
     const methods = db.prepare("SELECT * FROM payment_methods").all() as any[];
     return methods.map(method => ({
       ...method,
+      minAmountUSD: method.min_amount_usd || 0,
+      maxAmountUSD: method.max_amount_usd || 1000,
       isActive: Boolean(method.isActive),
       createdAt: new Date(method.createdAt)
     }));
@@ -720,11 +722,43 @@ export class SQLiteStorage {
   }
 
   async getGameSettings(): Promise<GameSettings> {
+    // إنشاء جدول game_settings إذا لم يكن موجوداً
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS game_settings (
+        id TEXT PRIMARY KEY,
+        baseWinRate INTEGER DEFAULT 50,
+        alwaysLose INTEGER DEFAULT 0,
+        houseEdgeBoost INTEGER DEFAULT 5,
+        behaviorTrackingEnabled INTEGER DEFAULT 1,
+        betIncreaseAfterWinPenalty INTEGER DEFAULT 15,
+        consecutiveWinsPenalty INTEGER DEFAULT 10,
+        maxMultiplier INTEGER DEFAULT 50,
+        highBetThreshold INTEGER DEFAULT 5000,
+        highBetMaxMultiplier INTEGER DEFAULT 20,
+        updatedAt TEXT NOT NULL
+      )
+    `);
+
+    let settings = db.prepare("SELECT * FROM game_settings LIMIT 1").get() as any;
+    
+    if (!settings) {
+      const id = randomUUID();
+      db.prepare(`
+        INSERT INTO game_settings (
+          id, baseWinRate, alwaysLose, houseEdgeBoost, behaviorTrackingEnabled,
+          betIncreaseAfterWinPenalty, consecutiveWinsPenalty, maxMultiplier,
+          highBetThreshold, highBetMaxMultiplier, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(id, 50, 0, 5, 1, 15, 10, 50, 5000, 20, new Date().toISOString());
+      
+      settings = db.prepare("SELECT * FROM game_settings LIMIT 1").get() as any;
+    }
+
     return {
-      id: randomUUID(),
-      baseWinRate: 50,
+      id: settings.id,
+      baseWinRate: settings.baseWinRate,
       targetLossRate: 70,
-      maxMultiplier: 50,
+      maxMultiplier: settings.maxMultiplier,
       strategy: "balanced",
       phase1Rounds: 10,
       phase2Rounds: 20,
@@ -733,18 +767,47 @@ export class SQLiteStorage {
       multiplier10to25Chance: 20,
       multiplier25to50Chance: 8,
       multiplier50PlusChance: 2,
-      highBetThreshold: 5000,
-      highBetMaxMultiplier: 20,
-      behaviorTrackingEnabled: true,
-      betIncreaseAfterWinPenalty: 15,
-      consecutiveWinsPenalty: 10,
-      houseEdgeBoost: 5,
-      alwaysLose: false,
-      updatedAt: new Date(),
+      highBetThreshold: settings.highBetThreshold,
+      highBetMaxMultiplier: settings.highBetMaxMultiplier,
+      behaviorTrackingEnabled: Boolean(settings.behaviorTrackingEnabled),
+      betIncreaseAfterWinPenalty: settings.betIncreaseAfterWinPenalty,
+      consecutiveWinsPenalty: settings.consecutiveWinsPenalty,
+      houseEdgeBoost: settings.houseEdgeBoost,
+      alwaysLose: Boolean(settings.alwaysLose),
+      updatedAt: new Date(settings.updatedAt),
     };
   }
 
   async updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings> {
+    const current = await this.getGameSettings();
+    
+    db.prepare(`
+      UPDATE game_settings 
+      SET baseWinRate = ?,
+          alwaysLose = ?,
+          houseEdgeBoost = ?,
+          behaviorTrackingEnabled = ?,
+          betIncreaseAfterWinPenalty = ?,
+          consecutiveWinsPenalty = ?,
+          maxMultiplier = ?,
+          highBetThreshold = ?,
+          highBetMaxMultiplier = ?,
+          updatedAt = ?
+      WHERE id = ?
+    `).run(
+      settings.baseWinRate ?? current.baseWinRate,
+      settings.alwaysLose ? 1 : 0,
+      settings.houseEdgeBoost ?? current.houseEdgeBoost,
+      settings.behaviorTrackingEnabled ? 1 : 0,
+      settings.betIncreaseAfterWinPenalty ?? current.betIncreaseAfterWinPenalty,
+      settings.consecutiveWinsPenalty ?? current.consecutiveWinsPenalty,
+      settings.maxMultiplier ?? current.maxMultiplier,
+      settings.highBetThreshold ?? current.highBetThreshold,
+      settings.highBetMaxMultiplier ?? current.highBetMaxMultiplier,
+      new Date().toISOString(),
+      current.id
+    );
+
     return this.getGameSettings();
   }
 
