@@ -212,15 +212,16 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(withdrawAmount);
-    const minLimit = method.minAmount || 0;
-    const maxLimit = method.maxAmount || 0;
+    const minLimit = selectedWithdrawCurrency === "USD" ? (method.minAmountUSD || 0) : (method.minAmount || 0);
+    const maxLimit = selectedWithdrawCurrency === "USD" ? (method.maxAmountUSD || 0) : (method.maxAmount || 0);
 
     if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
+      const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
       toast({
         title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
         description: language === 'ar'
-          ? `يجب أن يكون السحب بين £${minLimit.toLocaleString()} و £${maxLimit.toLocaleString()}`
-          : `Withdrawal must be between £${minLimit.toLocaleString()} and £${maxLimit.toLocaleString()}`,
+          ? `يجب أن يكون السحب بين ${currencySymbol}${minLimit.toLocaleString()} و ${currencySymbol}${maxLimit.toLocaleString()}`
+          : `Withdrawal must be between ${currencySymbol}${minLimit.toLocaleString()} and ${currencySymbol}${maxLimit.toLocaleString()}`,
         variant: "destructive",
       });
       return;
@@ -587,18 +588,27 @@ export default function WalletModal({
                   <Input
                     id="withdraw-amount"
                     type="number"
-                    placeholder={language === 'ar' ? 'أدخل المبلغ بالليرة السورية' : 'Enter amount in SYP'}
+                    placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     disabled={isLoading || !selectedWithdrawMethod}
-                    min={selectedWithdrawMethodData?.minAmount || 0}
-                    max={selectedWithdrawMethodData ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance}
+                    min={selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData?.minAmountUSD || 0) : (selectedWithdrawMethodData?.minAmount || 0)}
+                    max={selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData?.maxAmountUSD || 0) : (selectedWithdrawMethodData ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance)}
                   />
                   {selectedWithdrawMethodData && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('minAmount', language)}: £{(selectedWithdrawMethodData.minAmount || 0).toLocaleString()} |
-                        {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount || 0).toLocaleString()}
+                        {(() => {
+                          const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
+                          const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
+                          const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
+                          return (
+                            <>
+                              {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
+                              {t('maxAmount', language)}: {currencySymbol}{selectedWithdrawCurrency === "USD" ? maxLimit.toLocaleString() : Math.min(balance, maxLimit).toLocaleString()}
+                            </>
+                          );
+                        })()}
                       </p>
                       {(() => {
                         const amount = parseFloat(withdrawAmount);
@@ -640,8 +650,17 @@ export default function WalletModal({
                   )}
                   {selectedWithdrawMethodData && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('minAmount', language)}: £{(selectedWithdrawMethodData.minAmount || 0).toLocaleString()} |
-                      {t('maxAmount', language)}: £{Math.min(balance, selectedWithdrawMethodData.maxAmount || 0).toLocaleString()}
+                      {(() => {
+                        const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
+                        const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
+                        const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
+                        return (
+                          <>
+                            {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
+                            {t('maxAmount', language)}: {currencySymbol}{selectedWithdrawCurrency === "USD" ? maxLimit.toLocaleString() : Math.min(balance, maxLimit).toLocaleString()}
+                          </>
+                        );
+                      })()}
                     </p>
                   )}
                 </div>
