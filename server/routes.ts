@@ -22,14 +22,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(result.data);
-      
+
       // إرسال إشعار للمستخدم الجديد إذا كان لديه محيل
       if (result.data.referredBy && result.data.referredBy.trim() !== "") {
         const referrer = await storage.getUserByReferralCode(result.data.referredBy);
         if (referrer) {
           const userLang = user.language || 'en';
           const referrerLang = referrer.language || 'en';
-          
+
           await storage.createNotification({
             userId: user.id,
             title: userLang === 'ar' ? "تم التسجيل من خلال إحالة 💜" : "Registered via Referral 💜",
@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ? `لقد قمت بالتسجيل من خلال إحالة صديقك: ${referrer.username}\nأهلاً وسهلاً 💜`
               : `You registered through your friend: ${referrer.username}\nWelcome 💜`
           });
-          
+
           await storage.createNotification({
             userId: referrer.id,
             title: referrerLang === 'ar' ? "مستخدم جديد من إحالتك 💜" : "New Referral 💜",
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.json({ userId: user.id, referralCode: user.referralCode, message: "Account created successfully" });
     } catch (error) {
       console.error("Registration error:", error);
@@ -148,13 +148,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/generate-reset-token", async (req, res) => {
     try {
       const { userId } = req.body;
-      
+
       const { randomBytes } = await import('crypto');
       const token = randomBytes(32).toString('base64url');
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-      
+
       await storage.createPasswordResetToken(userId, token, expiresAt);
-      
+
       res.json({ 
         token,
         resetLink: `${req.protocol}://${req.get('host')}/reset-password?token=${token}`
@@ -222,10 +222,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { status } = req.body;
-      
+
       const requests = await storage.getDepositRequests();
       const request = requests.find((r) => r.id === id);
-      
+
       if (request && request.status === "pending") {
         const user = await storage.getUserByUsername(request.username);
         if (user) {
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // التحقق من العملة والتحويل التلقائي
             let amountInSYP = request.amount;
             let conversionMessage = "";
-            
+
             if (paymentMethod && paymentMethod.currency === "USD") {
               const settings = await storage.getPaymentSettings();
               const rate = settings.usdDepositRate / 100; // تحويل من المخزن إلى قيمة حقيقية
@@ -247,13 +247,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ? `\n💵 تم التحويل: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`
                 : `\n💵 Converted: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`;
             }
-            
+
             let totalAmount = amountInSYP;
-            
+
             if (paymentMethod && paymentMethod.fee > 0) {
               const bonusAmount = Math.floor((amountInSYP * paymentMethod.fee) / 100);
               totalAmount += bonusAmount;
-              
+
               const userLang = user.language || 'en';
               await storage.createNotification({
                 userId: user.id,
@@ -263,15 +263,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   : `You received an extra bonus of £${bonusAmount.toLocaleString()} from your last deposit. Welcome 💜✅`
               });
             }
-            
+
             await storage.updateUserBalance(user.id, user.balance + totalAmount);
-            
+
             if (user.referredBy) {
               const referrer = await storage.getUserByReferralCode(user.referredBy);
               if (referrer) {
                 const referralBonus = Math.floor((request.amount * 5) / 100);
                 await storage.updateUserBalance(referrer.id, referrer.balance + referralBonus);
-                
+
                 const referrerLang = referrer.language || 'en';
                 await storage.createNotification({
                   userId: referrer.id,
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 });
               }
             }
-            
+
             const userLang = user.language || 'en';
             const depositAmount = paymentMethod && paymentMethod.currency === "USD" ? `$${request.amount}` : `£${request.amount.toLocaleString()}`;
             await storage.createNotification({
@@ -354,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const requests = await storage.getWithdrawRequests();
       const request = requests.find((r) => r.id === id);
-      
+
       if (request && request.status === "pending") {
         const user = await storage.getUserByUsername(request.username);
         if (user) {
@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // التحقق من العملة والتحويل التلقائي
             let withdrawMessage = "";
             let displayAmount = `£${request.amount.toLocaleString()}`;
-            
+
             if (paymentMethod && paymentMethod.currency === "USD") {
               const settings = await storage.getPaymentSettings();
               const rate = settings.usdWithdrawRate / 100; // تحويل من المخزن إلى قيمة حقيقية
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ? `\n💵 سيتم السحب: $${amountInUSD} (£${request.amount.toLocaleString()} ÷ ${rate.toFixed(2)})`
                 : `\n💵 Withdrawing: $${amountInUSD} (£${request.amount.toLocaleString()} ÷ ${rate.toFixed(2)})`;
             }
-            
+
             const userLang = user.language || 'en';
             await storage.createNotification({
               userId: user.id,
@@ -389,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (status === "rejected") {
             // إعادة المبلغ للمستخدم
             await storage.updateUserBalance(user.id, user.balance + request.amount);
-            
+
             await storage.createNotification({
               userId: user.id,
               title: "تم رفض طلب السحب 🚫",
@@ -424,14 +424,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/payment-settings", async (req, res) => {
+  app.post("/api/payment-settings", async (req, res) => {
     try {
-      const result = insertPaymentSettingsSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid input", errors: result.error });
-      }
+      // التأكد من تحديث أسعار الصرف
+      const updatedSettings = {
+        ...req.body,
+        usdDepositRate: req.body.usdDepositRate || 1140000, // 11400 * 100
+        usdWithdrawRate: req.body.usdWithdrawRate || 1170000  // 11700 * 100
+      };
 
-      const settings = await storage.updatePaymentSettings(result.data);
+      const settings = await storage.updatePaymentSettings(updatedSettings);
       res.json(settings);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -514,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { betAmount, won, multiplier, newBalance } = req.body;
-      
+
       // استخدام الدالة الجديدة إذا تم إرسال البيانات الكاملة
       if (betAmount !== undefined && multiplier !== undefined && newBalance !== undefined) {
         await storage.updateUserGameStats(id, {
@@ -528,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { balance } = req.body;
         await storage.updateUserStats(id, balance, won);
       }
-      
+
       res.json({ message: "Stats updated" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -573,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, code } = req.body;
       const result = await storage.redeemPromoCode(userId, code);
-      
+
       if (result.success) {
         res.json({ message: "Promo code redeemed", reward: result.reward });
       } else {
@@ -696,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { title, message } = req.body;
       const users = await storage.getAllUsers();
-      
+
       for (const user of users) {
         await storage.createNotification({
           userId: user.id,
@@ -704,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message
         });
       }
-      
+
       res.json({ message: "Broadcast sent to all users", count: users.length });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -715,17 +717,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { usernameOrEmail, title, message } = req.body;
       const user = await storage.getUserByUsernameOrEmail(usernameOrEmail);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       await storage.createNotification({
         userId: user.id,
         title,
         message
       });
-      
+
       res.json({ message: "Message sent successfully" });
     } catch (error) {
       res.status(500).json({ message: "Server error" });
