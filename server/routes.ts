@@ -639,21 +639,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/payment-methods/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const result = insertPaymentMethodSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid input", errors: result.error });
-      }
-      
-      const updatedMethod = await storage.updatePaymentMethod(id, result.data);
-      res.json({ message: "Payment method updated", paymentMethod: updatedMethod });
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
   app.patch("/api/payment-methods/:id", async (req, res) => {
     try {
       const { id } = req.params;

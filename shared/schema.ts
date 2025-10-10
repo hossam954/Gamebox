@@ -173,16 +173,12 @@ export const paymentMethods = pgTable("payment_methods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: text("type").notNull().default("both"), // "deposit", "withdraw", "both"
-  currency: text("currency").notNull().default("SYP"), // "SYP", "USD", "both", "USDT", etc.
+  currency: text("currency").notNull().default("SYP"), // "SYP", "USD", or "both"
   minAmount: integer("min_amount").notNull().default(0),
   maxAmount: integer("max_amount").notNull().default(100000),
   minAmountUSD: integer("min_amount_usd").notNull().default(0),
   maxAmountUSD: integer("max_amount_usd").notNull().default(1000),
-  fee: integer("fee").notNull().default(0), // رسوم عامة أو رسوم الإيداع
-  withdrawFee: integer("withdraw_fee").notNull().default(0), // رسوم السحب منفصلة
-  depositBonus: integer("deposit_bonus").notNull().default(0), // بونص الإيداع (نسبة مئوية)
-  exchangeRate: integer("exchange_rate").notNull().default(0), // سعر الصرف للعملات الرقمية (مضروب في 100)
-  networks: text("networks").notNull().default("[]"), // JSON array للشبكات مثل [{"name":"BEP20","address":"0x123..."},{"name":"TRC20","address":"T123..."}]
+  fee: integer("fee").notNull().default(0),
   noteEn: text("note_en").notNull().default(""),
   noteAr: text("note_ar").notNull().default(""),
   isActive: boolean("is_active").notNull().default(true),
@@ -196,10 +192,6 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick
   minAmount: true,
   maxAmount: true,
   fee: true,
-  withdrawFee: true,
-  depositBonus: true,
-  exchangeRate: true,
-  networks: true,
   noteEn: true,
   noteAr: true,
 }).extend({
