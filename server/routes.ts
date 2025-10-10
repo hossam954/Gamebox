@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // تحقق من currency في طلب الإيداع نفسه أو من طريقة الدفع
             const depositCurrency = (request as any).currency || paymentMethod?.currency;
-            
+
             if (depositCurrency === "USD") {
               const settings = await storage.getPaymentSettings();
               const rate = settings.usdDepositRate;
@@ -249,8 +249,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const userLang = user.language || 'en';
               displayAmount = `$${request.amount}`;
               conversionMessage = userLang === 'ar' 
-                ? `\n💵 تم التحويل: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`
-                : `\n💵 Converted: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`;
+                ? `\n💵 تم التحويل: $${request.amount} × ${rate.toLocaleString()} = £${amountInSYP.toLocaleString()}`
+                : `\n💵 Converted: $${request.amount} × ${rate.toLocaleString()} = £${amountInSYP.toLocaleString()}`;
             }
 
             let totalAmount = amountInSYP;
@@ -329,6 +329,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // TODO: Implement minimum withdrawal limits for SYP and USD
+      // TODO: Ensure withdrawal amounts are displayed with decimal places for SYP
       if (user.balance < result.data.amount) {
         return res.status(400).json({ message: "Insufficient balance" });
       }
@@ -371,6 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let withdrawMessage = "";
             let displayAmount = `£${request.amount.toLocaleString()}`;
 
+            // Ensure withdrawal amounts are displayed with decimal places for SYP (if applicable)
             if (paymentMethod && paymentMethod.currency === "USD") {
               const settings = await storage.getPaymentSettings();
               const rate = settings.usdWithdrawRate; // استخدام القيمة مباشرة

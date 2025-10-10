@@ -635,18 +635,8 @@ export default function WalletModal({
                   {selectedWithdrawMethodData && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {(() => {
-                          const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
-                          const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
-                          const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
-                          const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : (maxLimit > 0 ? Math.min(balance, maxLimit) : balance);
-                          return (
-                            <>
-                              {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
-                              {t('maxAmount', language)}: {currencySymbol}{displayMaxLimit.toLocaleString()}
-                            </>
-                          );
-                        })()}
+                        {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
+                        {t('maxAmount', language)}: £{(selectedWithdrawMethodData.maxAmount > 0 ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance).toLocaleString()}
                       </p>
                       {(() => {
                         const amount = parseFloat(withdrawAmount);
@@ -655,7 +645,7 @@ export default function WalletModal({
                           const rate = paymentSettings.usdWithdrawRate;
                           const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
                           const netAmount = amount - fee;
-                          const amountInUSD = Math.floor(netAmount / rate);
+                          const amountInUSD = (netAmount / rate).toFixed(2);
 
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -666,7 +656,7 @@ export default function WalletModal({
                                 ({language === 'ar' ? 'المبلغ' : 'Amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'رسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} = £{netAmount.toLocaleString()})
                               </p>
                               <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                (£{netAmount.toLocaleString()} ÷ {rate.toFixed(2)} = ${amountInUSD})
+                                (£{netAmount.toLocaleString()} ÷ {rate.toLocaleString()} = ${amountInUSD})
                               </p>
                             </div>
                           );
@@ -692,18 +682,8 @@ export default function WalletModal({
                   )}
                   {selectedWithdrawMethodData && (!withdrawAmount || isNaN(parseFloat(withdrawAmount))) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {(() => {
-                        const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
-                        const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
-                        const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
-                        const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : (maxLimit > 0 ? Math.min(balance, maxLimit) : balance);
-                        return (
-                          <>
-                            {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
-                            {t('maxAmount', language)}: {currencySymbol}{displayMaxLimit.toLocaleString()}
-                          </>
-                        );
-                      })()}
+                      {t('minAmount', language)}: £{selectedWithdrawMethodData.minAmount.toLocaleString()} |
+                      {t('maxAmount', language)}: £{(selectedWithdrawMethodData.maxAmount > 0 ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance).toLocaleString()}
                     </p>
                   )}
                 </div>
