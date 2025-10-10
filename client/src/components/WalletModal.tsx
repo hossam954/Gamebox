@@ -1,3 +1,4 @@
+replit_final_file>
 import { useState, useEffect } from "react";
 import { Wallet, TrendingUp, TrendingDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -212,14 +213,14 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(withdrawAmount);
-    
+
     // Convert USD to SYP if needed for balance check and backend processing
     let amountInSYP = amount;
     if (selectedWithdrawCurrency === "USD" && paymentSettings) {
       const rate = paymentSettings.usdWithdrawRate || 11400;
       amountInSYP = Math.floor(amount * rate);
     }
-    
+
     const minLimit = selectedWithdrawCurrency === "USD" ? (method.minAmountUSD || 0) : (method.minAmount || 0);
     const maxLimit = selectedWithdrawCurrency === "USD" ? (method.maxAmountUSD || 0) : (method.maxAmount || 0);
 
@@ -273,7 +274,7 @@ export default function WalletModal({
       if (response.ok) {
         const fee = Math.floor((amountInSYP * method.fee) / 100);
         const netAmount = amountInSYP - fee;
-        
+
         const displayAmount = selectedWithdrawCurrency === "USD" ? `$${amount}` : `£${amount}`;
 
         toast({
@@ -491,7 +492,9 @@ export default function WalletModal({
                     min={selectedDepositCurrency === "USD" ? selectedDepositMethodData?.minAmountUSD || 0 : selectedDepositMethodData?.minAmount || 0}
                     max={selectedDepositCurrency === "USD" ? selectedDepositMethodData?.maxAmountUSD || 0 : selectedDepositMethodData?.maxAmount || 0}
                   />
-                  {selectedDepositMethodData && (() => {
+                  {selectedDepositMethodData && (
+                    <>
+                      {(() => {
                     const currencySymbol = selectedDepositCurrency === "USD" ? "$" : "£";
                     const minLimit = selectedDepositCurrency === "USD" ? selectedDepositMethodData.minAmountUSD : selectedDepositMethodData.minAmount;
                     const maxLimit = selectedDepositCurrency === "USD" ? selectedDepositMethodData.maxAmountUSD : selectedDepositMethodData.maxAmount;
@@ -502,12 +505,14 @@ export default function WalletModal({
                       </p>
                     );
                   })()}
-                  {getConversionInfo("deposit") && (
-                    <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200">
-                      <p className="text-sm text-green-800 dark:text-green-200">
-                        💰 {getConversionInfo("deposit")?.original} = {getConversionInfo("deposit")?.converted}
-                      </p>
-                    </div>
+                      {getConversionInfo("deposit") && (
+                        <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200">
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            💰 {getConversionInfo("deposit")?.original} = {getConversionInfo("deposit")?.converted}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -622,7 +627,7 @@ export default function WalletModal({
                       </p>
                       {(() => {
                         const amount = parseFloat(withdrawAmount);
-                        
+
                         if (selectedWithdrawCurrency === "USD" && paymentSettings) {
                           const rate = paymentSettings.usdWithdrawRate || 11400;
                           const amountInSYP = Math.floor(amount * rate);
@@ -647,7 +652,7 @@ export default function WalletModal({
                         } else {
                           const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
                           const netAmount = amount - fee;
-                          
+
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
@@ -708,3 +713,4 @@ export default function WalletModal({
     </Dialog>
   );
 }
+</replit_final_file>

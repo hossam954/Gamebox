@@ -2023,6 +2023,29 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           </div>
                         </div>
 
+                        <div className="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <h3 className="font-semibold text-lg">حدود السحب</h3>
+                          
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label>الحد الأدنى للسحب (£)</Label>
+                              <Input
+                                type="number"
+                                value={paymentSettings?.minWithdraw || 100}
+                                onChange={(e) => setPaymentSettings({...paymentSettings, minWithdraw: parseInt(e.target.value)})}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>الحد الأقصى للسحب (£)</Label>
+                              <Input
+                                type="number"
+                                value={paymentSettings?.maxWithdraw || 50000}
+                                onChange={(e) => setPaymentSettings({...paymentSettings, maxWithdraw: parseInt(e.target.value)})}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-300 dark:border-red-700">
                           <h3 className="font-semibold text-lg text-red-700 dark:text-red-400">⚠️ وضع الخسارة الدائمة</h3>
                           <div className="flex items-center justify-between">
