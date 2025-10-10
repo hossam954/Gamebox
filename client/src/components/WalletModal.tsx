@@ -712,4 +712,3 @@ export default function WalletModal({
     </Dialog>
   );
 }
-</replit_final_file>
