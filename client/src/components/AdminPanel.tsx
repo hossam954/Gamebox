@@ -132,7 +132,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         console.error('Error fetching settings:', error);
       }
     };
-    
+
     const fetchGameSettings = async () => {
       try {
         const response = await fetch('/api/game-settings');
@@ -144,7 +144,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         console.error('Error fetching game settings:', error);
       }
     };
-    
+
     fetchSettings();
     fetchGameSettings();
   }, []);
@@ -182,20 +182,20 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
     try {
       const usdDepositInput = document.getElementById('usdDepositRate') as HTMLInputElement;
       const usdWithdrawInput = document.getElementById('usdWithdrawRate') as HTMLInputElement;
-      
+
       const usdDepositValue = parseFloat(usdDepositInput?.value || '11400');
       const usdWithdrawValue = parseFloat(usdWithdrawInput?.value || '11700');
-      
+
       // حفظ القيمة كما هي مباشرة
       const usdDepositRate = Math.round(usdDepositValue);
       const usdWithdrawRate = Math.round(usdWithdrawValue);
-      
+
       console.log('Saving settings:', { winRate, usdDepositRate, usdWithdrawRate });
-      
+
       const response = await fetch('/api/payment-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           winRate,
           usdDepositRate,
           usdWithdrawRate
@@ -435,7 +435,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           navigator.clipboard.writeText(tokenData.resetLink);
-          
+
           await fetch(`/api/password-recovery/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -453,13 +453,13 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: "rejected" }),
         });
-        
+
         toast({
           title: "Request rejected",
           description: "Password recovery request has been rejected",
         });
       }
-      
+
       fetchPasswordRecoveryRequests();
     } catch (error) {
       toast({
@@ -624,10 +624,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
   const totalWithdrawals = withdrawRequests
     .filter(req => req.status === "approved")
     .reduce((sum, req) => sum + (req.amount ?? 0), 0);
-  
+
   const pendingDeposits = depositRequests.filter((r) => r.status === "pending").length;
   const pendingWithdrawals = withdrawRequests.filter((r) => r.status === "pending").length;
-  
+
   const pendingRequests = depositRequests.filter((r) => r.status === "pending").length +
     withdrawRequests.filter((r) => r.status === "pending").length +
     passwordRecoveryRequests.filter((r) => r.status === "pending").length +
@@ -1899,7 +1899,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                       <>
                         <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                           <h3 className="font-semibold text-lg">الإعدادات الأساسية</h3>
-                          
+
                           <div className="space-y-3">
                             <div className="flex justify-between items-center">
                               <Label>نسبة الربح الأساسية</Label>
@@ -1937,7 +1937,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
                         <div className="space-y-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                           <h3 className="font-semibold text-lg">تتبع سلوك اللاعب</h3>
-                          
+
                           <div className="flex items-center justify-between">
                             <Label>تفعيل تتبع السلوك</Label>
                             <Button
@@ -1990,7 +1990,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
                         <div className="space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                           <h3 className="font-semibold text-lg">حدود المضاعفات</h3>
-                          
+
                           <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                               <Label>المضاعف الأقصى</Label>
@@ -2097,7 +2097,6 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           id="usdDepositRate"
                           type="number"
                           step="1"
-                          placeholder="11400"
                           defaultValue={paymentSettings?.usdDepositRate || 11400}
                         />
                         <p className="text-xs text-muted-foreground">
@@ -2110,7 +2109,6 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           id="usdWithdrawRate"
                           type="number"
                           step="1"
-                          placeholder="11700"
                           defaultValue={paymentSettings?.usdWithdrawRate || 11700}
                         />
                         <p className="text-xs text-muted-foreground">
