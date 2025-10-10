@@ -458,14 +458,6 @@ export default function WalletModal({
                   </div>
                 )}
 
-                {selectedDepositMethod && paymentSettings && selectedDepositCurrency === "USD" && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate || 11400).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-
                 {selectedDepositMethod && (
                   <div className="p-3 bg-muted rounded-lg">
                     {selectedDepositMethodData && (language === 'ar' ? selectedDepositMethodData.noteAr : selectedDepositMethodData.noteEn) && (
@@ -577,14 +569,6 @@ export default function WalletModal({
                       <option value="SYP">£ {language === 'ar' ? 'ليرة سورية' : 'SYP'}</option>
                       <option value="USD">$ {language === 'ar' ? 'دولار أمريكي' : 'USD'}</option>
                     </select>
-                  </div>
-                )}
-
-                {selectedWithdrawMethod && paymentSettings && selectedWithdrawCurrency === "USD" && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate || 11400).toLocaleString()}
-                    </p>
                   </div>
                 )}
 
