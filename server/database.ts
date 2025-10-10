@@ -450,25 +450,39 @@ export class SQLiteStorage {
 
   async updatePaymentSettings(settings: InsertPaymentSettings): Promise<PaymentSettings> {
     const current = await this.getPaymentSettings();
+    
+    const updatedSettings = {
+      withdrawFee: settings.withdrawFee ?? current.withdrawFee,
+      minDeposit: settings.minDeposit ?? current.minDeposit,
+      maxDeposit: settings.maxDeposit ?? current.maxDeposit,
+      minWithdraw: settings.minWithdraw ?? current.minWithdraw,
+      maxWithdraw: settings.maxWithdraw ?? current.maxWithdraw,
+      depositAddress: settings.depositAddress ?? current.depositAddress,
+      paymentMethod: settings.paymentMethod ?? current.paymentMethod,
+      winRate: settings.winRate ?? current.winRate,
+      usdDepositRate: settings.usdDepositRate ?? current.usdDepositRate,
+      usdWithdrawRate: settings.usdWithdrawRate ?? current.usdWithdrawRate,
+    };
+
     db.prepare(`
       UPDATE payment_settings 
       SET withdrawFee = ?, minDeposit = ?, maxDeposit = ?, minWithdraw = ?, maxWithdraw = ?, depositAddress = ?, paymentMethod = ?, winRate = ?, usdDepositRate = ?, usdWithdrawRate = ?
       WHERE id = ?
     `).run(
-      settings.withdrawFee,
-      settings.minDeposit,
-      settings.maxDeposit,
-      settings.minWithdraw,
-      settings.maxWithdraw,
-      settings.depositAddress,
-      settings.paymentMethod,
-      settings.winRate ?? current.winRate,
-      settings.usdDepositRate ?? current.usdDepositRate,
-      settings.usdWithdrawRate ?? current.usdWithdrawRate,
+      updatedSettings.withdrawFee,
+      updatedSettings.minDeposit,
+      updatedSettings.maxDeposit,
+      updatedSettings.minWithdraw,
+      updatedSettings.maxWithdraw,
+      updatedSettings.depositAddress,
+      updatedSettings.paymentMethod,
+      updatedSettings.winRate,
+      updatedSettings.usdDepositRate,
+      updatedSettings.usdWithdrawRate,
       current.id
     );
 
-    return { ...current, ...settings };
+    return { id: current.id, ...updatedSettings };
   }
 
   async createPaymentMethod(data: InsertPaymentMethod): Promise<PaymentMethod> {
@@ -727,6 +741,43 @@ export class SQLiteStorage {
     multiplier: number | null;
     newBalance: number;
   }): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+
+    const profit = stats.won
+      ? (stats.betAmount * (stats.multiplier || 0)) - stats.betAmount
+      : -stats.betAmount;
+
+    // تحديث الإحصائيات
+    const currentStreak = stats.won ? (user.currentStreak + 1) : 0;
+    const longestStreak = stats.won && currentStreak > user.longestStreak ? currentStreak : user.longestStreak;
+
+    db.prepare(`
+      UPDATE users 
+      SET balance = ?,
+          totalWins = totalWins + ?,
+          totalLosses = totalLosses + ?,
+          totalBetsCount = totalBetsCount + 1,
+          totalWagered = totalWagered + ?,
+          lifetimeProfit = lifetimeProfit + ?,
+          sessionBetsCount = sessionBetsCount + 1,
+          lastBetAmount = ?,
+          lastGameResult = ?,
+          currentStreak = ?,
+          longestStreak = ?
+      WHERE id = ?
+    `).run(
+      stats.newBalance,
+      stats.won ? 1 : 0,
+      stats.won ? 0 : 1,
+      stats.betAmount,
+      profit,
+      stats.betAmount,
+      stats.won ? "win" : "loss",
+      currentStreak,
+      longestStreak,
+      userId
+    );
   }
 }
 

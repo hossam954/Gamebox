@@ -426,9 +426,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payment-settings", async (req, res) => {
     try {
+      console.log("Updating payment settings:", req.body);
       const settings = await storage.updatePaymentSettings(req.body);
+      console.log("Settings updated successfully:", settings);
       res.json(settings);
     } catch (error) {
+      console.error("Error updating payment settings:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
