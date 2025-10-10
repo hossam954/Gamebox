@@ -1,4 +1,3 @@
-replit_final_file>
 import { useState, useEffect } from "react";
 import { Wallet, TrendingUp, TrendingDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
