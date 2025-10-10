@@ -2023,6 +2023,27 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           </div>
                         </div>
 
+                        <div className="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-300 dark:border-red-700">
+                          <h3 className="font-semibold text-lg text-red-700 dark:text-red-400">⚠️ وضع الخسارة الدائمة</h3>
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <Label htmlFor="alwaysLose" className="text-base font-medium">
+                                تفعيل وضع "خسارة دائمة"
+                              </Label>
+                              <p className="text-sm text-muted-foreground">
+                                عند التفعيل: الصندوق سيكون فقط خسارة بدون أي ربح مهما كان
+                              </p>
+                            </div>
+                            <input
+                              type="checkbox"
+                              id="alwaysLose"
+                              checked={gameSettings.alwaysLose || false}
+                              onChange={(e) => setGameSettings({...gameSettings, alwaysLose: e.target.checked})}
+                              className="h-6 w-6 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                            />
+                          </div>
+                        </div>
+
                         <Button onClick={handleSaveGameSettings} className="w-full" size="lg">
                           حفظ إعدادات اللعبة
                         </Button>

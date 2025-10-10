@@ -370,12 +370,17 @@ export default function GamePage() {
       // التأكد من أن نسبة الربح في حدود منطقية
       adjustedWinRate = Math.max(5, Math.min(95, adjustedWinRate));
 
-      const lossThreshold = 100 - adjustedWinRate;
-
-      if (random < lossThreshold) {
-        // خسارة
+      // تحقق من وضع الخسارة الدائمة
+      if (gameSettings.alwaysLose) {
+        // وضع الخسارة الدائمة - لا ربح مطلقاً
         prizeMultiplier = null;
       } else {
+        const lossThreshold = 100 - adjustedWinRate;
+
+        if (random < lossThreshold) {
+          // خسارة
+          prizeMultiplier = null;
+        } else {
         // فوز - توزيع المضاعفات الذكي
         const winRandom = Math.random() * 100;
         const totalChance = gameSettings.multiplier2to5Chance + gameSettings.multiplier5to10Chance +
@@ -418,6 +423,7 @@ export default function GamePage() {
 
         // التأكد من أن المضاعف في الحد المسموح
         prizeMultiplier = Math.min(prizeMultiplier, dynamicMaxMultiplier);
+        }
       }
 
       setPrize(prizeMultiplier);
