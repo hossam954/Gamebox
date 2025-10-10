@@ -158,6 +158,9 @@ export const gameSettings = pgTable("game_settings", {
   consecutiveWinsPenalty: integer("consecutive_wins_penalty").notNull().default(10), // تقليل إضافي لكل انتصار متتالي (0-30)
   houseEdgeBoost: integer("house_edge_boost").notNull().default(5), // زيادة ميزة الموقع (0-20)
   
+  // وضع الخسارة الدائمة
+  alwaysLose: boolean("always_lose").notNull().default(false), // عند التفعيل: الصندوق فقط خسارة بدون أي ربح
+  
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

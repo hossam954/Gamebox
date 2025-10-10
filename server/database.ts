@@ -739,6 +739,7 @@ export class SQLiteStorage {
       betIncreaseAfterWinPenalty: 15,
       consecutiveWinsPenalty: 10,
       houseEdgeBoost: 5,
+      alwaysLose: false,
       updatedAt: new Date(),
     };
   }
