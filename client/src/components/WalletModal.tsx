@@ -616,7 +616,7 @@ export default function WalletModal({
                           const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
                           const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
                           const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
-                          const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : Math.min(balance, maxLimit);
+                          const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : (maxLimit > 0 ? Math.min(balance, maxLimit) : balance);
                           return (
                             <>
                               {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
@@ -675,7 +675,7 @@ export default function WalletModal({
                         const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
                         const minLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.minAmountUSD || 0) : (selectedWithdrawMethodData.minAmount || 0);
                         const maxLimit = selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData.maxAmountUSD || 0) : (selectedWithdrawMethodData.maxAmount || 0);
-                        const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : Math.min(balance, maxLimit || 0);
+                        const displayMaxLimit = selectedWithdrawCurrency === "USD" ? maxLimit : (maxLimit > 0 ? Math.min(balance, maxLimit) : balance);
                         return (
                           <>
                             {t('minAmount', language)}: {currencySymbol}{minLimit.toLocaleString()} |
