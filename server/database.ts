@@ -735,6 +735,10 @@ export class SQLiteStorage {
       multiplier50PlusChance: 2,
       highBetThreshold: 5000,
       highBetMaxMultiplier: 20,
+      behaviorTrackingEnabled: true,
+      betIncreaseAfterWinPenalty: 15,
+      consecutiveWinsPenalty: 10,
+      houseEdgeBoost: 5,
       updatedAt: new Date(),
     };
   }
