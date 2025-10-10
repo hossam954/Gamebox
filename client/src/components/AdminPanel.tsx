@@ -191,8 +191,6 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           ...paymentSettings,
-          usdDepositRate,
-          usdWithdrawRate,
           winRate,
           usdDepositRate,
           usdWithdrawRate
@@ -200,9 +198,11 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       });
 
       if (response.ok) {
+        const data = await response.json();
+        setPaymentSettings(data);
         toast({
           title: "تم حفظ الإعدادات بنجاح",
-          description: "تم حفظ جميع الإعدادات بنجاح.",
+          description: `سعر الإيداع: ${(data.usdDepositRate / 100).toFixed(2)} - سعر السحب: ${(data.usdWithdrawRate / 100).toFixed(2)}`,
         });
       } else {
         toast({
