@@ -238,9 +238,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let amountInSYP = request.amount;
             let conversionMessage = "";
 
-            if (paymentMethod && paymentMethod.currency === "USD") {
+            // تحقق من currency في طلب الإيداع نفسه
+            if (request.currency === "USD") {
               const settings = await storage.getPaymentSettings();
-              const rate = settings.usdDepositRate; // استخدام القيمة مباشرة
+              const rate = settings.usdDepositRate;
               amountInSYP = Math.floor(request.amount * rate);
               const userLang = user.language || 'en';
               conversionMessage = userLang === 'ar' 
