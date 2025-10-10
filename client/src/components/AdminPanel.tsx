@@ -186,6 +186,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       const usdDepositValue = parseFloat(usdDepositInput?.value || '114');
       const usdWithdrawValue = parseFloat(usdWithdrawInput?.value || '117');
       
+      // حفظ القيمة كما هي بدون ضرب في 100
       const usdDepositRate = Math.round(usdDepositValue * 100);
       const usdWithdrawRate = Math.round(usdWithdrawValue * 100);
       

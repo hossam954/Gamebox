@@ -93,8 +93,9 @@ db.exec(`
     maxWithdraw INTEGER DEFAULT 50000,
     depositAddress TEXT DEFAULT '',
     paymentMethod TEXT DEFAULT 'Bank Transfer',
-    usdDepositRate INTEGER DEFAULT 15000,
-    usdWithdrawRate INTEGER DEFAULT 15000
+    winRate INTEGER DEFAULT 50,
+    usdDepositRate INTEGER DEFAULT 11400,
+    usdWithdrawRate INTEGER DEFAULT 11700
   );
 
   CREATE TABLE IF NOT EXISTS payment_methods (
@@ -182,14 +183,21 @@ try {
   // Column already exists
 }
 
+// Add winRate column if it doesn't exist
+try {
+  db.prepare("ALTER TABLE payment_settings ADD COLUMN winRate INTEGER DEFAULT 50").run();
+} catch (e) {
+  // Column already exists
+}
+
 // Initialize payment settings if not exists
 const settingsExists = db.prepare("SELECT * FROM payment_settings").get();
 if (!settingsExists) {
   const settingsId = randomUUID();
   db.prepare(`
-    INSERT INTO payment_settings (id, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod, usdDepositRate, usdWithdrawRate)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(settingsId, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet", 15000, 15000);
+    INSERT INTO payment_settings (id, withdrawFee, minDeposit, maxDeposit, minWithdraw, maxWithdraw, depositAddress, paymentMethod, winRate, usdDepositRate, usdWithdrawRate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(settingsId, 5, 50, 50000, 100, 50000, "SYP-WALLET-ADDRESS-12345", "Bank Transfer / Mobile Wallet", 50, 11400, 11700);
 }
 
 export class SQLiteStorage {
