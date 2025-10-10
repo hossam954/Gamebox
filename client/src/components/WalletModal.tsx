@@ -213,26 +213,39 @@ export default function WalletModal({
 
     const amount = parseFloat(withdrawAmount);
 
-    // Convert USD to SYP if needed for balance check and backend processing
-    let amountInSYP = amount;
-    if (selectedWithdrawCurrency === "USD" && paymentSettings) {
-      const rate = paymentSettings.usdWithdrawRate || 11400;
-      amountInSYP = Math.floor(amount * rate);
-    }
-
+    // للدولار: المبلغ المدخل بالليرة السورية
+    const amountInSYP = amount;
+    
     const minLimit = selectedWithdrawCurrency === "USD" ? (method.minAmountUSD || 0) : (method.minAmount || 0);
     const maxLimit = selectedWithdrawCurrency === "USD" ? (method.maxAmountUSD || 0) : (method.maxAmount || 0);
 
-    if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
-      const currencySymbol = selectedWithdrawCurrency === "USD" ? "$" : "£";
-      toast({
-        title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
-        description: language === 'ar'
-          ? `يجب أن يكون السحب بين ${currencySymbol}${minLimit.toLocaleString()} و ${currencySymbol}${maxLimit.toLocaleString()}`
-          : `Withdrawal must be between ${currencySymbol}${minLimit.toLocaleString()} and ${currencySymbol}${maxLimit.toLocaleString()}`,
-        variant: "destructive",
-      });
-      return;
+    // التحقق من الحدود بناءً على العملة
+    if (selectedWithdrawCurrency === "USD" && paymentSettings) {
+      const rate = paymentSettings.usdWithdrawRate;
+      const minSYP = Math.floor(minLimit * rate);
+      const maxSYP = Math.floor(maxLimit * rate);
+      
+      if (isNaN(amount) || amount < minSYP || amount > maxSYP) {
+        toast({
+          title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
+          description: language === 'ar'
+            ? `يجب أن يكون السحب بين £${minSYP.toLocaleString()} و £${maxSYP.toLocaleString()}`
+            : `Withdrawal must be between £${minSYP.toLocaleString()} and £${maxSYP.toLocaleString()}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
+        toast({
+          title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
+          description: language === 'ar'
+            ? `يجب أن يكون السحب بين £${minLimit.toLocaleString()} و £${maxLimit.toLocaleString()}`
+            : `Withdrawal must be between £${minLimit.toLocaleString()} and £${maxLimit.toLocaleString()}`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     if (amountInSYP > balance) {
@@ -274,13 +287,23 @@ export default function WalletModal({
         const fee = Math.floor((amountInSYP * method.fee) / 100);
         const netAmount = amountInSYP - fee;
 
-        const displayAmount = selectedWithdrawCurrency === "USD" ? `$${amount}` : `£${amount}`;
+        let displayMessage = "";
+        if (selectedWithdrawCurrency === "USD" && paymentSettings) {
+          const rate = paymentSettings.usdWithdrawRate;
+          const amountInUSD = Math.floor(amountInSYP / rate);
+          const netUSD = Math.floor(netAmount / rate);
+          displayMessage = language === 'ar'
+            ? `طلب السحب بمبلغ £${amountInSYP.toLocaleString()} (سيتم استلام: $${netUSD} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
+            : `Your withdrawal of £${amountInSYP.toLocaleString()} (will receive: $${netUSD} after ${method.fee}% fee) is pending admin approval`;
+        } else {
+          displayMessage = language === 'ar'
+            ? `طلب السحب بمبلغ £${amountInSYP.toLocaleString()} (صافي: £${netAmount.toLocaleString()} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
+            : `Your withdrawal of £${amountInSYP.toLocaleString()} (net: £${netAmount.toLocaleString()} after ${method.fee}% fee) is pending admin approval`;
+        }
 
         toast({
           title: language === 'ar' ? "تم إرسال طلب السحب" : "Withdrawal request submitted",
-          description: language === 'ar'
-            ? `طلب السحب بمبلغ ${displayAmount} (${selectedWithdrawCurrency === "USD" ? `£${amountInSYP.toLocaleString()} - ` : ""}صافي: £${netAmount.toLocaleString()} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
-            : `Your withdrawal of ${displayAmount} (${selectedWithdrawCurrency === "USD" ? `£${amountInSYP.toLocaleString()} - ` : ""}net: £${netAmount.toLocaleString()} after ${method.fee}% fee) is pending admin approval`,
+          description: displayMessage,
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
@@ -597,17 +620,17 @@ export default function WalletModal({
 
                 <div>
                   <Label htmlFor="withdraw-amount">
-                    {t('amount', language)} ({selectedWithdrawCurrency === "USD" ? "$" : "£"})
+                    {t('amount', language)} (£)
                   </Label>
                   <Input
                     id="withdraw-amount"
                     type="number"
-                    placeholder={language === 'ar' ? 'أدخل المبلغ' : 'Enter amount'}
+                    placeholder={language === 'ar' ? 'أدخل المبلغ بالليرة السورية' : 'Enter amount in SYP'}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     disabled={isLoading || !selectedWithdrawMethod}
-                    min={selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData?.minAmountUSD || 0) : (selectedWithdrawMethodData?.minAmount || 0)}
-                    max={selectedWithdrawCurrency === "USD" ? (selectedWithdrawMethodData?.maxAmountUSD || 0) : (selectedWithdrawMethodData ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance)}
+                    min={selectedWithdrawMethodData?.minAmount || 0}
+                    max={selectedWithdrawMethodData ? Math.min(balance, selectedWithdrawMethodData.maxAmount) : balance}
                   />
                   {selectedWithdrawMethodData && withdrawAmount && !isNaN(parseFloat(withdrawAmount)) && (
                     <>
@@ -629,24 +652,22 @@ export default function WalletModal({
                         const amount = parseFloat(withdrawAmount);
 
                         if (selectedWithdrawCurrency === "USD" && paymentSettings) {
-                          const rate = paymentSettings.usdWithdrawRate || 11400;
-                          const amountInSYP = Math.floor(amount * rate);
-                          const fee = Math.floor((amountInSYP * selectedWithdrawMethodData.fee) / 100);
-                          const netAmount = amountInSYP - fee;
+                          const rate = paymentSettings.usdWithdrawRate;
+                          const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
+                          const netAmount = amount - fee;
+                          const amountInUSD = Math.floor(netAmount / rate);
 
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: ${amount}
+                                {language === 'ar' ? 'سيتم استلام' : 'Will receive'}: ${amountInUSD}
                               </p>
                               <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                ({language === 'ar' ? 'المبلغ' : 'Amount'}: ${amount} × {rate.toFixed(2)} = £{amountInSYP.toLocaleString()})
+                                ({language === 'ar' ? 'المبلغ' : 'Amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'رسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} = £{netAmount.toLocaleString()})
                               </p>
-                              {fee > 0 && (
-                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                  ({language === 'ar' ? 'الرسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} | {language === 'ar' ? 'الصافي' : 'Net'}: £{netAmount.toLocaleString()})
-                                </p>
-                              )}
+                              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                (£{netAmount.toLocaleString()} ÷ {rate.toFixed(2)} = ${amountInUSD})
+                              </p>
                             </div>
                           );
                         } else {

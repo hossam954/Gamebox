@@ -237,13 +237,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // التحقق من العملة والتحويل التلقائي
             let amountInSYP = request.amount;
             let conversionMessage = "";
+            let displayAmount = `£${request.amount.toLocaleString()}`;
 
-            // تحقق من currency في طلب الإيداع نفسه
-            if (request.currency === "USD") {
+            // تحقق من currency في طلب الإيداع نفسه أو من طريقة الدفع
+            const depositCurrency = (request as any).currency || paymentMethod?.currency;
+            
+            if (depositCurrency === "USD") {
               const settings = await storage.getPaymentSettings();
               const rate = settings.usdDepositRate;
               amountInSYP = Math.floor(request.amount * rate);
               const userLang = user.language || 'en';
+              displayAmount = `$${request.amount}`;
               conversionMessage = userLang === 'ar' 
                 ? `\n💵 تم التحويل: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`
                 : `\n💵 Converted: $${request.amount} × ${rate.toFixed(2)} = £${amountInSYP.toLocaleString()}`;
@@ -285,13 +289,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             const userLang = user.language || 'en';
-            const depositAmount = paymentMethod && paymentMethod.currency === "USD" ? `$${request.amount}` : `£${request.amount.toLocaleString()}`;
             await storage.createNotification({
               userId: user.id,
               title: userLang === 'ar' ? "تم قبول عملية الإيداع ✅" : "Deposit Approved ✅",
               message: userLang === 'ar'
-                ? `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"}\nالمبلغ: ${depositAmount}${conversionMessage}\nتم إضافة £${totalAmount.toLocaleString()} إلى رصيدك بنجاح ✅`
-                : `Your deposit via ${methodName} with transaction number ${request.transactionNumber || "Not available"} has been approved\nAmount: ${depositAmount}${conversionMessage}\n£${totalAmount.toLocaleString()} has been added to your balance ✅`
+                ? `تم قبول عملية إيداع بواسطة ${methodName} برقم عملية ${request.transactionNumber || "غير متوفر"}\nالمبلغ: ${displayAmount}${conversionMessage}\nتم إضافة £${totalAmount.toLocaleString()} إلى رصيدك بنجاح ✅`
+                : `Your deposit via ${methodName} with transaction number ${request.transactionNumber || "Not available"} has been approved\nAmount: ${displayAmount}${conversionMessage}\n£${totalAmount.toLocaleString()} has been added to your balance ✅`
             });
           } else if (status === "rejected") {
             const userLang = user.language || 'en';
