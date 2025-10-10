@@ -183,12 +183,12 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       const usdDepositInput = document.getElementById('usdDepositRate') as HTMLInputElement;
       const usdWithdrawInput = document.getElementById('usdWithdrawRate') as HTMLInputElement;
       
-      const usdDepositValue = parseFloat(usdDepositInput?.value || '114');
-      const usdWithdrawValue = parseFloat(usdWithdrawInput?.value || '117');
+      const usdDepositValue = parseFloat(usdDepositInput?.value || '11400');
+      const usdWithdrawValue = parseFloat(usdWithdrawInput?.value || '11700');
       
-      // حفظ القيمة كما هي بدون ضرب في 100
-      const usdDepositRate = Math.round(usdDepositValue * 100);
-      const usdWithdrawRate = Math.round(usdWithdrawValue * 100);
+      // حفظ القيمة كما هي مباشرة
+      const usdDepositRate = Math.round(usdDepositValue);
+      const usdWithdrawRate = Math.round(usdWithdrawValue);
       
       console.log('Saving settings:', { winRate, usdDepositRate, usdWithdrawRate });
       
@@ -208,7 +208,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
         setPaymentSettings(data);
         toast({
           title: "تم حفظ الإعدادات بنجاح",
-          description: `سعر الإيداع: ${(data.usdDepositRate / 100).toFixed(2)} - سعر السحب: ${(data.usdWithdrawRate / 100).toFixed(2)} - نسبة الربح: ${data.winRate}%`,
+          description: `سعر الإيداع: £${data.usdDepositRate.toLocaleString()} - سعر السحب: £${data.usdWithdrawRate.toLocaleString()} - نسبة الربح: ${data.winRate}%`,
         });
       } else {
         const errorData = await response.json();
@@ -2096,12 +2096,12 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         <Input
                           id="usdDepositRate"
                           type="number"
-                          step="0.01"
-                          placeholder="114.00"
-                          defaultValue={(paymentSettings?.usdDepositRate || 11400) / 100}
+                          step="1"
+                          placeholder="11400"
+                          defaultValue={paymentSettings?.usdDepositRate || 11400}
                         />
                         <p className="text-xs text-muted-foreground">
-                          عند إيداع $1 سيحصل المستخدم على {((paymentSettings?.usdDepositRate || 11400) / 100).toFixed(2)} ليرة سورية
+                          عند إيداع $1 سيحصل المستخدم على £{(paymentSettings?.usdDepositRate || 11400).toLocaleString()} ليرة سورية
                         </p>
                       </div>
                       <div className="space-y-2">
@@ -2109,12 +2109,12 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                         <Input
                           id="usdWithdrawRate"
                           type="number"
-                          step="0.01"
-                          placeholder="117.00"
-                          defaultValue={(paymentSettings?.usdWithdrawRate || 11700) / 100}
+                          step="1"
+                          placeholder="11700"
+                          defaultValue={paymentSettings?.usdWithdrawRate || 11700}
                         />
                         <p className="text-xs text-muted-foreground">
-                          عند سحب {((paymentSettings?.usdWithdrawRate || 11700) / 100).toFixed(2)} ليرة سورية سيحصل المستخدم على $1
+                          عند سحب £{(paymentSettings?.usdWithdrawRate || 11700).toLocaleString()} ليرة سورية سيحصل المستخدم على $1
                         </p>
                       </div>
                     </div>

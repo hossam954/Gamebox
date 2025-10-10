@@ -214,7 +214,7 @@ export default function WalletModal({
     const amount = parseFloat(withdrawAmount);
     const minLimit = method.minAmount || 0;
     const maxLimit = method.maxAmount || 0;
-    
+
     if (isNaN(amount) || amount < minLimit || amount > maxLimit) {
       toast({
         title: language === 'ar' ? "مبلغ غير صحيح" : "Invalid amount",
@@ -307,22 +307,22 @@ export default function WalletModal({
     if (isNaN(amount)) return null;
 
     if (type === "deposit" && selectedDepositCurrency === "USD") {
-      const rate = paymentSettings.usdDepositRate / 100;
+      const rate = paymentSettings.usdDepositRate || 11400;
       const sypAmount = Math.floor(amount * rate);
       return {
         original: `$${amount}`,
         converted: `£${sypAmount.toLocaleString()}`,
-        rate: rate.toFixed(2)
+        rate: (rate).toFixed(2)
       };
     }
 
     if (type === "withdraw" && selectedWithdrawCurrency === "USD") {
-      const rate = paymentSettings.usdWithdrawRate / 100;
+      const rate = paymentSettings.usdWithdrawRate || 11400;
       const usdAmount = (amount / rate).toFixed(2);
       return {
         original: `£${amount.toLocaleString()}`,
         converted: `$${usdAmount}`,
-        rate: rate.toFixed(2)
+        rate: (rate).toFixed(2)
       };
     }
 
@@ -461,7 +461,7 @@ export default function WalletModal({
                 {selectedDepositMethod && paymentSettings && selectedDepositCurrency === "USD" && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate || 15000 / 100).toLocaleString()}
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdDepositRate || 11400).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -583,7 +583,7 @@ export default function WalletModal({
                 {selectedWithdrawMethod && paymentSettings && selectedWithdrawCurrency === "USD" && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate || 15000 / 100).toLocaleString()}
+                      💵 {language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}: 1 USD = £{(paymentSettings.usdWithdrawRate || 11400).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -622,7 +622,7 @@ export default function WalletModal({
                         const netAmount = amount - fee;
 
                         if (selectedWithdrawCurrency === "USD" && paymentSettings) {
-                          const rate = (paymentSettings.usdWithdrawRate || 15000) / 100;
+                          const rate = paymentSettings.usdWithdrawRate || 11400;
                           const usdAmount = (netAmount / rate).toFixed(2);
 
                           return (

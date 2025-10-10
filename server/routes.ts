@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (paymentMethod && paymentMethod.currency === "USD") {
               const settings = await storage.getPaymentSettings();
-              const rate = settings.usdDepositRate / 100; // تحويل من المخزن إلى قيمة حقيقية
+              const rate = settings.usdDepositRate; // استخدام القيمة مباشرة
               amountInSYP = Math.floor(request.amount * rate);
               const userLang = user.language || 'en';
               conversionMessage = userLang === 'ar' 
@@ -369,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (paymentMethod && paymentMethod.currency === "USD") {
               const settings = await storage.getPaymentSettings();
-              const rate = settings.usdWithdrawRate / 100; // تحويل من المخزن إلى قيمة حقيقية
+              const rate = settings.usdWithdrawRate; // استخدام القيمة مباشرة
               const amountInUSD = Math.floor(request.amount / rate);
               const userLang = user.language || 'en';
               displayAmount = `£${request.amount.toLocaleString()} → $${amountInUSD}`;
