@@ -212,6 +212,14 @@ export default function WalletModal({
     if (!method) return;
 
     const amount = parseFloat(withdrawAmount);
+    
+    // Convert USD to SYP if needed for balance check and backend processing
+    let amountInSYP = amount;
+    if (selectedWithdrawCurrency === "USD" && paymentSettings) {
+      const rate = paymentSettings.usdWithdrawRate || 11400;
+      amountInSYP = Math.floor(amount * rate);
+    }
+    
     const minLimit = selectedWithdrawCurrency === "USD" ? (method.minAmountUSD || 0) : (method.minAmount || 0);
     const maxLimit = selectedWithdrawCurrency === "USD" ? (method.maxAmountUSD || 0) : (method.maxAmount || 0);
 
@@ -227,7 +235,7 @@ export default function WalletModal({
       return;
     }
 
-    if (amount > balance) {
+    if (amountInSYP > balance) {
       toast({
         title: language === 'ar' ? "رصيد غير كافٍ" : "Insufficient balance",
         description: language === 'ar' ? "ليس لديك رصيد كافٍ لهذا السحب" : "You don't have enough balance for this withdrawal",
@@ -253,7 +261,7 @@ export default function WalletModal({
         body: JSON.stringify({
           userId,
           username,
-          amount,
+          amount: amountInSYP,
           paymentMethodId: selectedWithdrawMethod,
           address: withdrawAddress,
           currency: selectedWithdrawCurrency
@@ -263,14 +271,16 @@ export default function WalletModal({
       const data = await response.json();
 
       if (response.ok) {
-        const fee = Math.floor((amount * method.fee) / 100);
-        const netAmount = amount - fee;
+        const fee = Math.floor((amountInSYP * method.fee) / 100);
+        const netAmount = amountInSYP - fee;
+        
+        const displayAmount = selectedWithdrawCurrency === "USD" ? `$${amount}` : `£${amount}`;
 
         toast({
           title: language === 'ar' ? "تم إرسال طلب السحب" : "Withdrawal request submitted",
           description: language === 'ar'
-            ? `طلب السحب بمبلغ £${amount} (صافي: £${netAmount} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
-            : `Your withdrawal of £${amount} (net: £${netAmount} after ${method.fee}% fee) is pending admin approval`,
+            ? `طلب السحب بمبلغ ${displayAmount} (${selectedWithdrawCurrency === "USD" ? `£${amountInSYP.toLocaleString()} - ` : ""}صافي: £${netAmount.toLocaleString()} بعد رسوم ${method.fee}%) قيد انتظار موافقة الإدارة`
+            : `Your withdrawal of ${displayAmount} (${selectedWithdrawCurrency === "USD" ? `£${amountInSYP.toLocaleString()} - ` : ""}net: £${netAmount.toLocaleString()} after ${method.fee}% fee) is pending admin approval`,
         });
         setWithdrawAmount("");
         setWithdrawAddress("");
@@ -319,10 +329,10 @@ export default function WalletModal({
 
     if (type === "withdraw" && selectedWithdrawCurrency === "USD") {
       const rate = paymentSettings.usdWithdrawRate || 11400;
-      const usdAmount = (amount / rate).toFixed(2);
+      const sypAmount = Math.floor(amount * rate);
       return {
-        original: `£${amount.toLocaleString()}`,
-        converted: `$${usdAmount}`,
+        original: `$${amount}`,
+        converted: `£${sypAmount.toLocaleString()}`,
         rate: (rate).toFixed(2)
       };
     }
@@ -612,26 +622,32 @@ export default function WalletModal({
                       </p>
                       {(() => {
                         const amount = parseFloat(withdrawAmount);
-                        const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
-                        const netAmount = amount - fee;
-
+                        
                         if (selectedWithdrawCurrency === "USD" && paymentSettings) {
                           const rate = paymentSettings.usdWithdrawRate || 11400;
-                          const usdAmount = (netAmount / rate).toFixed(2);
+                          const amountInSYP = Math.floor(amount * rate);
+                          const fee = Math.floor((amountInSYP * selectedWithdrawMethodData.fee) / 100);
+                          const netAmount = amountInSYP - fee;
 
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: ${usdAmount}
+                                {language === 'ar' ? 'سيتم السحب' : 'Will withdraw'}: ${amount}
+                              </p>
+                              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                ({language === 'ar' ? 'المبلغ' : 'Amount'}: ${amount} × {rate.toFixed(2)} = £{amountInSYP.toLocaleString()})
                               </p>
                               {fee > 0 && (
                                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                  ({language === 'ar' ? 'المبلغ المطلوب' : 'Requested amount'}: £{amount.toLocaleString()} - {language === 'ar' ? 'الرسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} = £{netAmount.toLocaleString()} ÷ {rate.toFixed(2)})
+                                  ({language === 'ar' ? 'الرسوم' : 'Fee'} {selectedWithdrawMethodData.fee}%: £{fee.toLocaleString()} | {language === 'ar' ? 'الصافي' : 'Net'}: £{netAmount.toLocaleString()})
                                 </p>
                               )}
                             </div>
                           );
                         } else {
+                          const fee = Math.floor((amount * selectedWithdrawMethodData.fee) / 100);
+                          const netAmount = amount - fee;
+                          
                           return (
                             <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
