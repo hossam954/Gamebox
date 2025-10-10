@@ -426,14 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payment-settings", async (req, res) => {
     try {
-      // التأكد من تحديث أسعار الصرف
-      const updatedSettings = {
-        ...req.body,
-        usdDepositRate: req.body.usdDepositRate || 1140000, // 11400 * 100
-        usdWithdrawRate: req.body.usdWithdrawRate || 1170000  // 11700 * 100
-      };
-
-      const settings = await storage.updatePaymentSettings(updatedSettings);
+      const settings = await storage.updatePaymentSettings(req.body);
       res.json(settings);
     } catch (error) {
       res.status(500).json({ message: "Server error" });

@@ -183,13 +183,16 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       const usdDepositInput = document.getElementById('usdDepositRate') as HTMLInputElement;
       const usdWithdrawInput = document.getElementById('usdWithdrawRate') as HTMLInputElement;
       
-      const usdDepositRate = parseFloat(usdDepositInput?.value || '150') * 100;
-      const usdWithdrawRate = parseFloat(usdWithdrawInput?.value || '150') * 100;
+      const usdDepositRate = Math.round(parseFloat(usdDepositInput?.value || '11400') * 100);
+      const usdWithdrawRate = Math.round(parseFloat(usdWithdrawInput?.value || '11700') * 100);
       
       const response = await fetch('/api/payment-settings', {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          ...paymentSettings,
+          usdDepositRate,
+          usdWithdrawRate,
           winRate,
           usdDepositRate,
           usdWithdrawRate

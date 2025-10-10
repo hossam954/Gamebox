@@ -89,6 +89,23 @@ export interface IStorage {
   }): Promise<void>;
 }
 
+import Database from 'better-sqlite3';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const db = new Database(join(__dirname, '../data.db'));
+
+// إنشاء الجداول إذا لم تكن موجودة
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users_cache (
+    id TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  )
+`);
+
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private passwordRecoveryRequests: Map<string, PasswordRecoveryRequest>;
@@ -104,6 +121,7 @@ export class MemStorage implements IStorage {
 
   constructor() {
     this.users = new Map();
+    this.loadUsersFromDB();
     this.passwordRecoveryRequests = new Map();
     this.passwordResetTokens = new Map();
     this.depositRequests = new Map();
@@ -690,6 +708,110 @@ export class MemStorage implements IStorage {
     }
 
     this.users.set(userId, user);
+  }
+
+  async updateUserBalance(userId: string, amount: number): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.balance = amount;
+      this.users.set(userId, user);
+    }
+  }
+
+  async updateUserStats(userId: string, balance: number, won: boolean): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.balance = balance;
+      if (won) {
+        user.totalWins += 1;
+      } else {
+        user.totalLosses += 1;
+      }
+      this.users.set(userId, user);
+    }
+  }
+}
+
+private loadUsersFromDB() {
+    const stmt = db.prepare('SELECT * FROM users_cache');
+    const rows = stmt.all() as { id: string; data: string }[];
+    
+    for (const row of rows) {
+      try {
+        const user = JSON.parse(row.data);
+        this.users.set(row.id, user);
+      } catch (e) {
+        console.error('Failed to parse user data:', e);
+      }
+    }
+  }
+
+  private saveUserToDB(user: User) {
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO users_cache (id, data, updated_at) 
+      VALUES (?, ?, ?)
+    `);
+    stmt.run(user.id, JSON.stringify(user), Date.now());
+  }
+
+  async updateUserGameStats(userId: string, stats: {
+    betAmount: number;
+    won: boolean;
+    multiplier: number | null;
+    newBalance: number;
+  }): Promise<void> {
+    const user = this.users.get(userId);
+    if (!user) return;
+
+    const profit = stats.won 
+      ? (stats.betAmount * (stats.multiplier || 0)) - stats.betAmount
+      : -stats.betAmount;
+
+    // تحديث الإحصائيات
+    user.balance = stats.newBalance;
+    user.totalBetsCount += 1;
+    user.totalWagered += stats.betAmount;
+    user.lifetimeProfit += profit;
+    user.sessionBetsCount += 1;
+    user.lastBetAmount = stats.betAmount;
+    user.lastGameResult = stats.won ? "win" : "loss";
+
+    if (stats.won) {
+      user.totalWins += 1;
+      user.currentStreak += 1;
+      if (user.currentStreak > user.longestStreak) {
+        user.longestStreak = user.currentStreak;
+      }
+    } else {
+      user.totalLosses += 1;
+      user.currentStreak = 0;
+    }
+
+    this.users.set(userId, user);
+    this.saveUserToDB(user);
+  }
+
+  async updateUserBalance(userId: string, amount: number): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.balance = amount;
+      this.users.set(userId, user);
+      this.saveUserToDB(user);
+    }
+  }
+
+  async updateUserStats(userId: string, balance: number, won: boolean): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.balance = balance;
+      if (won) {
+        user.totalWins += 1;
+      } else {
+        user.totalLosses += 1;
+      }
+      this.users.set(userId, user);
+      this.saveUserToDB(user);
+    }
   }
 }
 
