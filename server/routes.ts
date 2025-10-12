@@ -650,20 +650,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ✅ إرسال رسالة لمستخدم
-  app.post("/api/send-message", async (req, res) => {
-    try {
-      const { usernameOrEmail, title, message } = req.body;
-      const user = await storage.getUserByUsernameOrEmail(usernameOrEmail);
-      if (!user) return res.status(404).json({ message: "User not found" });
-      await storage.createNotification({ userId: user.id, title, message });
-      res.json({ message: "Message sent successfully" });
-    } catch (err) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+    // ✅ إرسال رسالة لمستخدم
+app.post("/api/send-message", async (req, res) => {
+  try {
+    const { usernameOrEmail, title, message } = req.body;
+    const user = await storage.getUserByUsernameOrEmail(usernameOrEmail);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  const httpServer = createServer(app);
-  return httpServer;
+    await storage.createNotification({
+      userId: user.id,
+      title,
+      message,
+    });
+
+    res.json({ message: "Message sent successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
+const httpServer = createServer(app);
+return httpServer;
+    }
