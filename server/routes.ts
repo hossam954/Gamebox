@@ -154,7 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Status updated" });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
-    // ✅ إنشاء توكن إعادة تعيين كلمة المرور
+    }
+  });
+
+  // ✅ إنشاء توكن إعادة تعيين كلمة المرور
   app.post("/api/auth/generate-reset-token", async (req, res) => {
     try {
       const { userId } = req.body;
