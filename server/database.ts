@@ -1,5 +1,6 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool } from "@neondatabase/serverless";
+import ws from "ws";
 import { randomUUID } from "crypto";
 import * as schema from "@shared/schema";
 
@@ -11,8 +12,8 @@ if (!process.env.DATABASE_URL) {
 // ✅ إعداد الاتصال بقاعدة PostgreSQL (Neon)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
 });
+pool.neonConfig.webSocketConstructor = ws;
 
 // ✅ إنشاء Drizzle ORM باستخدام السكيمة
 export const db = drizzle(pool, { schema });

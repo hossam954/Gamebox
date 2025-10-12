@@ -672,6 +672,6 @@ app.post("/api/send-message", async (req, res) => {
   }
 });
 
-const httpServer = createServer(app);
-return httpServer;
-    }
+  const httpServer = createServer(app);
+  return httpServer;
+}
