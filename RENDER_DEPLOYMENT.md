@@ -50,6 +50,8 @@ git push -u origin main
      npm run start
      ```
 
+   **⚠️ مهم**: تأكد من أن جميع حزم Build (vite, esbuild, typescript) في `dependencies` وليس في `devDependencies` - وهذا تم إصلاحه مسبقاً.
+
 ### 4️⃣ إضافة متغيرات البيئة (Environment Variables)
 
 في صفحة إعدادات Render، أضف المتغيرات التالية:
