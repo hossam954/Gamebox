@@ -1,6 +1,5 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import { randomUUID } from "crypto";
 import * as schema from "@shared/schema";
 
@@ -9,14 +8,11 @@ if (!process.env.DATABASE_URL) {
   throw new Error("❌ DATABASE_URL not set! Please add it in Render environment variables.");
 }
 
-// ✅ إعداد الاتصال بقاعدة PostgreSQL (Neon)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-pool.neonConfig.webSocketConstructor = ws;
+// ✅ إعداد الاتصال بقاعدة PostgreSQL (Neon) عبر HTTP
+const sql = neon(process.env.DATABASE_URL);
 
 // ✅ إنشاء Drizzle ORM باستخدام السكيمة
-export const db = drizzle(pool, { schema });
+export const db = drizzle(sql, { schema });
 
 // 🟣 كائن مماثل لـ storage السابق حتى ما يتغير أي شيء في routes.ts
 export const storage = {
