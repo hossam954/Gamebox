@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
-  });// ✅ إنشاء طلب سحب
+  // ✅ إنشاء طلب سحب
   app.post("/api/withdraw", async (req, res) => {
     try {
       const result = insertWithdrawRequestSchema.safeParse(req.body);
