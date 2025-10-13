@@ -451,6 +451,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+// ✅ تحديث إعدادات اللعبة
+app.post("/api/game-settings", async (req, res) => {
+  try {
+    const updated = await storage.updateGameSettings(req.body);
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating game settings:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+  
   app.put("/api/game-settings", async (req, res) => {
     try {
       const settings = await storage.updateGameSettings(req.body);
