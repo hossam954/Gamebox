@@ -173,19 +173,19 @@ export class MemStorage implements IStorage {
 
     this.gameSettings = {
       id: randomUUID(),
-      baseWinRate: 9,
-      targetLossRate: 95,
-      maxMultiplier: 50,
+      baseWinRate: 5,
+      targetLossRate: 99,
+      maxMultiplier: 25,
       strategy: "hopeful",
-      phase1Rounds: 9,
+      phase1Rounds: 5,
       phase2Rounds: 18,
-      multiplier2to5Chance: 80,
-      multiplier5to10Chance: 29,
-      multiplier10to25Chance: 7,
-      multiplier25to50Chance: 2,
+      multiplier2to5Chance: 40,
+      multiplier5to10Chance: 12,
+      multiplier10to25Chance: 1,
+      multiplier25to50Chance: 1,
       multiplier50PlusChance: 1,
       highBetThreshold: 500,
-      highBetMaxMultiplier: 5,
+      highBetMaxMultiplier: 3,
       updatedAt: new Date(),
     };
 
