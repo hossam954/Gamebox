@@ -282,7 +282,7 @@ export default function GamePage() {
       console.error('Error fetching game settings:', error);
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const random = Math.random() * 100;
       let prizeMultiplier: number | null = null;
 
@@ -433,7 +433,6 @@ export default function GamePage() {
       if (prizeMultiplier) {
         const winnings = selectedBet! * prizeMultiplier;
         const newBalance = balance - selectedBet! + winnings;
-        setBalance(newBalance);
         setLastBet(selectedBet);
         setLastResult('win');
 
@@ -442,16 +441,35 @@ export default function GamePage() {
 
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
-          fetch(`/api/users/${userId}/game-result`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              betAmount: selectedBet,
-              won: true,
-              multiplier: prizeMultiplier,
-              newBalance: newBalance
-            })
-          }).catch(err => console.error('Failed to save game result:', err));
+          try {
+            const response = await fetch(`/api/users/${userId}/game-result`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                betAmount: selectedBet,
+                won: true,
+                multiplier: prizeMultiplier,
+                newBalance: newBalance
+              })
+            });
+            
+            if (response.ok) {
+              // تحديث الرصيد فقط بعد نجاح الحفظ في السيرفر
+              setBalance(newBalance);
+            } else {
+              throw new Error('Failed to save game result');
+            }
+          } catch (err) {
+            console.error('Failed to save game result:', err);
+            toast({
+              title: "خطأ",
+              description: "فشل حفظ نتيجة اللعبة. يرجى المحاولة مرة أخرى.",
+              variant: "destructive",
+            });
+            return; // لا تكمل إذا فشل الحفظ
+          }
+        } else {
+          setBalance(newBalance);
         }
 
         setTransactions((prev) => [
@@ -483,7 +501,6 @@ export default function GamePage() {
 
       } else {
         const newBalance = balance - selectedBet!;
-        setBalance(newBalance);
         setLastBet(selectedBet);
         setLastResult('loss');
 
@@ -492,16 +509,35 @@ export default function GamePage() {
 
         // حفظ النتيجة في السيرفر مع الإحصائيات الكاملة
         if (userId) {
-          fetch(`/api/users/${userId}/game-result`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              betAmount: selectedBet,
-              won: false,
-              multiplier: null,
-              newBalance: newBalance
-            })
-          }).catch(err => console.error('Failed to save game result:', err));
+          try {
+            const response = await fetch(`/api/users/${userId}/game-result`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                betAmount: selectedBet,
+                won: false,
+                multiplier: null,
+                newBalance: newBalance
+              })
+            });
+            
+            if (response.ok) {
+              // تحديث الرصيد فقط بعد نجاح الحفظ في السيرفر
+              setBalance(newBalance);
+            } else {
+              throw new Error('Failed to save game result');
+            }
+          } catch (err) {
+            console.error('Failed to save game result:', err);
+            toast({
+              title: "خطأ",
+              description: "فشل حفظ نتيجة اللعبة. يرجى المحاولة مرة أخرى.",
+              variant: "destructive",
+            });
+            return; // لا تكمل إذا فشل الحفظ
+          }
+        } else {
+          setBalance(newBalance);
         }
 
         setTransactions((prev) => [
