@@ -158,13 +158,24 @@ export const storage = {
   async createPaymentMethod(data: any) {
     const id = randomUUID();
     const createdAt = new Date();
-    await db.insert(schema.paymentMethods).values({
+    const paymentMethod = {
       id,
-      ...data,
-      createdAt,
+      name: data.name,
+      type: data.type || "both",
+      currency: data.currency || "SYP",
+      minAmount: data.minAmount || 0,
+      maxAmount: data.maxAmount || 100000,
+      minAmountUSD: data.minAmountUSD || 0,
+      maxAmountUSD: data.maxAmountUSD || 1000,
+      fee: data.fee || 0,
+      noteEn: data.noteEn || "",
+      noteAr: data.noteAr || "",
       isActive: true,
-    });
-    return { id };
+      createdAt,
+    };
+    
+    await db.insert(schema.paymentMethods).values(paymentMethod);
+    return paymentMethod;
   },
 
   async getPaymentMethods() {

@@ -685,10 +685,6 @@ app.post("/api/send-message", async (req, res) => {
   });
 
   app.post("/api/payment-methods", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user?.isAdmin) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-
     try {
       const result = await storage.createPaymentMethod(req.body);
       console.log("Payment method created:", result);
@@ -700,10 +696,6 @@ app.post("/api/send-message", async (req, res) => {
   });
 
   app.put("/api/payment-methods/:id", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user?.isAdmin) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-
     try {
       await storage.updatePaymentMethod(req.params.id, req.body);
       console.log("Payment method updated:", req.params.id);
@@ -715,10 +707,6 @@ app.post("/api/send-message", async (req, res) => {
   });
 
   app.delete("/api/payment-methods/:id", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user?.isAdmin) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-
     try {
       await storage.deletePaymentMethod(req.params.id);
       console.log("Payment method deleted:", req.params.id);
