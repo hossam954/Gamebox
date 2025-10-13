@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
+import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as schema from "@shared/schema";
 
@@ -57,25 +58,25 @@ export const storage = {
   },
 
   async updateUserBalance(userId: string, newBalance: number) {
-    await db.update(schema.users).set({ balance: newBalance }).where(schema.users.id.eq(userId));
+    await db.update(schema.users).set({ balance: newBalance }).where(eq(schema.users.id, userId));
   },
 
   async updateUserPassword(userId: string, newPassword: string) {
-    await db.update(schema.users).set({ password: newPassword }).where(schema.users.id.eq(userId));
+    await db.update(schema.users).set({ password: newPassword }).where(eq(schema.users.id, userId));
   },
 
   async updateUserLanguage(userId: string, language: string) {
-    await db.update(schema.users).set({ language }).where(schema.users.id.eq(userId));
+    await db.update(schema.users).set({ language }).where(eq(schema.users.id, userId));
   },
 
   async updateUserStats(userId: string, balance: number, won: boolean) {
     await db.update(schema.users)
       .set({
         balance,
-        totalWins: won ? db.sql`${schema.users.totalWins} + 1` : undefined,
-        totalLosses: !won ? db.sql`${schema.users.totalLosses} + 1` : undefined,
+        totalWins: won ? sql`${schema.users.totalWins} + 1` : undefined,
+        totalLosses: !won ? sql`${schema.users.totalLosses} + 1` : undefined,
       })
-      .where(schema.users.id.eq(userId));
+      .where(eq(schema.users.id, userId));
   },
 
   async getAllUsers() {
@@ -92,7 +93,7 @@ export const storage = {
   },
 
   async deleteUser(id: string) {
-    await db.delete(schema.users).where(schema.users.id.eq(id));
+    await db.delete(schema.users).where(eq(schema.users.id, id));
   },
 
   // 💰 الإيداعات
@@ -113,7 +114,7 @@ export const storage = {
   },
 
   async updateDepositStatus(id: string, status: string) {
-    await db.update(schema.depositRequests).set({ status }).where(schema.depositRequests.id.eq(id));
+    await db.update(schema.depositRequests).set({ status }).where(eq(schema.depositRequests.id, id));
   },
 
   // 💸 السحب
@@ -134,7 +135,7 @@ export const storage = {
   },
 
   async updateWithdrawStatus(id: string, status: string) {
-    await db.update(schema.withdrawRequests).set({ status }).where(schema.withdrawRequests.id.eq(id));
+    await db.update(schema.withdrawRequests).set({ status }).where(eq(schema.withdrawRequests.id, id));
   },
 
   // ⚙️ إعدادات الدفع
@@ -150,7 +151,7 @@ export const storage = {
       await db.insert(schema.paymentSettings).values({ id, ...data });
       return { id, ...data };
     }
-    await db.update(schema.paymentSettings).set(data).where(schema.paymentSettings.id.eq(settings.id));
+    await db.update(schema.paymentSettings).set(data).where(eq(schema.paymentSettings.id, settings.id));
     return { ...settings, ...data };
   },
 
@@ -183,15 +184,15 @@ export const storage = {
   },
 
   async updatePaymentMethodStatus(id: string, isActive: boolean) {
-    await db.update(schema.paymentMethods).set({ isActive }).where(schema.paymentMethods.id.eq(id));
+    await db.update(schema.paymentMethods).set({ isActive }).where(eq(schema.paymentMethods.id, id));
   },
 
   async deletePaymentMethod(id: string) {
-    await db.delete(schema.paymentMethods).where(schema.paymentMethods.id.eq(id));
+    await db.delete(schema.paymentMethods).where(eq(schema.paymentMethods.id, id));
   },
 
   async updatePaymentMethod(id: string, data: any) {
-    await db.update(schema.paymentMethods).set(data).where(schema.paymentMethods.id.eq(id));
+    await db.update(schema.paymentMethods).set(data).where(eq(schema.paymentMethods.id, id));
   },
 
   // 🏷️ أكواد الخصم
@@ -213,7 +214,7 @@ export const storage = {
   },
 
   async updatePromoCodeStatus(id: string, isActive: boolean) {
-    await db.update(schema.promoCodes).set({ isActive }).where(schema.promoCodes.id.eq(id));
+    await db.update(schema.promoCodes).set({ isActive }).where(eq(schema.promoCodes.id, id));
   },
 
   // 🎟️ الدعم الفني
@@ -231,7 +232,7 @@ export const storage = {
   async updateSupportTicket(id: string, response: string, status: string) {
     await db.update(schema.supportTickets)
       .set({ response, status })
-      .where(schema.supportTickets.id.eq(id));
+      .where(eq(schema.supportTickets.id, id));
   },
 
   // 🔔 الإشعارات
@@ -247,11 +248,11 @@ export const storage = {
   },
 
   async markNotificationAsRead(id: string) {
-    await db.update(schema.notifications).set({ read: true }).where(schema.notifications.id.eq(id));
+    await db.update(schema.notifications).set({ read: true }).where(eq(schema.notifications.id, id));
   },
 
   async clearAllNotifications(userId: string) {
-    await db.delete(schema.notifications).where(schema.notifications.userId.eq(userId));
+    await db.delete(schema.notifications).where(eq(schema.notifications.userId, userId));
   },
 
   // ⚙️ إعدادات اللعبة
@@ -267,7 +268,7 @@ export const storage = {
       await db.insert(schema.gameSettings).values({ id, ...data, updatedAt: new Date() });
       return { id, ...data, updatedAt: new Date() };
     }
-    await db.update(schema.gameSettings).set({ ...data, updatedAt: new Date() }).where(schema.gameSettings.id.eq(settings.id));
+    await db.update(schema.gameSettings).set({ ...data, updatedAt: new Date() }).where(eq(schema.gameSettings.id, settings.id));
     return { ...settings, ...data, updatedAt: new Date() };
   },
 
@@ -287,17 +288,17 @@ export const storage = {
 
     await db.update(schema.users).set({
       balance: stats.newBalance,
-      totalBetsCount: db.sql`${schema.users.totalBetsCount} + 1`,
-      totalWagered: db.sql`${schema.users.totalWagered} + ${stats.betAmount}`,
-      lifetimeProfit: db.sql`${schema.users.lifetimeProfit} + ${profit}`,
-      sessionBetsCount: db.sql`${schema.users.sessionBetsCount} + 1`,
+      totalBetsCount: sql`${schema.users.totalBetsCount} + 1`,
+      totalWagered: sql`${schema.users.totalWagered} + ${stats.betAmount}`,
+      lifetimeProfit: sql`${schema.users.lifetimeProfit} + ${profit}`,
+      sessionBetsCount: sql`${schema.users.sessionBetsCount} + 1`,
       lastBetAmount: stats.betAmount,
       lastGameResult: stats.won ? "win" : "loss",
-      totalWins: stats.won ? db.sql`${schema.users.totalWins} + 1` : undefined,
-      totalLosses: !stats.won ? db.sql`${schema.users.totalLosses} + 1` : undefined,
-      currentStreak: stats.won ? db.sql`${schema.users.currentStreak} + 1` : 0,
-      longestStreak: stats.won ? db.sql`GREATEST(${schema.users.longestStreak}, ${schema.users.currentStreak} + 1)` : undefined,
-    }).where(schema.users.id.eq(userId));
+      totalWins: stats.won ? sql`${schema.users.totalWins} + 1` : undefined,
+      totalLosses: !stats.won ? sql`${schema.users.totalLosses} + 1` : undefined,
+      currentStreak: stats.won ? sql`${schema.users.currentStreak} + 1` : 0,
+      longestStreak: stats.won ? sql`GREATEST(${schema.users.longestStreak}, ${schema.users.currentStreak} + 1)` : undefined,
+    }).where(eq(schema.users.id, userId));
   },
 
   // 🔑 Password Reset Tokens
@@ -319,7 +320,7 @@ export const storage = {
   },
 
   async markTokenAsUsed(token: string) {
-    await db.update(schema.passwordResetTokens).set({ used: true }).where(schema.passwordResetTokens.token.eq(token));
+    await db.update(schema.passwordResetTokens).set({ used: true }).where(eq(schema.passwordResetTokens.token, token));
   },
 
   // 📝 Password Recovery Requests
@@ -339,7 +340,7 @@ export const storage = {
   },
 
   async updatePasswordRecoveryStatus(id: string, status: string) {
-    await db.update(schema.passwordRecoveryRequests).set({ status }).where(schema.passwordRecoveryRequests.id.eq(id));
+    await db.update(schema.passwordRecoveryRequests).set({ status }).where(eq(schema.passwordRecoveryRequests.id, id));
   },
 
   // 🎁 Promo Codes
@@ -375,15 +376,15 @@ export const storage = {
       reward = `${promoCode.value}% bonus (£${bonus})`;
     }
 
-    await db.update(schema.users).set({ balance: newBalance }).where(schema.users.id.eq(userId));
-    await db.update(schema.promoCodes).set({ usedCount: db.sql`${schema.promoCodes.usedCount} + 1` }).where(schema.promoCodes.id.eq(promoCode.id));
+    await db.update(schema.users).set({ balance: newBalance }).where(eq(schema.users.id, userId));
+    await db.update(schema.promoCodes).set({ usedCount: sql`${schema.promoCodes.usedCount} + 1` }).where(eq(schema.promoCodes.id, promoCode.id));
 
     return { success: true, reward };
   },
 
   // 🔄 تحديث حالة المستخدم
   async updateUserStatus(userId: string, status: string) {
-    await db.update(schema.users).set({ status } as any).where(schema.users.id.eq(userId));
+    await db.update(schema.users).set({ status } as any).where(eq(schema.users.id, userId));
   },
 };
 
