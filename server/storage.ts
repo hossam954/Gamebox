@@ -669,7 +669,8 @@ export class MemStorage implements IStorage {
   }
 
   async getGameSettings(): Promise<GameSettings> {
-    return this.gameSettings;
+  console.log("🎯 Current gameSettings:", this.gameSettings);
+  return this.gameSettings;
   }
 
   async updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings> {
