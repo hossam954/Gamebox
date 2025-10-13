@@ -188,7 +188,8 @@ export class MemStorage implements IStorage {
       highBetMaxMultiplier: 3,
       updatedAt: new Date(),
     };
-
+      console.log("🎯 Loaded game settings from storage.ts (test marker)");
+    
     const defaultPaymentMethod1: PaymentMethod = {
       id: randomUUID(),
       name: "Bank Transfer (SYP)",
