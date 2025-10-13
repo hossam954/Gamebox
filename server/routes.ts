@@ -425,9 +425,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/payment-settings", async (_req, res) => {
     try {
       const settings = await storage.getPaymentSettings();
-      res.json(settings);
-    } catch (err) {
-      res.status(500).json({ message: "Server error" });
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Error fetching payment settings:", error);
+      res.status(500).json({ message: "Failed to fetch payment settings", error: String(error) });
     }
   });
 
@@ -671,6 +672,62 @@ app.post("/api/send-message", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+  // ✅ طرق الدفع
+  app.get("/api/payment-methods", async (_req, res) => {
+    try {
+      const methods = await storage.getPaymentMethods();
+      res.json(methods || []);
+    } catch (error) {
+      console.error("Error fetching payment methods:", error);
+      res.status(500).json({ message: "Failed to fetch payment methods", error: String(error) });
+    }
+  });
+
+  app.post("/api/payment-methods", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const result = await storage.createPaymentMethod(req.body);
+      console.log("Payment method created:", result);
+      res.json({ success: true, id: result.id });
+    } catch (error) {
+      console.error("Error creating payment method:", error);
+      res.status(500).json({ message: "Failed to create payment method", error: String(error) });
+    }
+  });
+
+  app.put("/api/payment-methods/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      await storage.updatePaymentMethod(req.params.id, req.body);
+      console.log("Payment method updated:", req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating payment method:", error);
+      res.status(500).json({ message: "Failed to update payment method", error: String(error) });
+    }
+  });
+
+  app.delete("/api/payment-methods/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      await storage.deletePaymentMethod(req.params.id);
+      console.log("Payment method deleted:", req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting payment method:", error);
+      res.status(500).json({ message: "Failed to delete payment method", error: String(error) });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

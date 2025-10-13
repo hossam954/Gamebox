@@ -179,6 +179,10 @@ export const storage = {
     await db.delete(schema.paymentMethods).where(schema.paymentMethods.id.eq(id));
   },
 
+  async updatePaymentMethod(id: string, data: any) {
+    await db.update(schema.paymentMethods).set(data).where(schema.paymentMethods.id.eq(id));
+  },
+
   // 🏷️ أكواد الخصم
   async createPromoCode(data: any) {
     const id = randomUUID();
