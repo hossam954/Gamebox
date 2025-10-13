@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   referralCode: text("referral_code").unique(),
   referredBy: text("referred_by"),
   language: text("language").notNull().default("en"),
+  status: text("status").notNull().default("active"), // "active" or "suspended"
   
   // إحصائيات اللعبة المتقدمة
   currentStreak: integer("current_streak").notNull().default(0), // عدد الانتصارات المتتالية
@@ -68,6 +69,7 @@ export const depositRequests = pgTable("deposit_requests", {
   amount: integer("amount").notNull(),
   paymentMethodId: varchar("payment_method_id"),
   transactionNumber: text("transaction_number"),
+  currency: text("currency").default("SYP"), // "SYP" or "USD"
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -365,6 +365,11 @@ export const storage = {
 
     return { success: true, reward };
   },
+
+  // 🔄 تحديث حالة المستخدم
+  async updateUserStatus(userId: string, status: string) {
+    await db.update(schema.users).set({ status } as any).where(schema.users.id.eq(userId));
+  },
 };
 
 // ✅ إنشاء الأدمن تلقائيًا
