@@ -673,12 +673,15 @@ export class MemStorage implements IStorage {
   }
 
   async updateGameSettings(settings: Partial<InsertGameSettings>): Promise<GameSettings> {
-    this.gameSettings = {
-      ...this.gameSettings,
-      ...settings,
-      updatedAt: new Date(),
-    };
-    return this.gameSettings;
+  this.gameSettings = {
+    ...this.gameSettings,
+    ...settings,
+    updatedAt: new Date(),
+  };
+
+  console.log("🎯 Game settings updated:", JSON.stringify(this.gameSettings, null, 2));
+
+  return this.gameSettings;
   }
 
   async updateUserGameStats(userId: string, stats: {
