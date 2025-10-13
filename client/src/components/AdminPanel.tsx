@@ -1733,7 +1733,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               type="number"
                               placeholder="10"
                               value={newPaymentMethod.minAmount}
-                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmount: parseFloat(e.target.value) })}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmount: parseInt(e.target.value) || 0 })}
                               data-testid="input-payment-method-min-amount"
                             />
                           </div>
@@ -1744,7 +1744,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               type="number"
                               placeholder="100000"
                               value={newPaymentMethod.maxAmount}
-                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmount: parseFloat(e.target.value) })}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmount: parseInt(e.target.value) || 0 })}
                               data-testid="input-payment-method-max-amount"
                             />
                           </div>
@@ -1763,7 +1763,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               type="number"
                               placeholder="1"
                               value={newPaymentMethod.minAmountUSD}
-                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmountUSD: parseFloat(e.target.value) })}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, minAmountUSD: parseInt(e.target.value) || 0 })}
                               data-testid="input-payment-method-min-amount-usd"
                             />
                           </div>
@@ -1774,7 +1774,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               type="number"
                               placeholder="1000"
                               value={newPaymentMethod.maxAmountUSD}
-                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmountUSD: parseFloat(e.target.value) })}
+                              onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, maxAmountUSD: parseInt(e.target.value) || 0 })}
                               data-testid="input-payment-method-max-amount-usd"
                             />
                           </div>
@@ -1787,9 +1787,9 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                           <Input
                             id="paymentFee"
                             type="number"
-                            placeholder="0.5"
+                            placeholder="5"
                             value={newPaymentMethod.fee}
-                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, fee: parseFloat(e.target.value) })}
+                            onChange={(e) => setNewPaymentMethod({ ...newPaymentMethod, fee: parseInt(e.target.value) || 0 })}
                             data-testid="input-payment-method-fee"
                           />
                         </div>
