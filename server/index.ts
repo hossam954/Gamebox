@@ -1,7 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeAdminUser } from "./database.js"; // ✅ استدعاء كود الأدمن
+import { initializeAdminUser } from "./database.js";
+import { initTelegramBot } from "./telegram"; // ✅ استدعاء كود البوت
 
 const app = express();
 app.use(express.json());
@@ -38,6 +39,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize admin user
+  await initializeAdminUser();
+
+  // Initialize Telegram bot
+  initTelegramBot();
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -48,8 +55,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // ✅ إنشاء الأدمن تلقائياً عند بدء السيرفر
-  await initializeAdminUser();
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

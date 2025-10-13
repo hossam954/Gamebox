@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./database";
+import { notifyNewUser, notifyNewDeposit, notifyNewWithdrawal, notifyDepositStatus, notifyWithdrawalStatus } from "./telegram";
 import {
   insertUserSchema,
   insertPasswordRecoverySchema,
@@ -29,6 +30,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already exists" });
 
       const user = await storage.createUser(result.data);
+
+      // إشعار تلغرام بالمستخدم الجديد
+      try {
+        await notifyNewUser(result.data.username, result.data.email, user.referralCode);
+      } catch (err) {
+        console.error("Failed to send Telegram notification:", err);
+      }
 
       // إشعار الإحالة إذا وجد
       if (result.data.referredBy && result.data.referredBy.trim() !== "") {
@@ -207,6 +215,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid input", errors: result.error });
 
       const deposit = await storage.createDepositRequest(result.data);
+      
+      // إشعار تلغرام بطلب الإيداع الجديد
+      try {
+        const methods = await storage.getPaymentMethods();
+        const method = methods.find((m: any) => m.id === result.data.paymentMethodId);
+        const methodName = method?.name || "غير محدد";
+        const currency = (result.data as any).currency || method?.currency || "SYP";
+        await notifyNewDeposit(result.data.username, result.data.amount, currency, methodName);
+      } catch (err) {
+        console.error("Failed to send Telegram notification:", err);
+      }
+      
       res.json({ message: "Deposit request submitted", id: deposit.id });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
@@ -324,6 +344,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.updateDepositStatus(id, status);
+      
+      // إشعار تلغرام بتحديث حالة الإيداع
+      if (request) {
+        try {
+          await notifyDepositStatus(request.username, request.amount || 0, status as 'approved' | 'rejected');
+        } catch (err) {
+          console.error("Failed to send Telegram notification:", err);
+        }
+      }
+      
       res.json({ message: "Deposit status updated" });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
@@ -343,6 +373,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateUserBalance(user.id, user.balance - result.data.amount);
       const withdraw = await storage.createWithdrawRequest(result.data);
+      
+      // إشعار تلغرام بطلب السحب الجديد
+      try {
+        const methods = await storage.getPaymentMethods();
+        const method = methods.find((m: any) => m.id === result.data.paymentMethodId);
+        const methodName = method?.name || "غير محدد";
+        await notifyNewWithdrawal(result.data.username, result.data.amount, methodName, result.data.address);
+      } catch (err) {
+        console.error("Failed to send Telegram notification:", err);
+      }
+      
       res.json({ message: "Withdrawal request submitted", id: withdraw.id });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
@@ -415,6 +456,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.updateWithdrawStatus(id, status);
+      
+      // إشعار تلغرام بتحديث حالة السحب
+      if (request) {
+        try {
+          await notifyWithdrawalStatus(request.username, request.amount ?? 0, status as 'approved' | 'rejected');
+        } catch (err) {
+          console.error("Failed to send Telegram notification:", err);
+        }
+      }
+      
       res.json({ message: "Withdrawal status updated" });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
