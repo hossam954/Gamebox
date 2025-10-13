@@ -10,10 +10,10 @@ if (!process.env.DATABASE_URL) {
 }
 
 // ✅ إعداد الاتصال بقاعدة PostgreSQL (Neon) عبر HTTP
-const sql = neon(process.env.DATABASE_URL);
+const neonClient = neon(process.env.DATABASE_URL);
 
 // ✅ إنشاء Drizzle ORM باستخدام السكيمة
-export const db = drizzle(sql, { schema });
+export const db = drizzle(neonClient, { schema });
 
 // 🟣 كائن مماثل لـ storage السابق حتى ما يتغير أي شيء في routes.ts
 export const storage = {
