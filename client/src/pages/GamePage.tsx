@@ -287,6 +287,39 @@ export default function GamePage() {
       let prizeMultiplier: number | null = null;
 
       // ============================================
+      // تطبيق وضع ميزة الصندوق (House Advantage Mode)
+      // ============================================
+      
+      // تطبيق الإعدادات بناءً على الوضع المختار
+      const advantageMode = gameSettings.houseAdvantageMode || 'balanced';
+      
+      // ضبط الإعدادات بناءً على الوضع
+      if (advantageMode === 'player_wins') {
+        // اللاعب يربح كثير
+        gameSettings.baseWinRate = 70;
+        gameSettings.targetLossRate = 30;
+        gameSettings.houseEdgeBoost = 0;
+        gameSettings.alwaysLose = false;
+        gameSettings.behaviorTrackingEnabled = false; // تعطيل تتبع السلوك
+        gameSettings.maxMultiplier = 50;
+      } else if (advantageMode === 'balanced') {
+        // وسط - الإعدادات الافتراضية
+        gameSettings.baseWinRate = gameSettings.baseWinRate || 50;
+        gameSettings.alwaysLose = false;
+      } else if (advantageMode === 'house_wins') {
+        // الصندوق يربح كثير
+        gameSettings.baseWinRate = 25;
+        gameSettings.targetLossRate = 80;
+        gameSettings.houseEdgeBoost = 10;
+        gameSettings.alwaysLose = false;
+        gameSettings.behaviorTrackingEnabled = true;
+        gameSettings.maxMultiplier = 20;
+      } else if (advantageMode === 'always_lose') {
+        // خسارة فقط
+        gameSettings.alwaysLose = true;
+      }
+
+      // ============================================
       // خوارزمية ذكية متطورة - نظام المراحل الثلاث
       // ============================================
 

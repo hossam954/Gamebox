@@ -131,6 +131,9 @@ export type PaymentSettings = typeof paymentSettings.$inferSelect;
 export const gameSettings = pgTable("game_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   
+  // وضع ميزة الصندوق - للتحكم السهل
+  houseAdvantageMode: text("house_advantage_mode").notNull().default("balanced"), // "player_wins" (اللاعب يربح كثير) | "balanced" (وسط) | "house_wins" (الصندوق يربح كثير) | "always_lose" (خسارة فقط)
+  
   // الإعدادات الأساسية
   baseWinRate: integer("base_win_rate").notNull().default(50), // نسبة الربح الأساسية 0-100
   targetLossRate: integer("target_loss_rate").notNull().default(70), // نسبة الخسارة المستهدفة 0-100

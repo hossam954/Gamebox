@@ -1907,8 +1907,79 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                   <CardContent className="space-y-6">
                     {gameSettings && (
                       <>
+                        <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <span className="text-2xl">🎯</span>
+                            وضع ميزة الصندوق - التحكم السريع
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            اختر الوضع المناسب للتحكم في نسب الربح بسهولة
+                          </p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                            <Button
+                              variant={gameSettings.houseAdvantageMode === 'player_wins' ? 'default' : 'outline'}
+                              className="h-auto flex-col gap-2 p-4"
+                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'player_wins'})}
+                              data-testid="button-mode-player-wins"
+                            >
+                              <span className="text-2xl">🎉</span>
+                              <span className="font-bold">اللاعب يربح كثير</span>
+                              <span className="text-xs opacity-75">نسبة ربح عالية ~70%</span>
+                            </Button>
+                            
+                            <Button
+                              variant={gameSettings.houseAdvantageMode === 'balanced' ? 'default' : 'outline'}
+                              className="h-auto flex-col gap-2 p-4"
+                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'balanced'})}
+                              data-testid="button-mode-balanced"
+                            >
+                              <span className="text-2xl">⚖️</span>
+                              <span className="font-bold">وسط (متوازن)</span>
+                              <span className="text-xs opacity-75">نسبة ربح متوسطة ~50%</span>
+                            </Button>
+                            
+                            <Button
+                              variant={gameSettings.houseAdvantageMode === 'house_wins' ? 'default' : 'outline'}
+                              className="h-auto flex-col gap-2 p-4"
+                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'house_wins'})}
+                              data-testid="button-mode-house-wins"
+                            >
+                              <span className="text-2xl">💰</span>
+                              <span className="font-bold">الصندوق يربح كثير</span>
+                              <span className="text-xs opacity-75">نسبة ربح منخفضة ~25%</span>
+                            </Button>
+                            
+                            <Button
+                              variant={gameSettings.houseAdvantageMode === 'always_lose' ? 'destructive' : 'outline'}
+                              className="h-auto flex-col gap-2 p-4"
+                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'always_lose'})}
+                              data-testid="button-mode-always-lose"
+                            >
+                              <span className="text-2xl">🚫</span>
+                              <span className="font-bold">خسارة فقط</span>
+                              <span className="text-xs opacity-75">لا ربح مطلقاً</span>
+                            </Button>
+                          </div>
+
+                          <div className="mt-4 p-3 bg-white/50 dark:bg-black/20 rounded-md">
+                            <p className="text-sm">
+                              <strong>الوضع الحالي:</strong> {
+                                gameSettings.houseAdvantageMode === 'player_wins' ? '🎉 اللاعب يربح كثير' :
+                                gameSettings.houseAdvantageMode === 'balanced' ? '⚖️ متوازن (وسط)' :
+                                gameSettings.houseAdvantageMode === 'house_wins' ? '💰 الصندوق يربح كثير' :
+                                gameSettings.houseAdvantageMode === 'always_lose' ? '🚫 خسارة فقط' :
+                                '⚖️ متوازن (افتراضي)'
+                              }
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                              ⚠️ تنبيه: لا تنسى الضغط على زر "حفظ الإعدادات" بالأسفل بعد اختيار الوضع
+                            </p>
+                          </div>
+                        </div>
+
                         <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                          <h3 className="font-semibold text-lg">الإعدادات الأساسية</h3>
+                          <h3 className="font-semibold text-lg">الإعدادات الأساسية (متقدم)</h3>
 
                           <div className="space-y-3">
                             <div className="flex justify-between items-center">

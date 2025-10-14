@@ -173,6 +173,7 @@ export class MemStorage implements IStorage {
 
     this.gameSettings = {
       id: randomUUID(),
+      houseAdvantageMode: "balanced",
       baseWinRate: 5,
       targetLossRate: 99,
       maxMultiplier: 25,
