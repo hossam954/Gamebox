@@ -67,6 +67,11 @@ Preferred communication style: Simple, everyday language.
 - Multiplier ranges: 0 (loss) to 5000x with weighted probabilities
 - Balance updates are atomic and server-validated
 - Win/loss statistics tracked per user
+- **House Advantage Control System**: Admin can easily control game outcomes via 4 preset modes:
+  - 🎉 Player Wins Mode (~70% win rate): Players win frequently with higher multipliers
+  - ⚖️ Balanced Mode (~50% win rate): Fair gameplay with standard settings
+  - 💰 House Wins Mode (~25% win rate): House has strong advantage
+  - 🚫 Always Lose Mode (0% win rate): Players always lose (testing/maintenance)
 
 ### Data Storage Solutions
 
