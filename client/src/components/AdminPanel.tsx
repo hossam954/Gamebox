@@ -1927,8 +1927,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               variant={gameSettings.houseAdvantageMode === 'player_wins' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
                               onClick={async () => {
-                                const newSettings = {...gameSettings, houseAdvantageMode: 'player_wins'};
+                                const newSettings = {
+                                  ...gameSettings, 
+                                  houseAdvantageMode: 'player_wins',
+                                  baseWinRate: 70,
+                                  targetLossRate: 30,
+                                  houseEdgeBoost: 0,
+                                  alwaysLose: false,
+                                  behaviorTrackingEnabled: false,
+                                  maxMultiplier: 50
+                                };
                                 setGameSettings(newSettings);
+                                await handleSaveGameSettings();
                               }}
                               data-testid="button-mode-player-wins"
                             >
@@ -1941,8 +1951,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               variant={gameSettings.houseAdvantageMode === 'balanced' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
                               onClick={async () => {
-                                const newSettings = {...gameSettings, houseAdvantageMode: 'balanced'};
+                                const newSettings = {
+                                  ...gameSettings, 
+                                  houseAdvantageMode: 'balanced',
+                                  baseWinRate: 50,
+                                  targetLossRate: 50,
+                                  houseEdgeBoost: 5,
+                                  alwaysLose: false,
+                                  behaviorTrackingEnabled: true,
+                                  maxMultiplier: 50
+                                };
                                 setGameSettings(newSettings);
+                                await handleSaveGameSettings();
                               }}
                               data-testid="button-mode-balanced"
                             >
@@ -1955,8 +1975,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               variant={gameSettings.houseAdvantageMode === 'house_wins' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
                               onClick={async () => {
-                                const newSettings = {...gameSettings, houseAdvantageMode: 'house_wins'};
+                                const newSettings = {
+                                  ...gameSettings, 
+                                  houseAdvantageMode: 'house_wins',
+                                  baseWinRate: 25,
+                                  targetLossRate: 80,
+                                  houseEdgeBoost: 10,
+                                  alwaysLose: false,
+                                  behaviorTrackingEnabled: true,
+                                  maxMultiplier: 50
+                                };
                                 setGameSettings(newSettings);
+                                await handleSaveGameSettings();
                               }}
                               data-testid="button-mode-house-wins"
                             >
@@ -1969,8 +1999,18 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                               variant={gameSettings.houseAdvantageMode === 'always_lose' ? 'destructive' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
                               onClick={async () => {
-                                const newSettings = {...gameSettings, houseAdvantageMode: 'always_lose'};
+                                const newSettings = {
+                                  ...gameSettings, 
+                                  houseAdvantageMode: 'always_lose',
+                                  baseWinRate: 0,
+                                  targetLossRate: 100,
+                                  houseEdgeBoost: 20,
+                                  alwaysLose: true,
+                                  behaviorTrackingEnabled: false,
+                                  maxMultiplier: 0
+                                };
                                 setGameSettings(newSettings);
+                                await handleSaveGameSettings();
                               }}
                               data-testid="button-mode-always-lose"
                             >
