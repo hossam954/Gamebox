@@ -454,7 +454,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // ✅ تحديث إعدادات اللعبة
 app.post("/api/game-settings", async (req, res) => {
   try {
+    console.log("📝 Saving game settings to database:", req.body);
     const updated = await storage.updateGameSettings(req.body);
+    console.log("✅ Game settings saved successfully");
     res.json(updated);
   } catch (err) {
     console.error("❌ Error updating game settings:", err);
@@ -462,14 +464,17 @@ app.post("/api/game-settings", async (req, res) => {
   }
 });
   
-  app.put("/api/game-settings", async (req, res) => {
-    try {
-      const settings = await storage.updateGameSettings(req.body);
-      res.json(settings);
-    } catch (err) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+app.put("/api/game-settings", async (req, res) => {
+  try {
+    console.log("📝 Updating game settings in database:", req.body);
+    const settings = await storage.updateGameSettings(req.body);
+    console.log("✅ Game settings updated successfully");
+    res.json(settings);
+  } catch (err) {
+    console.error("❌ Error updating game settings:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
   // ✅ المستخدمين
   app.get("/api/users", async (_req, res) => {

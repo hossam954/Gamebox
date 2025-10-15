@@ -171,25 +171,8 @@ export class MemStorage implements IStorage {
       usdWithdrawRate: 15000, // سعر صرف الدولار للسحب (150.00 ل.س)
     };
 
-    this.gameSettings = {
-      id: randomUUID(),
-      houseAdvantageMode: "balanced",
-      baseWinRate: 5,
-      targetLossRate: 99,
-      maxMultiplier: 25,
-      strategy: "hopeful",
-      phase1Rounds: 5,
-      phase2Rounds: 18,
-      multiplier2to5Chance: 40,
-      multiplier5to10Chance: 12,
-      multiplier10to25Chance: 1,
-      multiplier25to50Chance: 1,
-      multiplier50PlusChance: 1,
-      highBetThreshold: 500,
-      highBetMaxMultiplier: 3,
-      updatedAt: new Date(),
-    };
-      console.log("🎯 Loaded game settings from storage.ts (test marker)");
+    // تم نقل إعدادات اللعبة إلى قاعدة البيانات Neon
+    // يتم قراءتها وحفظها من خلال database.ts
     
     const defaultPaymentMethod1: PaymentMethod = {
       id: randomUUID(),

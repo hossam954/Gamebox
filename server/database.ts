@@ -258,18 +258,28 @@ export const storage = {
   // ⚙️ إعدادات اللعبة
   async getGameSettings() {
     const settings = await db.select().from(schema.gameSettings).limit(1);
+    console.log("📖 Reading game settings from database:", settings[0] ? "Found" : "Not found");
     return settings[0];
   },
 
   async updateGameSettings(data: any) {
     const settings = await this.getGameSettings();
+    const updateData = { ...data, updatedAt: new Date() };
+    
     if (!settings) {
       const id = randomUUID();
-      await db.insert(schema.gameSettings).values({ id, ...data, updatedAt: new Date() });
-      return { id, ...data, updatedAt: new Date() };
+      const newSettings = { id, ...updateData };
+      await db.insert(schema.gameSettings).values(newSettings);
+      console.log("✅ New game settings inserted into database");
+      return newSettings;
     }
-    await db.update(schema.gameSettings).set({ ...data, updatedAt: new Date() }).where(eq(schema.gameSettings.id, settings.id));
-    return { ...settings, ...data, updatedAt: new Date() };
+    
+    await db.update(schema.gameSettings)
+      .set(updateData)
+      .where(eq(schema.gameSettings.id, settings.id));
+    
+    console.log("✅ Game settings updated in database");
+    return { ...settings, ...updateData };
   },
 
   // 📊 تحديث إحصائيات اللاعب المتقدمة
@@ -421,6 +431,7 @@ export async function initializeGameSettings() {
     const existing = await db.select().from(schema.gameSettings).limit(1);
 
     if (!existing || existing.length === 0) {
+      // القيم الافتراضية - يمكن تعديلها من لوحة التحكم
       await db.insert(schema.gameSettings).values({
         id: randomUUID(),
         houseAdvantageMode: "balanced",
@@ -444,9 +455,9 @@ export async function initializeGameSettings() {
         alwaysLose: false,
         updatedAt: new Date(),
       });
-      console.log("✅ Game settings created successfully.");
+      console.log("✅ Game settings created successfully with default values.");
     } else {
-      console.log("✅ Game settings already exist.");
+      console.log("✅ Game settings already exist in database.");
     }
   } catch (err) {
     console.error("⚠️ Error initializing game settings:", err);

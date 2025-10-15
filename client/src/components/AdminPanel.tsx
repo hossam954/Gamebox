@@ -151,6 +151,7 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
 
   const handleSaveGameSettings = async () => {
     try {
+      console.log('💾 Saving game settings to database...', gameSettings);
       const response = await fetch('/api/game-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -158,21 +159,26 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
       });
 
       if (response.ok) {
+        const savedSettings = await response.json();
+        console.log('✅ Game settings saved successfully:', savedSettings);
         toast({
-          title: "تم حفظ الإعدادات",
-          description: "تم حفظ إعدادات اللعبة بنجاح",
+          title: "تم حفظ الإعدادات ✅",
+          description: "تم حفظ إعدادات اللعبة في قاعدة البيانات بنجاح",
         });
       } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to save settings:', errorData);
         toast({
           title: "خطأ",
-          description: "فشل حفظ الإعدادات",
+          description: "فشل حفظ الإعدادات في قاعدة البيانات",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error('❌ Error saving game settings:', error);
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء حفظ الإعدادات",
+        description: "حدث خطأ أثناء الاتصال بقاعدة البيانات",
         variant: "destructive",
       });
     }
@@ -1920,7 +1926,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             <Button
                               variant={gameSettings.houseAdvantageMode === 'player_wins' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
-                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'player_wins'})}
+                              onClick={async () => {
+                                const newSettings = {...gameSettings, houseAdvantageMode: 'player_wins'};
+                                setGameSettings(newSettings);
+                              }}
                               data-testid="button-mode-player-wins"
                             >
                               <span className="text-2xl">🎉</span>
@@ -1931,7 +1940,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             <Button
                               variant={gameSettings.houseAdvantageMode === 'balanced' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
-                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'balanced'})}
+                              onClick={async () => {
+                                const newSettings = {...gameSettings, houseAdvantageMode: 'balanced'};
+                                setGameSettings(newSettings);
+                              }}
                               data-testid="button-mode-balanced"
                             >
                               <span className="text-2xl">⚖️</span>
@@ -1942,7 +1954,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             <Button
                               variant={gameSettings.houseAdvantageMode === 'house_wins' ? 'default' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
-                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'house_wins'})}
+                              onClick={async () => {
+                                const newSettings = {...gameSettings, houseAdvantageMode: 'house_wins'};
+                                setGameSettings(newSettings);
+                              }}
                               data-testid="button-mode-house-wins"
                             >
                               <span className="text-2xl">💰</span>
@@ -1953,7 +1968,10 @@ export default function AdminPanel({ users, onEditBalance, onSuspendUser, onDele
                             <Button
                               variant={gameSettings.houseAdvantageMode === 'always_lose' ? 'destructive' : 'outline'}
                               className="h-auto flex-col gap-2 p-4"
-                              onClick={() => setGameSettings({...gameSettings, houseAdvantageMode: 'always_lose'})}
+                              onClick={async () => {
+                                const newSettings = {...gameSettings, houseAdvantageMode: 'always_lose'};
+                                setGameSettings(newSettings);
+                              }}
                               data-testid="button-mode-always-lose"
                             >
                               <span className="text-2xl">🚫</span>
