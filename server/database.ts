@@ -414,3 +414,41 @@ export async function initializeAdminUser() {
     console.error("⚠️ Error initializing admin user:", err);
   }
 }
+
+// ✅ إنشاء إعدادات اللعبة الافتراضية
+export async function initializeGameSettings() {
+  try {
+    const existing = await db.select().from(schema.gameSettings).limit(1);
+
+    if (!existing || existing.length === 0) {
+      await db.insert(schema.gameSettings).values({
+        id: randomUUID(),
+        houseAdvantageMode: "balanced",
+        baseWinRate: 50,
+        targetLossRate: 70,
+        maxMultiplier: 50,
+        strategy: "balanced",
+        phase1Rounds: 10,
+        phase2Rounds: 20,
+        multiplier2to5Chance: 40,
+        multiplier5to10Chance: 30,
+        multiplier10to25Chance: 20,
+        multiplier25to50Chance: 8,
+        multiplier50PlusChance: 2,
+        highBetThreshold: 5000,
+        highBetMaxMultiplier: 20,
+        behaviorTrackingEnabled: true,
+        betIncreaseAfterWinPenalty: 15,
+        consecutiveWinsPenalty: 10,
+        houseEdgeBoost: 5,
+        alwaysLose: false,
+        updatedAt: new Date(),
+      });
+      console.log("✅ Game settings created successfully.");
+    } else {
+      console.log("✅ Game settings already exist.");
+    }
+  } catch (err) {
+    console.error("⚠️ Error initializing game settings:", err);
+  }
+}

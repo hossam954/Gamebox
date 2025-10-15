@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeAdminUser } from "./database.js"; // ✅ استدعاء كود الأدمن
+import { initializeAdminUser, initializeGameSettings } from "./database.js"; // ✅ استدعاء كود الأدمن
 
 const app = express();
 app.use(express.json());
@@ -50,6 +50,9 @@ app.use((req, res, next) => {
 
   // ✅ إنشاء الأدمن تلقائياً عند بدء السيرفر
   await initializeAdminUser();
+  
+  // ✅ إنشاء إعدادات اللعبة الافتراضية
+  await initializeGameSettings();
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
